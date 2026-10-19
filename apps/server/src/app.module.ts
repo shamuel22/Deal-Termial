@@ -6,7 +6,12 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import type { AppConfig } from '@deal/shared';
 import { ConfigModule } from './config.module.js';
 import { DatabaseModule } from './database.module.js';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { AgentSelfController, AgentsController } from './agents/agents.controller.js';
+import { AuthController } from './auth/auth.controller.js';
+import { AuthGuard } from './auth/auth.guard.js';
 import { HealthController } from './health/health.controller.js';
+import { DomainExceptionFilter } from './http/domain-exception.filter.js';
 
 /** Portal React compilado (apps/portal/dist), servido por el mismo proceso. */
 export const portalDist = join(
@@ -32,7 +37,11 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [HealthController],
+      controllers: [HealthController, AuthController, AgentsController, AgentSelfController],
+      providers: [
+        { provide: APP_GUARD, useClass: AuthGuard },
+        { provide: APP_FILTER, useClass: DomainExceptionFilter },
+      ],
     };
   }
 }

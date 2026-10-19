@@ -11,7 +11,7 @@
     "build": "pnpm -r --workspace-concurrency=1 run build",
     "start": "node apps/server/dist/main.js",
     "test": "pnpm -r --workspace-concurrency=1 run test",
-    "typecheck": "tsc -b && pnpm --filter @deal/portal run typecheck",
+    "typecheck": "tsc -b && tsc -p tsconfig.tests.json && pnpm --filter @deal/portal run typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

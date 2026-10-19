@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapas 0 y 2 ✅ · Etapa 1 ⛔ en espera de PayPal (vault plataforma) · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0, 2 y 3 ✅ · Etapa 1 ⛔ en espera de PayPal (vault plataforma) · **Última actualización:** 2026-10-19
 
 ---
 
@@ -119,11 +119,11 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                                  | Quién | Estado |
 | --- | -------------------------------------------------------------------------------------- | ----- | ------ |
-| 3.1 | Registro/login de propietarios (sesión segura, cookies httpOnly)                       | C     | ⬜     |
-| 3.2 | Alta de agentes y emisión de credenciales (hash en BD, mostradas una vez)              | C     | ⬜     |
-| 3.3 | Contexto de actor (`org`, `agente`, `nivel`) resuelto por el servidor en cada petición | C     | ⬜     |
-| 3.4 | Guardas de aislamiento por organización y tests                                        | C     | ⬜     |
-| 3.5 | Registro de auditoría transversal                                                      | C     | ⬜     |
+| 3.1 | Registro/login de propietarios (sesión segura, cookies httpOnly)                       | C     | ✅     |
+| 3.2 | Alta de agentes y emisión de credenciales (hash en BD, mostradas una vez)              | C     | ✅     |
+| 3.3 | Contexto de actor (`org`, `agente`, `nivel`) resuelto por el servidor en cada petición | C     | ✅     |
+| 3.4 | Guardas de aislamiento por organización y tests                                        | C     | ✅     |
+| 3.5 | Registro de auditoría transversal                                                      | C     | ✅     |
 
 ### Etapa 4 — Motor de autorizaciones y presupuesto
 
@@ -268,31 +268,35 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 2026-10-19 | Esquema inicial: 28 tablas; dinero en `numeric` (totales 2 decimales, precios unitarios 4); concesiones, autorizaciones y cotizaciones versionadas; un pedido por cotización (índice único) | Brief §10, §11                                                                        |
 | 2026-10-19 | Lógica de negocio en `@deal/core` (TS puro, sin decoradores), compartida por API y MCP                                                                                                      | Un solo motor; tests sin Nest                                                         |
 | 2026-10-19 | Conexión financiera con alcance `platform` o `merchant:<id>`                                                                                                                                | Soporta vault de plataforma (si PayPal lo habilita) o por proveedor                   |
+| 2026-10-19 | Contraseñas con scrypt (N=2^17); sesiones y credenciales de agente como tokens de 256 bits guardados solo como SHA-256; cookie httpOnly + SameSite=Lax                                      | Sin dependencias criptográficas externas                                              |
+| 2026-10-19 | Recursos de otra organización responden 404 (no 403)                                                                                                                                        | No revelar su existencia                                                              |
+| 2026-10-19 | Rutas del portal bajo `/api/orgs/:orgId/...` (sesión + membresía); rutas de agente bajo `/api/agent/...` (Bearer)                                                                           | Aislamiento explícito y verificable                                                   |
 | 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                                                                   | Cubren huecos del §3, §4 y §9 del brief                                               |
 
 ## 8. Pendientes de decisión / insumos del equipo
 
-| #   | Tema                                                                                                                                                                                   | Propuesta por defecto                 | Estado                    |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
-| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1        |
-| P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto                   |
-| P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | Abierto                   |
-| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto                   |
-| P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)             |
-| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ⛔ Abierto                |
-| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto                   |
-| P9  | Pago autónomo: autonomía comercial completa; cobro automático implementado tras bandera y desactivado hasta habilitación PayPal; sin ella, el pedido queda pendiente de pago del dueño | Propuesta de Claude                   | Pendiente de confirmación |
-| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                                                                                                                 | Hacer público antes de la entrega     | Abierto                   |
+| #   | Tema                                                                                                                                                                                   | Propuesta por defecto                 | Estado             |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
+| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1 |
+| P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto            |
+| P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | Abierto            |
+| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto            |
+| P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)      |
+| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ⛔ Abierto         |
+| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto            |
+| P9  | Pago autónomo: autonomía comercial completa; cobro automático implementado tras bandera y desactivado hasta habilitación PayPal; sin ella, el pedido queda pendiente de pago del dueño | Propuesta de Claude                   | ✅ Confirmado      |
+| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                                                                                                                 | Hacer público antes de la entrega     | Abierto            |
 
 ## 9. Riesgos
 
-| Riesgo                                                               | Impacto                       | Mitigación                                                 |
-| -------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------- |
-| Vault a nivel plataforma requiere habilitación de partner en sandbox | Alto: bloquea autonomía total | Etapa 1 primero; escalar con soporte PayPal pronto         |
-| Token no válido para el segundo proveedor                            | Alto                          | Detectarlo en 1.5 y documentar alternativa conforme        |
-| Webhooks requieren URL pública                                       | Medio                         | Túnel (cloudflared) en desarrollo; dominio en VPS          |
-| Concurrencia en presupuesto/stock                                    | Alto                          | Bloqueos de fila + tests concurrentes contra Postgres real |
-| Fuga de secretos en respuestas MCP                                   | Alto                          | Serialización por lista blanca + test automático           |
+| Riesgo                                                               | Impacto                       | Mitigación                                                            |
+| -------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
+| Vault a nivel plataforma requiere habilitación de partner en sandbox | Alto: bloquea autonomía total | Etapa 1 primero; escalar con soporte PayPal pronto                    |
+| Token no válido para el segundo proveedor                            | Alto                          | Detectarlo en 1.5 y documentar alternativa conforme                   |
+| Webhooks requieren URL pública                                       | Medio                         | Túnel (cloudflared) en desarrollo; dominio en VPS                     |
+| Concurrencia en presupuesto/stock                                    | Alto                          | Bloqueos de fila + tests concurrentes contra Postgres real            |
+| Fuerza bruta en login del portal                                     | Medio                         | Limitar intentos por IP/email antes del despliegue público (Etapa 11) |
+| Fuga de secretos en respuestas MCP                                   | Alto                          | Serialización por lista blanca + test automático                      |
 
 ## 10. Bitácora
 
@@ -302,3 +306,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — Consentimiento aprobado por el comprador sandbox; token persistente, cobro sin checkout y reembolso ✅.
 - **2026-10-19** — Proveedores A y B conectados. El token de la plataforma no sirve para pagarles (`BILLING_AGREEMENT_NOT_FOUND`); el vault en su nombre y a nivel plataforma requieren habilitación de PayPal. Solicitud enviada. Detalle en `docs/paypal-spike.md`.
 - **2026-10-19** — Etapa 2 completa: esquema de 28 tablas con migración inicial, `@deal/core` con módulo de dinero, catálogo de errores accionables, tests de integración sobre Postgres de test.
+- **2026-10-19** — Etapa 3 completa: alta y sesión de dueños, agentes con credenciales y niveles versionados, guard único (cookie o Bearer), errores accionables, aislamiento probado en core y e2e (criterios 8 y 16). 33 tests.
