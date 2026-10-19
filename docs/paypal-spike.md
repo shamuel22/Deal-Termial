@@ -117,3 +117,31 @@ El diseño del producto soportará ambos: la conexión financiera del comprador 
    - Crear una orden con ese `vault_id` y `payee.merchant_id` = proveedor A; repetir con proveedor B.
    - Si funciona, el recorrido cumple el brief sin depender de la habilitación de plataforma; si PayPal lo rechaza,
      la habilitación del punto 1 es imprescindible.
+
+## Respuesta de PayPal (2026-10-19)
+
+PayPal respondió que lo disponible es lo publicado en su documentación de desarrolladores y que no puede
+habilitar el vault a nivel plataforma ni el vault en nombre de los vendedores para esta cuenta.
+
+**Decisión (P9 del plan):** el MVP mantiene la autonomía comercial completa (buscar, negociar, aceptar y reservar
+dentro de la autorización). El pago lo completa el dueño con un checkout de un clic, salvo que exista una
+autorización financiera que cubra al proveedor. La ruta de cobro sin checkout está implementada y probada con
+una pasarela simulada; se activa sin cambios de diseño si PayPal habilita el vault multi-vendedor. El spike
+demuestra que el mecanismo (consentimiento único + cobro sin checkout) funciona en sandbox cuando el beneficiario
+es el titular del acuerdo.
+
+## Validación en producto contra sandbox (2026-10-19)
+
+Recorrido ejecutado con el servidor real (`apps/server`), datos de `pnpm seed:demo` y la API:
+
+| Paso                                                                                  | Resultado                                                                                                        |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Búsqueda del encargo (300 envases, sin foam, ≤ US$80)                                 | GB-BAG24 81.19 · ENV-KR16-L 83.35 · ENV-PP32-L 145.06 (todas compatibles; por encima del presupuesto → negociar) |
+| Cotización inicial de EcoPack                                                         | 83.35                                                                                                            |
+| Contrapropuesta del agente (0.20) → respuesta por reglas                              | 0.22 → **76.86**, sin violaciones de la autorización                                                             |
+| Revisión y aceptación del dueño                                                       | Pedido `pending_payment`, stock y presupuesto reservados                                                         |
+| Checkout PayPal y aprobación del comprador                                            | Orden `66Y57409W3161101E`                                                                                        |
+| Captura verificada                                                                    | `74983976NW1421130` COMPLETED, **76.86 USD a 4Z22N6RZVZKAC (EcoPack)**, invoice `DT-<pedido>` (criterio 9)       |
+| Pedido                                                                                | `paid`; presupuesto y stock consumidos                                                                           |
+| Reembolso parcial aprobado por el agente de ventas de EcoPack (PayPal-Auth-Assertion) | `258063294T6704230` COMPLETED; captura `PARTIALLY_REFUNDED`                                                      |
+| Presupuesto delegado tras el reembolso                                                | Sin restaurar: consumido 76.86, disponible 3.14 (criterio 14)                                                    |

@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapas 0, 2–7 ✅ · Etapa 1 ⛔ en espera de PayPal · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0–8 ✅ (pago delegado multi-vendedor no disponible en PayPal; ver P9) · **Última actualización:** 2026-10-19
 
 ---
 
@@ -69,7 +69,7 @@ docs/
 
 ## 4. Etapas
 
-Leyenda: ⬜ pendiente · 🔄 en curso · ✅ hecho · ⛔ bloqueado
+Leyenda: ⬜ pendiente · 🔄 en curso · ✅ hecho · ⛔ bloqueado · ❌ no disponible en PayPal · ➖ omitido por decisión
 Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 ### Etapa 0 — Fundaciones del repositorio
@@ -93,12 +93,12 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | #   | Tarea                                                                                                           | Quién | Estado |
 | --- | --------------------------------------------------------------------------------------------------------------- | ----- | ------ |
 | 1.1 | Investigar y fijar endpoints vigentes (Partner Referrals, Vault v3 setup/payment tokens, Orders v2 con `payee`) | C     | ✅     |
-| 1.2 | Onboarding sandbox de proveedor A y B; comprobar `payments_receivable` y `primary_email_confirmed`              | C     | 🔄     |
+| 1.2 | Onboarding sandbox de proveedor A y B; comprobar `payments_receivable` y `primary_email_confirmed`              | C     | ✅     |
 | 1.3 | Flujo de consentimiento comprador (setup token → aprobación → payment token)                                    | C     | ✅     |
-| 1.4 | Pago posterior a proveedor A con el token, sin checkout                                                         | C     | 🔄     |
-| 1.5 | Pago con el mismo token a proveedor B (alcance a nivel plataforma)                                              | C     | ⬜     |
-| 1.6 | Reembolso sandbox y recepción/verificación de webhook                                                           | C     | 🔄     |
-| 1.7 | Documento de hallazgos y decisión de diseño final de pagos                                                      | C     | ⬜     |
+| 1.4 | Pago posterior a proveedor A con el token, sin checkout                                                         | C     | ❌     |
+| 1.5 | Pago con el mismo token a proveedor B (alcance a nivel plataforma)                                              | C     | ❌     |
+| 1.6 | Reembolso sandbox y recepción/verificación de webhook                                                           | C     | ✅     |
+| 1.7 | Documento de hallazgos y decisión de diseño final de pagos                                                      | C     | ✅     |
 
 ### Etapa 2 — Modelo de datos y núcleo
 
@@ -179,14 +179,14 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                              | Quién | Estado |
 | --- | ---------------------------------------------------------------------------------- | ----- | ------ |
-| 8.1 | Paquete `paypal`: cliente tipado, OAuth, reintentos seguros, sin filtrar secretos  | C     | ⬜     |
-| 8.2 | Conexión de proveedor (onboarding) y estados                                       | C     | ⬜     |
-| 8.3 | Conexión financiera del comprador (vault) con los 5 estados del §8                 | C     | ⬜     |
-| 8.4 | Checkout manual (solo negociación)                                                 | C     | ⬜     |
-| 8.5 | `execute_purchase` delegado: doble verificación, idempotente, token nunca expuesto | C     | ⬜     |
-| 8.6 | Webhooks: verificación de firma, deduplicación, eventos fuera de orden             | C     | ⬜     |
-| 8.7 | Reconciliación de resultados desconocidos (consulta antes de reintentar)           | C     | ⬜     |
-| 8.8 | Reembolsos con facultad del proveedor; sin restaurar presupuesto delegado          | C     | ⬜     |
+| 8.1 | Paquete `paypal`: cliente tipado, OAuth, reintentos seguros, sin filtrar secretos  | C     | ✅     |
+| 8.2 | Conexión de proveedor (onboarding) y estados                                       | C     | ✅     |
+| 8.3 | Conexión financiera del comprador (vault) con los 5 estados del §8                 | C     | ➖     |
+| 8.4 | Checkout manual (solo negociación)                                                 | C     | ✅     |
+| 8.5 | `execute_purchase` delegado: doble verificación, idempotente, token nunca expuesto | C     | ✅     |
+| 8.6 | Webhooks: verificación de firma, deduplicación, eventos fuera de orden             | C     | ✅     |
+| 8.7 | Reconciliación de resultados desconocidos (consulta antes de reintentar)           | C     | ✅     |
+| 8.8 | Reembolsos con facultad del proveedor; sin restaurar presupuesto delegado          | C     | ✅     |
 
 ### Etapa 9 — Servidor MCP
 
@@ -283,21 +283,26 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 2026-10-19 | Retención de stock de 60 min al aceptar; pedidos impagos vencen y liberan reservas salvo pago en curso o incierto                                                                                                                                                    | Brief §10–§11                                                                         |
 | 2026-10-19 | Idempotencia: natural (un pedido por cotización) + clave opcional (`Idempotency-Key` o campo) registrada en la misma transacción                                                                                                                                     | Reintentos concurrentes devuelven el mismo resultado                                  |
 | 2026-10-19 | Los rechazos se auditan después de revertir la transacción                                                                                                                                                                                                           | Auditar dentro bloquearía contra los locks propios                                    |
+| 2026-10-19 | Flujo de alta de autorización financiera (vault) omitido en esta versión; la ruta de cobro con token queda implementada tras la existencia de una conexión activa                                                                                                    | PayPal no ofrece vault multi-vendedor; documentado como integración esencial futura   |
+| 2026-10-19 | Pago en 3 pasos: registrar intento → PayPal sin bloqueos → aplicar verificando importe/moneda/beneficiario                                                                                                                                                           | Ningún cobro perdido ni duplicado ante caídas                                         |
+| 2026-10-19 | Bloqueos `FOR NO KEY UPDATE` en toda la app                                                                                                                                                                                                                          | `FOR UPDATE` chocaba con las comprobaciones de FK (interbloqueo detectado por test)   |
+| 2026-10-19 | Planificador propio con `pg_try_advisory_lock` en lugar de pg-boss                                                                                                                                                                                                   | Un proceso; tareas idempotentes; sin dependencia extra                                |
+| 2026-10-19 | Superar el presupuesto no descarta una oferta en la búsqueda: se informa para negociar                                                                                                                                                                               | Detectado en el recorrido real                                                        |
 | 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                                                                                                                                            | Cubren huecos del §3, §4 y §9 del brief                                               |
 
 ## 8. Pendientes de decisión / insumos del equipo
 
-| #   | Tema                                                                                                                                                                                   | Propuesta por defecto                 | Estado             |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
-| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1 |
-| P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto            |
-| P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | Abierto            |
-| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto            |
-| P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)      |
-| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ⛔ Abierto         |
-| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto            |
-| P9  | Pago autónomo: autonomía comercial completa; cobro automático implementado tras bandera y desactivado hasta habilitación PayPal; sin ella, el pedido queda pendiente de pago del dueño | Propuesta de Claude                   | ✅ Confirmado      |
-| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                                                                                                                 | Hacer público antes de la entrega     | Abierto            |
+| #   | Tema                                                                                                                                                                                   | Propuesta por defecto                 | Estado                                |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------- |
+| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1                    |
+| P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto                               |
+| P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | Abierto                               |
+| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto                               |
+| P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)                         |
+| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ❌ PayPal no lo habilita (2026-10-19) |
+| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto                               |
+| P9  | Pago autónomo: autonomía comercial completa; cobro automático implementado tras bandera y desactivado hasta habilitación PayPal; sin ella, el pedido queda pendiente de pago del dueño | Propuesta de Claude                   | ✅ Confirmado                         |
+| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                                                                                                                 | Hacer público antes de la entrega     | Abierto                               |
 
 ## 9. Riesgos
 
@@ -323,3 +328,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — Etapa 5 (salvo datos demo) y Etapa 6 completas: catálogo del proveedor (Codex, revisado), búsqueda y solicitudes privadas, motor de reglas del proveedor, negociación versionada (request_quote, counter_quote, submit_quote, respond_to_counterquote, submit_for_review, list_pending_negotiations). 134 tests.
 - **2026-10-19** — Datos de demostración (`pnpm seed:demo`, Codex, revisado): comprador, dos proveedores sandbox, 6 ofertas y autorizaciones del caso de uso. 146 tests.
 - **2026-10-19** — Etapa 7 completa: accept_quote con verificación completa y reservas atómicas, aceptación manual del dueño, idempotencia, cancelación, vencimiento de reservas, get_order/listado con aislamiento. Corregido un posible interbloqueo detectado en revisión propia.
+- **2026-10-19** — PayPal confirma que no habilita vault multi-vendedor. Etapa 8 completa: cliente PayPal, checkout manual, execute_purchase (pendiente del dueño sin autorización financiera), reconciliación, webhooks verificados, reembolsos, conexión de proveedores, planificador. Validado en sandbox real: pago de 76.86 a EcoPack y reembolso parcial en su nombre. 185 tests.
