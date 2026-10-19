@@ -87,6 +87,11 @@ PayPal reutiliza el mismo payment token (`VAULTED`) de la plataforma. Cobro post
   (cuenta Braintree, SDK propio); no cubre pagos a múltiples vendedores.
 - Blogs de pagos agénticos de PayPal: alto nivel, sin mecanismo multi-vendedor documentado.
 
+Con el BN code real de la app (`FLAVORsb-ri3ol51889760_MP`, sección _Multiparty features_ del dashboard):
+setup token `PLATFORM` ❌ `403` (debug `f545532967a80`), orden `PLATFORM` con `payee` A ❌ `422` (debug `f5455326e3461`),
+setup token en nombre de A ❌ `403 NOT_AUTHORIZED` (debug `f45026047a28e`). El dashboard no ofrece ninguna opción de
+vault a nivel plataforma; solo _Save payment methods_ (activa). **Se requiere habilitación por parte de PayPal.**
+
 **Conclusión:** un acuerdo de pago guardado a nivel comerciante solo sirve para pagar al comerciante que lo creó.
 Hay dos caminos que cumplen el brief (pago dirigido al proveedor, sin checkout por compra):
 
