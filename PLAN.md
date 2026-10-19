@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapa 0 pendiente de inicio · **Última actualización:** 2026-10-19
+**Estado actual:** Etapa 0 ✅ · Etapa 1 🔄 (vault a nivel plataforma bloqueado, ver `docs/paypal-spike.md`) · **Última actualización:** 2026-10-19
 
 ---
 
@@ -78,12 +78,12 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                       | Quién | Estado |
 | --- | --------------------------------------------------------------------------- | ----- | ------ |
-| 0.1 | `git init`, remoto GitHub, `.gitignore`, licencia                           | C     | ⬜     |
-| 0.2 | Monorepo pnpm, TS estricto, ESLint, Prettier                                | C     | ⬜     |
-| 0.3 | Esqueleto Nest con `/api/health` y config validada por zod desde `.env`     | C     | ⬜     |
-| 0.4 | Paquete `db` con Drizzle, migración vacía y migración automática en `start` | C     | ⬜     |
-| 0.5 | Vitest + BD de test; GitHub Actions (lint, typecheck, test, build)          | X     | ⬜     |
-| 0.6 | `.env.example`, README inicial con contrato de despliegue                   | C     | ⬜     |
+| 0.1 | `git init`, remoto GitHub, `.gitignore`, licencia                           | C     | ✅     |
+| 0.2 | Monorepo pnpm, TS estricto, ESLint, Prettier                                | C     | ✅     |
+| 0.3 | Esqueleto Nest con `/api/health` y config validada por zod desde `.env`     | C     | ✅     |
+| 0.4 | Paquete `db` con Drizzle, migración vacía y migración automática en `start` | C     | ✅     |
+| 0.5 | Vitest + BD de test; GitHub Actions (lint, typecheck, test, build)          | X     | ✅     |
+| 0.6 | `.env.example`, README inicial con contrato de despliegue                   | C     | ✅     |
 
 ### Etapa 1 — Prueba de viabilidad financiera (GATE)
 
@@ -92,9 +92,9 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                                                           | Quién | Estado |
 | --- | --------------------------------------------------------------------------------------------------------------- | ----- | ------ |
-| 1.1 | Investigar y fijar endpoints vigentes (Partner Referrals, Vault v3 setup/payment tokens, Orders v2 con `payee`) | C     | ⬜     |
-| 1.2 | Onboarding sandbox de proveedor A y B; comprobar `payments_receivable` y `primary_email_confirmed`              | C     | ⬜     |
-| 1.3 | Flujo de consentimiento comprador (setup token → aprobación → payment token)                                    | C     | ⬜     |
+| 1.1 | Investigar y fijar endpoints vigentes (Partner Referrals, Vault v3 setup/payment tokens, Orders v2 con `payee`) | C     | ✅     |
+| 1.2 | Onboarding sandbox de proveedor A y B; comprobar `payments_receivable` y `primary_email_confirmed`              | C     | 🔄     |
+| 1.3 | Flujo de consentimiento comprador (setup token → aprobación → payment token)                                    | C     | ⛔     |
 | 1.4 | Pago posterior a proveedor A con el token, sin checkout                                                         | C     | ⬜     |
 | 1.5 | Pago con el mismo token a proveedor B (alcance a nivel plataforma)                                              | C     | ⬜     |
 | 1.6 | Reembolso sandbox y recepción/verificación de webhook                                                           | C     | ⬜     |
@@ -254,24 +254,29 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 ## 7. Decisiones tomadas
 
-| Fecha      | Decisión                                                                                                                  | Motivo                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 2026-10-19 | Proceso único Node que sirve API, MCP, webhooks, portal y tareas                                                          | Contrato de despliegue simple en VPS                     |
-| 2026-10-19 | Postgres + Drizzle + pg-boss, sin Redis                                                                                   | Menos piezas; transacciones y colas en la misma BD       |
-| 2026-10-19 | Autenticación de agentes por credencial propia por agente (hash en BD); OAuth evaluable después                           | Compatible con clientes MCP actuales y simple de auditar |
-| 2026-10-19 | Reserva de stock al aceptar, no al cotizar                                                                                | Evita bloqueo de inventario por consultas                |
-| 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund` | Cubren huecos del §3, §4 y §9 del brief                  |
+| Fecha      | Decisión                                                                                                                                             | Motivo                                                   |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 2026-10-19 | Proceso único Node que sirve API, MCP, webhooks, portal y tareas                                                                                     | Contrato de despliegue simple en VPS                     |
+| 2026-10-19 | Postgres + Drizzle + pg-boss, sin Redis                                                                                                              | Menos piezas; transacciones y colas en la misma BD       |
+| 2026-10-19 | Autenticación de agentes por credencial propia por agente (hash en BD); OAuth evaluable después                                                      | Compatible con clientes MCP actuales y simple de auditar |
+| 2026-10-19 | Reserva de stock al aceptar, no al cotizar                                                                                                           | Evita bloqueo de inventario por consultas                |
+| 2026-10-19 | TypeScript 6.0.3 (no 7): Nest necesita `emitDecoratorMetadata` y typescript-eslint soporta < 6.1                                                     | Compatibilidad                                           |
+| 2026-10-19 | Todo el monorepo en ESM (NestJS 12 es ESM)                                                                                                           | Coherencia de módulos                                    |
+| 2026-10-19 | Se respeta la edad mínima de publicación de pnpm 11: no se usan versiones del mismo día; scripts de instalación solo en lista blanca (`allowBuilds`) | Seguridad de la cadena de suministro                     |
+| 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                            | Cubren huecos del §3, §4 y §9 del brief                  |
 
 ## 8. Pendientes de decisión / insumos del equipo
 
-| #   | Tema                                                                        | Propuesta por defecto                 | Estado             |
-| --- | --------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
-| P1  | Credenciales PayPal sandbox (app REST plataforma, comprador, 2 proveedores) | —                                     | ⛔ Bloquea Etapa 1 |
-| P2  | Fecha límite del hackatón                                                   | —                                     | Abierto            |
-| P3  | Cliente MCP de referencia                                                   | Claude Code / Claude Desktop vía HTTP | Abierto            |
-| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)         | nginx + Let's Encrypt                 | Abierto            |
-| P5  | Licencia                                                                    | MIT                                   | Abierto            |
-| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)      | Hacer público antes de la entrega     | Abierto            |
+| #   | Tema                                                                                          | Propuesta por defecto                 | Estado             |
+| --- | --------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
+| P1  | Credenciales PayPal sandbox: app REST ✅; faltan cuenta compradora y 2 proveedoras            | —                                     | ⛔ Bloquea Etapa 1 |
+| P2  | Fecha límite del hackatón                                                                     | —                                     | Abierto            |
+| P3  | Cliente MCP de referencia                                                                     | Claude Code / Claude Desktop vía HTTP | Abierto            |
+| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                           | nginx + Let's Encrypt                 | Abierto            |
+| P5  | Licencia                                                                                      | MIT                                   | Asumido (MIT)      |
+| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox    | Solicitar a PayPal                    | ⛔ Abierto         |
+| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal` | Actualizar en el dashboard            | Abierto            |
+| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                        | Hacer público antes de la entrega     | Abierto            |
 
 ## 9. Riesgos
 
@@ -285,4 +290,6 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 ## 10. Bitácora
 
-- **2026-10-19** — Brief leído y analizado. Plan vivo creado. Esperando instrucciones para iniciar Etapa 0.
+- **2026-10-19** — Brief leído y analizado. Plan vivo creado.
+- **2026-10-19** — Etapa 0 completa: monorepo, servidor con `/api/health`, portal, migraciones al arrancar, CI (Codex, revisado). Contrato `pnpm install → build → start` verificado en local.
+- **2026-10-19** — Etapa 1 iniciada: Partner Referrals ✅, vault PayPal a nivel comerciante ✅, a nivel plataforma ❌ (`NOT_ENABLED_TO_VAULT_PAYMENT_SOURCE`). Faltan cuentas sandbox para aprobar consentimiento y probar cobro a proveedores.

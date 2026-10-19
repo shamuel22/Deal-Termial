@@ -17,4 +17,9 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  {
+    // Scripts Node en JS (spikes, configuración): los globales de Node son válidos.
+    files: ['**/*.{js,mjs}'],
+    rules: { 'no-undef': 'off' },
+  },
 );
