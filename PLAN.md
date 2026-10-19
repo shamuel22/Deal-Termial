@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapas 0, 2, 3, 4 y 6 ✅ · Etapa 5 🔄 (datos demo) · Etapa 1 ⛔ en espera de PayPal · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0, 2, 3, 4, 5 y 6 ✅ · Etapa 1 ⛔ en espera de PayPal · **Última actualización:** 2026-10-19
 
 ---
 
@@ -148,7 +148,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 5.2 | CRUD de productos/ofertas del proveedor con tramos por cantidad, stock, zonas y plazos               | X     | ✅     |
 | 5.3 | Motor de coincidencia por atributos, presupuesto, zona y fecha; cálculo de totales; campos faltantes | C     | ✅     |
 | 5.4 | Solicitudes privadas (`create_request`, `get_request`)                                               | C     | ✅     |
-| 5.5 | Datos semilla: dos proveedores, catálogo de envases realista                                         | X     | 🔄     |
+| 5.5 | Datos semilla: dos proveedores, catálogo de envases realista                                         | X     | ✅     |
 
 ### Etapa 6 — Negociación
 
@@ -317,3 +317,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — Etapa 3 completa: alta y sesión de dueños, agentes con credenciales y niveles versionados, guard único (cookie o Bearer), errores accionables, aislamiento probado en core y e2e (criterios 8 y 16). 33 tests.
 - **2026-10-19** — Etapa 4 completa: autorizaciones versionadas, motor de políticas puro, libro de presupuesto por encargo y mensual UTC, solicitudes de cambio del agente, API de portal y de agente. Concurrencia verificada (criterio 11) con test de mutación. 85 tests.
 - **2026-10-19** — Etapa 5 (salvo datos demo) y Etapa 6 completas: catálogo del proveedor (Codex, revisado), búsqueda y solicitudes privadas, motor de reglas del proveedor, negociación versionada (request_quote, counter_quote, submit_quote, respond_to_counterquote, submit_for_review, list_pending_negotiations). 134 tests.
+- **2026-10-19** — Datos de demostración (`pnpm seed:demo`, Codex, revisado): comprador, dos proveedores sandbox, 6 ofertas y autorizaciones del caso de uso. 146 tests.
