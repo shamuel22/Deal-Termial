@@ -71,6 +71,22 @@ Interpretación: la cuenta partner no está habilitada para guardar medios de pa
 nivel plataforma; ambas son habilitaciones de PayPal sobre el partner. Queda por comprobar si un acuerdo creado
 durante una compra con `payee` = A permite cobros posteriores a A (y a B).
 
+Guardado durante compra aprobado por el comprador (orden `75L64192JX774693M`, captura `9F014419EH276064D`):
+PayPal reutiliza el mismo payment token (`VAULTED`) de la plataforma. Cobro posterior a A y B con ese token:
+❌ `BILLING_AGREEMENT_NOT_FOUND` (debug `ca4d2cb5499e0`, `ca4d2cb5d6deb`). Hacer la primera compra a A no liga el acuerdo a A.
+
+### Investigación documental (2026-10-19)
+
+- [Guía multiparty, guardar PayPal durante compra](https://developer.paypal.com/docs/multiparty/checkout/save-payment-methods/during-purchase/js-sdk/paypal/):
+  nivel plataforma = `attributes.vault.usage_type: PLATFORM` + `payee.merchant_id` + cabecera `PayPal-Partner-Attribution-ID`,
+  **sin** `PayPal-Auth-Assertion`. Probado con varios BN codes: ❌ `NOT_ENABLED_TO_VAULT_PAYMENT_SOURCE` en órdenes y setup tokens.
+- [Onboarding a nivel plataforma](https://developer.paypal.com/docs/multiparty/checkout/save-payment-methods/onboarding/platform/):
+  no describe un paso de habilitación por API; la habilitación es de cuenta.
+- Foro de PayPal: el mismo error se resuelve activando _Vault_ en las opciones avanzadas de la app sandbox, o por soporte.
+- [Braintree Vault](https://developer.paypal.com/braintree/docs/guides/paypal/vault/javascript/v3/): producto distinto
+  (cuenta Braintree, SDK propio); no cubre pagos a múltiples vendedores.
+- Blogs de pagos agénticos de PayPal: alto nivel, sin mecanismo multi-vendedor documentado.
+
 **Conclusión:** un acuerdo de pago guardado a nivel comerciante solo sirve para pagar al comerciante que lo creó.
 Hay dos caminos que cumplen el brief (pago dirigido al proveedor, sin checkout por compra):
 
