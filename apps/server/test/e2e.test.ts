@@ -237,6 +237,70 @@ describe('API de identidad (e2e)', () => {
     expect(invalid.body.error).toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 
+  it('catálogo: dueño publica, agente proveedor actualiza y otra organización recibe 404', async () => {
+    const { cookie, orgId } = await company('catalogo');
+    const product = await call('POST', `/orgs/${orgId}/products`, {
+      cookie,
+      body: {
+        sku: 'ENV-16',
+        name: 'Envase kraft',
+        category: 'food_containers',
+        attributes: {
+          material: 'kraft_paper',
+          capacity_oz: 16,
+          hot_food_safe: true,
+          has_lid: true,
+          pack_size: 50,
+        },
+      },
+    });
+    expect(product.status).toBe(201);
+    const terms = {
+      status: 'active',
+      stockAvailable: 1000,
+      shipRegions: ['TX'],
+      leadTimeDays: 3,
+      priceTiers: [
+        { minQty: 1, unitPrice: '0.25' },
+        { minQty: 300, unitPrice: '0.2' },
+      ],
+      negotiationRules: { floorUnitPrice: '0.18', minLeadTimeDays: 1 },
+    };
+    const offer = await call('POST', `/orgs/${orgId}/offers`, {
+      cookie,
+      body: { productId: product.body.id, ...terms },
+    });
+    expect(offer.status).toBe(201);
+    expect(offer.body).toMatchObject({ version: 1, status: 'active' });
+    const agent = await call('POST', `/orgs/${orgId}/agents`, {
+      cookie,
+      body: { name: 'Proveedor', access: { buyerLevel: null, sellerScopes: ['publish_offers'] } },
+    });
+    expect(agent.status).toBe(201);
+    const cred = await call('POST', `/orgs/${orgId}/agents/${agent.body.id}/credentials`, {
+      cookie,
+    });
+    expect(cred.status).toBe(201);
+    const updated = await call('PUT', `/agent/offers/${offer.body.id}`, {
+      bearer: cred.body.apiKey as string,
+      body: { ...terms, stockAvailable: 900 },
+    });
+    expect(updated.status).toBe(200);
+    expect(updated.body).toMatchObject({ version: 2, stockAvailable: 900 });
+    const other = await company('catalogoajeno');
+    expect(
+      (await call('GET', `/orgs/${other.orgId}/offers/${offer.body.id}`, { cookie: other.cookie }))
+        .status,
+    ).toBe(404);
+    expect(
+      (
+        await call('GET', `/orgs/${other.orgId}/products/${product.body.id}`, {
+          cookie: other.cookie,
+        })
+      ).status,
+    ).toBe(404);
+  });
+
   it('publica OpenAPI con las rutas y los esquemas de entrada', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/docs-json`);
     expect(res.status).toBe(200);

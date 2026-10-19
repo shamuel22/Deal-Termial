@@ -14,3 +14,4 @@ export * from './authorization/change-requests.js';
 export * from './catalog/pricing.js';
 export * from './catalog/search.js';
 export * from './catalog/requests.js';
+export * from './catalog/offers.js';

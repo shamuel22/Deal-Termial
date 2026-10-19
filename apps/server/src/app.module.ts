@@ -13,6 +13,7 @@ import {
   AgentAuthorizationController,
   AuthorizationsController,
 } from './authorizations/authorizations.controller.js';
+import { CatalogController, AgentCatalogController } from './catalog/catalog.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { HealthController } from './health/health.controller.js';
 import { AgentMarketController, PortalMarketController } from './market/market.controller.js';
@@ -51,6 +52,8 @@ export class AppModule {
         AgentAuthorizationController,
         AgentMarketController,
         PortalMarketController,
+        CatalogController,
+        AgentCatalogController,
       ],
       providers: [
         { provide: APP_GUARD, useClass: AuthGuard },
