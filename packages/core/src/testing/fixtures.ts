@@ -1,7 +1,7 @@
 import { schema, type Database } from '@deal/db';
 import { createAgent, issueCredential, resolveAgentKey } from '../identity/agents.js';
 import { registerOwner, resolveUserActor } from '../identity/accounts.js';
-import type { AgentActor, BuyerLevel, UserActor } from '../identity/actor.js';
+import type { AgentActor, BuyerLevel, SellerScope, UserActor } from '../identity/actor.js';
 import type { AuthorizationTermsInput } from '../authorization/schemas.js';
 
 /** Utilidades de test: construyen escenarios mínimos y coherentes sobre la base de test. */
@@ -24,8 +24,12 @@ export async function newAgentWithKey(
   db: Database,
   owner: UserActor,
   buyerLevel: BuyerLevel | null,
+  sellerScopes: SellerScope[] = [],
 ): Promise<{ actor: AgentActor; apiKey: string }> {
-  const agent = await createAgent(db, owner, { name: `Agente ${next()}`, access: { buyerLevel } });
+  const agent = await createAgent(db, owner, {
+    name: `Agente ${next()}`,
+    access: { buyerLevel, sellerScopes },
+  });
   const { apiKey } = await issueCredential(db, owner, agent.id);
   return { actor: await resolveAgentKey(db, apiKey), apiKey };
 }
@@ -34,8 +38,9 @@ export async function newAgent(
   db: Database,
   owner: UserActor,
   buyerLevel: BuyerLevel | null,
+  sellerScopes: SellerScope[] = [],
 ): Promise<AgentActor> {
-  return (await newAgentWithKey(db, owner, buyerLevel)).actor;
+  return (await newAgentWithKey(db, owner, buyerLevel, sellerScopes)).actor;
 }
 
 export const DEMO_ADDRESS = {

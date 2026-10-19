@@ -45,6 +45,28 @@ export function requireAdmin(actor: Actor): UserActor {
   return actor;
 }
 
+/**
+ * Operaciones de venta: las puede hacer el dueño/administrador con sesión, o un agente con la
+ * facultad de venta indicada. Las facultades de venta son independientes del nivel de compra.
+ */
+export function requireSellerScope(actor: Actor, scope: SellerScope): Actor {
+  if (actor.kind === 'user') {
+    requireAdmin(actor);
+    return actor;
+  }
+  if (!actor.grant.sellerScopes.includes(scope)) {
+    throw new DomainError(
+      'SELLER_SCOPE_MISSING',
+      `El agente no tiene la facultad de venta "${scope}"`,
+      {
+        requiredScope: scope,
+        currentScopes: actor.grant.sellerScopes,
+      },
+    );
+  }
+  return actor;
+}
+
 export function requireUser(actor: Actor): UserActor {
   if (actor.kind !== 'user') {
     throw new DomainError('FORBIDDEN', 'Esta operación requiere una sesión del portal');
