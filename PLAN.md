@@ -254,16 +254,18 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 ## 7. Decisiones tomadas
 
-| Fecha      | Decisión                                                                                                                                             | Motivo                                                   |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 2026-10-19 | Proceso único Node que sirve API, MCP, webhooks, portal y tareas                                                                                     | Contrato de despliegue simple en VPS                     |
-| 2026-10-19 | Postgres + Drizzle + pg-boss, sin Redis                                                                                                              | Menos piezas; transacciones y colas en la misma BD       |
-| 2026-10-19 | Autenticación de agentes por credencial propia por agente (hash en BD); OAuth evaluable después                                                      | Compatible con clientes MCP actuales y simple de auditar |
-| 2026-10-19 | Reserva de stock al aceptar, no al cotizar                                                                                                           | Evita bloqueo de inventario por consultas                |
-| 2026-10-19 | TypeScript 6.0.3 (no 7): Nest necesita `emitDecoratorMetadata` y typescript-eslint soporta < 6.1                                                     | Compatibilidad                                           |
-| 2026-10-19 | Todo el monorepo en ESM (NestJS 12 es ESM)                                                                                                           | Coherencia de módulos                                    |
-| 2026-10-19 | Se respeta la edad mínima de publicación de pnpm 11: no se usan versiones del mismo día; scripts de instalación solo en lista blanca (`allowBuilds`) | Seguridad de la cadena de suministro                     |
-| 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                            | Cubren huecos del §3, §4 y §9 del brief                  |
+| Fecha      | Decisión                                                                                                                                             | Motivo                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 2026-10-19 | Proceso único Node que sirve API, MCP, webhooks, portal y tareas                                                                                     | Contrato de despliegue simple en VPS                                                  |
+| 2026-10-19 | Postgres + Drizzle + pg-boss, sin Redis                                                                                                              | Menos piezas; transacciones y colas en la misma BD                                    |
+| 2026-10-19 | Autenticación de agentes por credencial propia por agente (hash en BD); OAuth evaluable después                                                      | Compatible con clientes MCP actuales y simple de auditar                              |
+| 2026-10-19 | Reserva de stock al aceptar, no al cotizar                                                                                                           | Evita bloqueo de inventario por consultas                                             |
+| 2026-10-19 | TypeScript 6.0.3 (no 7): Nest necesita `emitDecoratorMetadata` y typescript-eslint soporta < 6.1                                                     | Compatibilidad                                                                        |
+| 2026-10-19 | Todo el monorepo en ESM (NestJS 12 es ESM)                                                                                                           | Coherencia de módulos                                                                 |
+| 2026-10-19 | Se respeta la edad mínima de publicación de pnpm 11: no se usan versiones del mismo día; scripts de instalación solo en lista blanca (`allowBuilds`) | Seguridad de la cadena de suministro                                                  |
+| 2026-10-19 | Cobro por la plataforma + Payouts al proveedor queda solo como posibilidad, no se implementa                                                         | Complica reembolsos y conciliación; contradice el pago directo al proveedor del brief |
+| 2026-10-19 | PayPal Agent Toolkit / AI-Toolkit no se usa para el vault: cubre órdenes, reembolsos, facturas, etc., sin vault ni multiparty                        | Revisado; sus guías de webhooks y reembolsos sirven de referencia                     |
+| 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                            | Cubren huecos del §3, §4 y §9 del brief                                               |
 
 ## 8. Pendientes de decisión / insumos del equipo
 
