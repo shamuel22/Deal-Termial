@@ -408,6 +408,25 @@ describe('API de identidad (e2e)', () => {
     );
     expect(review.body).toMatchObject({ status: 'pending_owner_review' });
 
+    // Solo negociación no puede aceptar por su cuenta; el dueño acepta desde el portal.
+    const quoteId = (review.body.quotes as Array<{ id: string }>).at(-1)!.id;
+    const denied = await call('POST', '/agent/orders', {
+      bearer: apiKey,
+      body: { negotiationId: negotiation.body.id, quoteId },
+    });
+    expect(denied.status).toBe(403);
+    expect(denied.body.error).toMatchObject({ code: 'LEVEL_INSUFFICIENT' });
+    const order = await call('POST', `/orgs/${buyer.orgId}/orders`, {
+      cookie: buyer.cookie,
+      body: { negotiationId: negotiation.body.id, quoteId },
+    });
+    expect(order.status).toBe(201);
+    expect(order.body).toMatchObject({ status: 'pending_payment', paymentMode: 'manual' });
+    const supplierOrder = await call('GET', `/orgs/${supplier.orgId}/orders/${order.body.id}`, {
+      cookie: supplier.cookie,
+    });
+    expect(supplierOrder.body).toMatchObject({ total: order.body.total });
+
     const supplierList = await call(
       'GET',
       `/orgs/${supplier.orgId}/supplier/negotiations?status=all`,

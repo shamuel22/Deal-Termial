@@ -16,6 +16,7 @@ import {
 import { CatalogController, AgentCatalogController } from './catalog/catalog.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { HealthController } from './health/health.controller.js';
+import { AgentOrdersController, PortalOrdersController } from './orders/orders.controller.js';
 import { AgentMarketController, PortalMarketController } from './market/market.controller.js';
 import {
   AgentNegotiationController,
@@ -58,6 +59,8 @@ export class AppModule {
         PortalMarketController,
         AgentNegotiationController,
         PortalNegotiationController,
+        AgentOrdersController,
+        PortalOrdersController,
         CatalogController,
         AgentCatalogController,
       ],

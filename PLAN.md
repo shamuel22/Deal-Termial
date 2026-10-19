@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapas 0, 2, 3, 4, 5 y 6 ✅ · Etapa 1 ⛔ en espera de PayPal · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0, 2–7 ✅ · Etapa 1 ⛔ en espera de PayPal · **Última actualización:** 2026-10-19
 
 ---
 
@@ -168,10 +168,10 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                                         | Quién | Estado |
 | --- | --------------------------------------------------------------------------------------------- | ----- | ------ |
-| 7.1 | `accept_quote`: validación completa (§10) + reserva de stock y presupuesto en una transacción | C     | ⬜     |
-| 7.2 | Claves de idempotencia para escrituras críticas                                               | C     | ⬜     |
-| 7.3 | Máquina de estados de pedido; cancelación antes del pago                                      | C     | ⬜     |
-| 7.4 | Expiración de reservas e incidencia por pago tardío                                           | C     | ⬜     |
+| 7.1 | `accept_quote`: validación completa (§10) + reserva de stock y presupuesto en una transacción | C     | ✅     |
+| 7.2 | Claves de idempotencia para escrituras críticas                                               | C     | ✅     |
+| 7.3 | Máquina de estados de pedido; cancelación antes del pago                                      | C     | ✅     |
+| 7.4 | Expiración de reservas e incidencia por pago tardío                                           | C     | ✅     |
 
 ### Etapa 8 — Pagos PayPal en producto
 
@@ -279,6 +279,10 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 2026-10-19 | Motor de reglas del proveedor: ajusta cada dimensión al mejor valor permitido (precio ≥ máx(piso, lista×(1−descuento)), plazo ≥ mínimo, transporte solo si bonificable); si no ajusta nada, acepta; escala al proveedor si autoRespond=false, stock, zona o cantidad | Responde sin agente conectado y nunca concede fuera de su autoridad                   |
 | 2026-10-19 | Agente del proveedor limitado por sus reglas; el dueño del proveedor puede aprobar excepciones (queda trazado)                                                                                                                                                       | Brief §7 "aprobación de excepciones"                                                  |
 | 2026-10-19 | El comprador nunca ve reglas ni traza del proveedor; sí una comprobación informativa contra su autorización                                                                                                                                                          | Reglas privadas; el agente sabe si la propuesta cabe en su encargo                    |
+| 2026-10-19 | Orden de bloqueo único en toda la app: organización compradora → autorización → oferta → negociación                                                                                                                                                                 | Evita interbloqueos entre aceptación, reserva y revocación                            |
+| 2026-10-19 | Retención de stock de 60 min al aceptar; pedidos impagos vencen y liberan reservas salvo pago en curso o incierto                                                                                                                                                    | Brief §10–§11                                                                         |
+| 2026-10-19 | Idempotencia: natural (un pedido por cotización) + clave opcional (`Idempotency-Key` o campo) registrada en la misma transacción                                                                                                                                     | Reintentos concurrentes devuelven el mismo resultado                                  |
+| 2026-10-19 | Los rechazos se auditan después de revertir la transacción                                                                                                                                                                                                           | Auditar dentro bloquearía contra los locks propios                                    |
 | 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                                                                                                                                            | Cubren huecos del §3, §4 y §9 del brief                                               |
 
 ## 8. Pendientes de decisión / insumos del equipo
@@ -318,3 +322,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — Etapa 4 completa: autorizaciones versionadas, motor de políticas puro, libro de presupuesto por encargo y mensual UTC, solicitudes de cambio del agente, API de portal y de agente. Concurrencia verificada (criterio 11) con test de mutación. 85 tests.
 - **2026-10-19** — Etapa 5 (salvo datos demo) y Etapa 6 completas: catálogo del proveedor (Codex, revisado), búsqueda y solicitudes privadas, motor de reglas del proveedor, negociación versionada (request_quote, counter_quote, submit_quote, respond_to_counterquote, submit_for_review, list_pending_negotiations). 134 tests.
 - **2026-10-19** — Datos de demostración (`pnpm seed:demo`, Codex, revisado): comprador, dos proveedores sandbox, 6 ofertas y autorizaciones del caso de uso. 146 tests.
+- **2026-10-19** — Etapa 7 completa: accept_quote con verificación completa y reservas atómicas, aceptación manual del dueño, idempotencia, cancelación, vencimiento de reservas, get_order/listado con aislamiento. Corregido un posible interbloqueo detectado en revisión propia.
