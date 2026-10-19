@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapa 0 ✅ · Etapa 1 🔄 (vault a nivel plataforma bloqueado, ver `docs/paypal-spike.md`) · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0 y 2 ✅ · Etapa 1 ⛔ en espera de PayPal (vault plataforma) · **Última actualización:** 2026-10-19
 
 ---
 
@@ -106,12 +106,12 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                                                                                  | Quién | Estado |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
-| 2.1 | Esquema: organización, usuario, membresía/rol, agente, credencial de agente                                                            | C     | ⬜     |
-| 2.2 | Esquema: autorización versionada, concesión de nivel, conexión PayPal                                                                  | C     | ⬜     |
-| 2.3 | Esquema: producto, oferta, tramos de precio, existencias, reglas de negociación del proveedor                                          | C     | ⬜     |
-| 2.4 | Esquema: solicitud, cotización versionada, pedido, reservas (stock y presupuesto), intento de pago, reembolso, auditoría, idempotencia | C     | ⬜     |
-| 2.5 | Módulo `money` (decimal, USD, redondeo explícito) + tests                                                                              | C     | ⬜     |
-| 2.6 | Catálogo de errores accionables (§12) compartido API/MCP                                                                               | C     | ⬜     |
+| 2.1 | Esquema: organización, usuario, membresía/rol, agente, credencial de agente                                                            | C     | ✅     |
+| 2.2 | Esquema: autorización versionada, concesión de nivel, conexión PayPal                                                                  | C     | ✅     |
+| 2.3 | Esquema: producto, oferta, tramos de precio, existencias, reglas de negociación del proveedor                                          | C     | ✅     |
+| 2.4 | Esquema: solicitud, cotización versionada, pedido, reservas (stock y presupuesto), intento de pago, reembolso, auditoría, idempotencia | C     | ✅     |
+| 2.5 | Módulo `money` (decimal, USD, redondeo explícito) + tests                                                                              | C     | ✅     |
+| 2.6 | Catálogo de errores accionables (§12) compartido API/MCP                                                                               | C     | ✅     |
 
 ### Etapa 3 — Identidad, organizaciones y aislamiento
 
@@ -254,31 +254,35 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 ## 7. Decisiones tomadas
 
-| Fecha      | Decisión                                                                                                                                             | Motivo                                                                                |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 2026-10-19 | Proceso único Node que sirve API, MCP, webhooks, portal y tareas                                                                                     | Contrato de despliegue simple en VPS                                                  |
-| 2026-10-19 | Postgres + Drizzle + pg-boss, sin Redis                                                                                                              | Menos piezas; transacciones y colas en la misma BD                                    |
-| 2026-10-19 | Autenticación de agentes por credencial propia por agente (hash en BD); OAuth evaluable después                                                      | Compatible con clientes MCP actuales y simple de auditar                              |
-| 2026-10-19 | Reserva de stock al aceptar, no al cotizar                                                                                                           | Evita bloqueo de inventario por consultas                                             |
-| 2026-10-19 | TypeScript 6.0.3 (no 7): Nest necesita `emitDecoratorMetadata` y typescript-eslint soporta < 6.1                                                     | Compatibilidad                                                                        |
-| 2026-10-19 | Todo el monorepo en ESM (NestJS 12 es ESM)                                                                                                           | Coherencia de módulos                                                                 |
-| 2026-10-19 | Se respeta la edad mínima de publicación de pnpm 11: no se usan versiones del mismo día; scripts de instalación solo en lista blanca (`allowBuilds`) | Seguridad de la cadena de suministro                                                  |
-| 2026-10-19 | Cobro por la plataforma + Payouts al proveedor queda solo como posibilidad, no se implementa                                                         | Complica reembolsos y conciliación; contradice el pago directo al proveedor del brief |
-| 2026-10-19 | PayPal Agent Toolkit / AI-Toolkit no se usa para el vault: cubre órdenes, reembolsos, facturas, etc., sin vault ni multiparty                        | Revisado; sus guías de webhooks y reembolsos sirven de referencia                     |
-| 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                            | Cubren huecos del §3, §4 y §9 del brief                                               |
+| Fecha      | Decisión                                                                                                                                                                                    | Motivo                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 2026-10-19 | Proceso único Node que sirve API, MCP, webhooks, portal y tareas                                                                                                                            | Contrato de despliegue simple en VPS                                                  |
+| 2026-10-19 | Postgres + Drizzle + pg-boss, sin Redis                                                                                                                                                     | Menos piezas; transacciones y colas en la misma BD                                    |
+| 2026-10-19 | Autenticación de agentes por credencial propia por agente (hash en BD); OAuth evaluable después                                                                                             | Compatible con clientes MCP actuales y simple de auditar                              |
+| 2026-10-19 | Reserva de stock al aceptar, no al cotizar                                                                                                                                                  | Evita bloqueo de inventario por consultas                                             |
+| 2026-10-19 | TypeScript 6.0.3 (no 7): Nest necesita `emitDecoratorMetadata` y typescript-eslint soporta < 6.1                                                                                            | Compatibilidad                                                                        |
+| 2026-10-19 | Todo el monorepo en ESM (NestJS 12 es ESM)                                                                                                                                                  | Coherencia de módulos                                                                 |
+| 2026-10-19 | Se respeta la edad mínima de publicación de pnpm 11: no se usan versiones del mismo día; scripts de instalación solo en lista blanca (`allowBuilds`)                                        | Seguridad de la cadena de suministro                                                  |
+| 2026-10-19 | Cobro por la plataforma + Payouts al proveedor queda solo como posibilidad, no se implementa                                                                                                | Complica reembolsos y conciliación; contradice el pago directo al proveedor del brief |
+| 2026-10-19 | PayPal Agent Toolkit / AI-Toolkit no se usa para el vault: cubre órdenes, reembolsos, facturas, etc., sin vault ni multiparty                                                               | Revisado; sus guías de webhooks y reembolsos sirven de referencia                     |
+| 2026-10-19 | Esquema inicial: 28 tablas; dinero en `numeric` (totales 2 decimales, precios unitarios 4); concesiones, autorizaciones y cotizaciones versionadas; un pedido por cotización (índice único) | Brief §10, §11                                                                        |
+| 2026-10-19 | Lógica de negocio en `@deal/core` (TS puro, sin decoradores), compartida por API y MCP                                                                                                      | Un solo motor; tests sin Nest                                                         |
+| 2026-10-19 | Conexión financiera con alcance `platform` o `merchant:<id>`                                                                                                                                | Soporta vault de plataforma (si PayPal lo habilita) o por proveedor                   |
+| 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                                                                   | Cubren huecos del §3, §4 y §9 del brief                                               |
 
 ## 8. Pendientes de decisión / insumos del equipo
 
-| #   | Tema                                                                                          | Propuesta por defecto                 | Estado             |
-| --- | --------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
-| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores       | —                                     | ⛔ Bloquea Etapa 1 |
-| P2  | Fecha límite del hackatón                                                                     | —                                     | Abierto            |
-| P3  | Cliente MCP de referencia                                                                     | Claude Code / Claude Desktop vía HTTP | Abierto            |
-| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                           | nginx + Let's Encrypt                 | Abierto            |
-| P5  | Licencia                                                                                      | MIT                                   | Asumido (MIT)      |
-| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox    | Solicitar a PayPal                    | ⛔ Abierto         |
-| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal` | Actualizar en el dashboard            | Abierto            |
-| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                        | Hacer público antes de la entrega     | Abierto            |
+| #   | Tema                                                                                                                                                                                   | Propuesta por defecto                 | Estado                    |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
+| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1        |
+| P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto                   |
+| P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | Abierto                   |
+| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto                   |
+| P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)             |
+| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ⛔ Abierto                |
+| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto                   |
+| P9  | Pago autónomo: autonomía comercial completa; cobro automático implementado tras bandera y desactivado hasta habilitación PayPal; sin ella, el pedido queda pendiente de pago del dueño | Propuesta de Claude                   | Pendiente de confirmación |
+| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                                                                                                                 | Hacer público antes de la entrega     | Abierto                   |
 
 ## 9. Riesgos
 
@@ -294,5 +298,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 - **2026-10-19** — Brief leído y analizado. Plan vivo creado.
 - **2026-10-19** — Etapa 0 completa: monorepo, servidor con `/api/health`, portal, migraciones al arrancar, CI (Codex, revisado). Contrato `pnpm install → build → start` verificado en local.
-- **2026-10-19** — Consentimiento aprobado por el comprador sandbox; token persistente, cobro sin checkout y reembolso ✅. Falta probar pago a proveedores distintos de la plataforma (se necesitan 2 cuentas business adicionales).
-- **2026-10-19** — Etapa 1 iniciada: Partner Referrals ✅, vault PayPal a nivel comerciante ✅, a nivel plataforma ❌ (`NOT_ENABLED_TO_VAULT_PAYMENT_SOURCE`). Faltan cuentas sandbox para aprobar consentimiento y probar cobro a proveedores.
+- **2026-10-19** — Etapa 1 iniciada: Partner Referrals ✅, vault PayPal a nivel comerciante ✅, a nivel plataforma ❌ (`NOT_ENABLED_TO_VAULT_PAYMENT_SOURCE`).
+- **2026-10-19** — Consentimiento aprobado por el comprador sandbox; token persistente, cobro sin checkout y reembolso ✅.
+- **2026-10-19** — Proveedores A y B conectados. El token de la plataforma no sirve para pagarles (`BILLING_AGREEMENT_NOT_FOUND`); el vault en su nombre y a nivel plataforma requieren habilitación de PayPal. Solicitud enviada. Detalle en `docs/paypal-spike.md`.
+- **2026-10-19** — Etapa 2 completa: esquema de 28 tablas con migración inicial, `@deal/core` con módulo de dinero, catálogo de errores accionables, tests de integración sobre Postgres de test.

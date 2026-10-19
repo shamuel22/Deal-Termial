@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
     }
   },
   "files": [
@@ -15,7 +19,7 @@
   ],
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "generate": "drizzle-kit generate",
     "migrate": "node --env-file-if-exists=../../.env dist/migrate-cli.js"
   },
