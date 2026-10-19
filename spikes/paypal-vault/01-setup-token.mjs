@@ -1,5 +1,8 @@
-// Paso 1.3a: crea un setup token de PayPal wallet a nivel plataforma y muestra el enlace de aprobación.
+// Paso 1.3a: crea un setup token de PayPal wallet y muestra el enlace de aprobación.
+// Uso: node --env-file=.env spikes/paypal-vault/01-setup-token.mjs [PLATFORM|MERCHANT]
 import { pp, show } from './pp.mjs';
+
+const usageType = process.argv[2] ?? 'PLATFORM';
 
 const r = await pp('POST', '/v3/vault/setup-tokens', {
   payment_source: {
@@ -7,7 +10,7 @@ const r = await pp('POST', '/v3/vault/setup-tokens', {
       description: 'Deal Terminal: compras autorizadas por tu agente',
       permit_multiple_payment_tokens: false,
       usage_pattern: 'IMMEDIATE',
-      usage_type: 'PLATFORM',
+      usage_type: usageType,
       customer_type: 'CONSUMER',
       experience_context: {
         brand_name: 'Deal Terminal',

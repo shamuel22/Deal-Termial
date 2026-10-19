@@ -94,10 +94,10 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | --- | --------------------------------------------------------------------------------------------------------------- | ----- | ------ |
 | 1.1 | Investigar y fijar endpoints vigentes (Partner Referrals, Vault v3 setup/payment tokens, Orders v2 con `payee`) | C     | ✅     |
 | 1.2 | Onboarding sandbox de proveedor A y B; comprobar `payments_receivable` y `primary_email_confirmed`              | C     | 🔄     |
-| 1.3 | Flujo de consentimiento comprador (setup token → aprobación → payment token)                                    | C     | ⛔     |
-| 1.4 | Pago posterior a proveedor A con el token, sin checkout                                                         | C     | ⬜     |
+| 1.3 | Flujo de consentimiento comprador (setup token → aprobación → payment token)                                    | C     | ✅     |
+| 1.4 | Pago posterior a proveedor A con el token, sin checkout                                                         | C     | 🔄     |
 | 1.5 | Pago con el mismo token a proveedor B (alcance a nivel plataforma)                                              | C     | ⬜     |
-| 1.6 | Reembolso sandbox y recepción/verificación de webhook                                                           | C     | ⬜     |
+| 1.6 | Reembolso sandbox y recepción/verificación de webhook                                                           | C     | 🔄     |
 | 1.7 | Documento de hallazgos y decisión de diseño final de pagos                                                      | C     | ⬜     |
 
 ### Etapa 2 — Modelo de datos y núcleo
@@ -269,7 +269,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tema                                                                                          | Propuesta por defecto                 | Estado             |
 | --- | --------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
-| P1  | Credenciales PayPal sandbox: app REST ✅; faltan cuenta compradora y 2 proveedoras            | —                                     | ⛔ Bloquea Etapa 1 |
+| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores       | —                                     | ⛔ Bloquea Etapa 1 |
 | P2  | Fecha límite del hackatón                                                                     | —                                     | Abierto            |
 | P3  | Cliente MCP de referencia                                                                     | Claude Code / Claude Desktop vía HTTP | Abierto            |
 | P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                           | nginx + Let's Encrypt                 | Abierto            |
@@ -292,4 +292,5 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 - **2026-10-19** — Brief leído y analizado. Plan vivo creado.
 - **2026-10-19** — Etapa 0 completa: monorepo, servidor con `/api/health`, portal, migraciones al arrancar, CI (Codex, revisado). Contrato `pnpm install → build → start` verificado en local.
+- **2026-10-19** — Consentimiento aprobado por el comprador sandbox; token persistente, cobro sin checkout y reembolso ✅. Falta probar pago a proveedores distintos de la plataforma (se necesitan 2 cuentas business adicionales).
 - **2026-10-19** — Etapa 1 iniciada: Partner Referrals ✅, vault PayPal a nivel comerciante ✅, a nivel plataforma ❌ (`NOT_ENABLED_TO_VAULT_PAYMENT_SOURCE`). Faltan cuentas sandbox para aprobar consentimiento y probar cobro a proveedores.

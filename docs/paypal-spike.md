@@ -28,6 +28,24 @@ Documento de hallazgos. Scripts en [`spikes/paypal-vault/`](../spikes/paypal-vau
 | Setup token de tarjeta                              | ✅ `201 APPROVED`                                                                                                                 |
 | Partner Referrals (enlace de conexión de proveedor) | ✅ `201` con `action_url`                                                                                                         |
 
+### Recorrido con cuenta compradora (2026-10-19)
+
+| Paso                                                        | Resultado                                                                                            |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Reintento `usage_type: PLATFORM`                            | ❌ mismo error (debug `f2891912d6dde`). Solicitud enviada a PayPal                                   |
+| Setup token `MERCHANT` aprobado por el comprador en sandbox | ✅ `APPROVED`; PayPal redirige a `return_url` con `approval_token_id`                                |
+| Conversión a payment token                                  | ✅ `201`, token persistente con `customer.id` y `payer_id`                                           |
+| Orden con `vault_id`, **sin checkout**                      | ✅ `COMPLETED` (orden `4JU408499W196332S`, captura `6UF50818X4681181H`)                              |
+| Reembolso de la captura                                     | ✅ `COMPLETED` (`6F687870T4466520B`)                                                                 |
+| Pago a **otro** comerciante con el mismo token              | ⏳ Pendiente: la cuenta business disponible es la dueña de la app (`EY95RKLNXCGUW`), no un proveedor |
+
+Conclusiones parciales:
+
+- El consentimiento único y el cobro posterior sin checkout funcionan en sandbox.
+- El setup token aprobado se verifica (`GET /v3/vault/setup-tokens/{id}` → `APPROVED`) antes de convertirlo; se cumple
+  el requisito del brief de no tratarlo como token de pago.
+- Queda por validar el punto crítico: pagar a proveedores distintos de la plataforma con el token `MERCHANT`.
+
 ### Interpretación
 
 - La app puede guardar medios de pago PayPal **a nivel comerciante** (el token pertenece a la cuenta de la plataforma),
