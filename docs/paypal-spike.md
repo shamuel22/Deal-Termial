@@ -57,6 +57,20 @@ Cuentas: plataforma `EY95RKLNXCGUW` (dueña de la app), proveedor A `4Z22N6RZVZK
 | Setup token en nombre de A (`PayPal-Auth-Assertion`)                                                       | ❌ `403 NOT_AUTHORIZED`: A no concedió permisos de vault                      |
 | Partner Referrals con `VAULT`, `BILLING_AGREEMENT`, `ADVANCED_VAULTING`, `PAYPAL_WALLET_VAULTING_ADVANCED` | ✅ `201`; pendiente que A y B completen la reconexión                         |
 
+Reconexión con permisos de vault (A y B): `oauth_scopes` 8, incluye `vault/payment-tokens/readwrite`,
+`billing-agreements`; capacidad `PAYPAL_WALLET_VAULTING_ADVANCED` **ACTIVE**.
+
+| Prueba                                                                   | Resultado                                                                                  |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Orden simple en nombre de A (`PayPal-Auth-Assertion`)                    | ✅ `201 CREATED` (la cabecera es válida)                                                   |
+| Setup token en nombre de A (PayPal, tarjeta, con/sin BN code)            | ❌ `403 NOT_AUTHORIZED` (debug `f871540fbb82e`, `f510437979d00`)                           |
+| Guardado durante compra en nombre de A                                   | ❌ `422 NOT_ENABLED_TO_VAULT_PAYMENT_SOURCE` (debug `f3368345d6add`)                       |
+| Guardado durante compra, plataforma como titular `MERCHANT`, `payee` = A | ✅ `PAYER_ACTION_REQUIRED` (orden `75L64192JX774693M`); pendiente aprobación del comprador |
+
+Interpretación: la cuenta partner no está habilitada para guardar medios de pago **en nombre** de comerciantes ni a
+nivel plataforma; ambas son habilitaciones de PayPal sobre el partner. Queda por comprobar si un acuerdo creado
+durante una compra con `payee` = A permite cobros posteriores a A (y a B).
+
 **Conclusión:** un acuerdo de pago guardado a nivel comerciante solo sirve para pagar al comerciante que lo creó.
 Hay dos caminos que cumplen el brief (pago dirigido al proveedor, sin checkout por compra):
 
