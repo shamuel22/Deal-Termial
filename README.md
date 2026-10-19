@@ -21,11 +21,13 @@ pnpm start
 
 `pnpm start` aplica las migraciones pendientes y levanta un único proceso que sirve:
 
-| Ruta          | Contenido                                 |
-| ------------- | ----------------------------------------- |
-| `/`           | Portal de configuración y revisión        |
-| `/api`        | API REST (`/api/docs` para OpenAPI)       |
-| `/api/health` | Estado del servicio y de la base de datos |
+| Ruta               | Contenido                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `/`                | Portal de configuración y revisión                                                     |
+| `/api`             | API REST (`/api/docs` para OpenAPI)                                                    |
+| `/api/health`      | Estado del servicio y de la base de datos                                              |
+| `/mcp`             | Servidor MCP para agentes ([guía](./docs/mcp.md), [herramientas](./docs/mcp-tools.md)) |
+| `/webhooks/paypal` | Webhooks de PayPal (firma verificada)                                                  |
 
 ## Desarrollo
 

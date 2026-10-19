@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapas 0–8 ✅ (pago delegado multi-vendedor no disponible en PayPal; ver P9) · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0–9 ✅ (pago delegado multi-vendedor no disponible en PayPal; ver P9) · **Última actualización:** 2026-10-19
 
 ---
 
@@ -194,11 +194,11 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                        | Quién | Estado |
 | --- | ---------------------------------------------------------------------------- | ----- | ------ |
-| 9.1 | Montaje MCP Streamable HTTP en Nest + autenticación por credencial de agente | C     | ⬜     |
-| 9.2 | Herramientas del comprador (§9) sobre servicios `core`                       | C     | ⬜     |
-| 9.3 | Herramientas del proveedor                                                   | C     | ⬜     |
-| 9.4 | Descripciones de herramientas orientadas a modelos + errores accionables     | C     | ⬜     |
-| 9.5 | Test automatizado: ninguna respuesta MCP contiene tokens/secretos            | C     | ⬜     |
+| 9.1 | Montaje MCP Streamable HTTP en Nest + autenticación por credencial de agente | C     | ✅     |
+| 9.2 | Herramientas del comprador (§9) sobre servicios `core`                       | C     | ✅     |
+| 9.3 | Herramientas del proveedor                                                   | C     | ✅     |
+| 9.4 | Descripciones de herramientas orientadas a modelos + errores accionables     | C     | ✅     |
+| 9.5 | Test automatizado: ninguna respuesta MCP contiene tokens/secretos            | C     | ✅     |
 
 ### Etapa 10 — Portal y consola
 
@@ -230,7 +230,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | #    | Tarea                                                                     | Quién | Estado |
 | ---- | ------------------------------------------------------------------------- | ----- | ------ |
 | 12.1 | README final, variables de entorno, guía de despliegue VPS                | C     | ⬜     |
-| 12.2 | Catálogo de herramientas MCP y guía de conexión del cliente               | X     | ⬜     |
+| 12.2 | Catálogo de herramientas MCP y guía de conexión del cliente               | X     | ✅     |
 | 12.3 | Especificación comercial y de autorizaciones v0.2                         | C     | ⬜     |
 | 12.4 | Instrucciones para jueces y cuentas sandbox                               | C     | ⬜     |
 | 12.5 | Guion del video (< 3 min) y explicación del papel de los modelos y PayPal | C     | ⬜     |
@@ -288,21 +288,24 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 2026-10-19 | Bloqueos `FOR NO KEY UPDATE` en toda la app                                                                                                                                                                                                                          | `FOR UPDATE` chocaba con las comprobaciones de FK (interbloqueo detectado por test)   |
 | 2026-10-19 | Planificador propio con `pg_try_advisory_lock` en lugar de pg-boss                                                                                                                                                                                                   | Un proceso; tareas idempotentes; sin dependencia extra                                |
 | 2026-10-19 | Superar el presupuesto no descarta una oferta en la búsqueda: se informa para negociar                                                                                                                                                                               | Detectado en el recorrido real                                                        |
+| 2026-10-19 | MCP Streamable HTTP sin estado en `/mcp`, autenticado con la credencial del agente; todas las herramientas visibles y permisos aplicados en core                                                                                                                     | Brief §6/§9: el agente ve qué existe y recibe errores accionables al exceder su nivel |
+| 2026-10-19 | Esquemas MCP simples (sin transformaciones) y validación estricta en core; saneado final de claves secretas                                                                                                                                                          | Compatibilidad con cualquier cliente y defensa en profundidad                         |
+| 2026-10-19 | Catálogo de herramientas generado desde el código (`pnpm docs:mcp`)                                                                                                                                                                                                  | Documentación siempre sincronizada                                                    |
 | 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                                                                                                                                            | Cubren huecos del §3, §4 y §9 del brief                                               |
 
 ## 8. Pendientes de decisión / insumos del equipo
 
-| #   | Tema                                                                                                                                                                                   | Propuesta por defecto                 | Estado                                |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------- |
-| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1                    |
-| P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto                               |
-| P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | Abierto                               |
-| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto                               |
-| P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)                         |
-| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ❌ PayPal no lo habilita (2026-10-19) |
-| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto                               |
-| P9  | Pago autónomo: autonomía comercial completa; cobro automático implementado tras bandera y desactivado hasta habilitación PayPal; sin ella, el pedido queda pendiente de pago del dueño | Propuesta de Claude                   | ✅ Confirmado                         |
-| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                                                                                                                 | Hacer público antes de la entrega     | Abierto                               |
+| #   | Tema                                                                                                                                                                                   | Propuesta por defecto                 | Estado                                                                 |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------- |
+| P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1                                                     |
+| P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto                                                                |
+| P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | ✅ Streamable HTTP + Bearer; probado con SDK oficial y Codex (GPT-6.1) |
+| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto                                                                |
+| P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)                                                          |
+| P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ❌ PayPal no lo habilita (2026-10-19)                                  |
+| P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto                                                                |
+| P9  | Pago autónomo: autonomía comercial completa; cobro automático implementado tras bandera y desactivado hasta habilitación PayPal; sin ella, el pedido queda pendiente de pago del dueño | Propuesta de Claude                   | ✅ Confirmado                                                          |
+| P6  | Visibilidad del repo (hoy privado; el brief exige público al entregar)                                                                                                                 | Hacer público antes de la entrega     | Abierto                                                                |
 
 ## 9. Riesgos
 
@@ -329,3 +332,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — Datos de demostración (`pnpm seed:demo`, Codex, revisado): comprador, dos proveedores sandbox, 6 ofertas y autorizaciones del caso de uso. 146 tests.
 - **2026-10-19** — Etapa 7 completa: accept_quote con verificación completa y reservas atómicas, aceptación manual del dueño, idempotencia, cancelación, vencimiento de reservas, get_order/listado con aislamiento. Corregido un posible interbloqueo detectado en revisión propia.
 - **2026-10-19** — PayPal confirma que no habilita vault multi-vendedor. Etapa 8 completa: cliente PayPal, checkout manual, execute_purchase (pendiente del dueño sin autorización financiera), reconciliación, webhooks verificados, reembolsos, conexión de proveedores, planificador. Validado en sandbox real: pago de 76.86 a EcoPack y reembolso parcial en su nombre. 185 tests.
+- **2026-10-19** — Etapa 9 completa: servidor MCP con 24 herramientas, guía de conexión y catálogo generado. Criterio 1 validado con un modelo real: Codex (GPT-6.1) ejecutó el encargo por MCP sin acceso al código (`docs/evidence/mcp-real-agent.md`). 191 tests.

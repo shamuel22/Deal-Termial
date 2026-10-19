@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @deal/db run generate",
-    "db:migrate": "pnpm --filter @deal/db run migrate"
+    "db:migrate": "pnpm --filter @deal/db run migrate",
+    "docs:mcp": "node apps/server/dist/mcp/catalog-cli.js > docs/mcp-tools.md && prettier --write docs/mcp-tools.md"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
