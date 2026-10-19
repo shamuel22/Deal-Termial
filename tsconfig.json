@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/shared" },
     { "path": "packages/db" },
+    { "path": "packages/paypal" },
     { "path": "packages/core" },
     { "path": "apps/server" }
   ]

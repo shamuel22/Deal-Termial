@@ -167,7 +167,7 @@ async function loadRow(db: Executor, orgId: string, authorizationId: string, loc
       ),
     );
   const [row] = lock
-    ? await query.for('update', { of: schema.purchaseAuthorizations })
+    ? await query.for('no key update', { of: schema.purchaseAuthorizations })
     : await query;
   if (!row) throw new DomainError('NOT_FOUND', 'Autorización no encontrada');
   return row;

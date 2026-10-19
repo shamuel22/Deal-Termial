@@ -16,6 +16,14 @@ import {
 import { CatalogController, AgentCatalogController } from './catalog/catalog.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { HealthController } from './health/health.controller.js';
+import {
+  AgentPaymentsController,
+  PayPalReturnController,
+  PayPalWebhookController,
+  PortalPaymentsController,
+} from './payments/payments.controller.js';
+import { PaymentsModule } from './payments/payments.module.js';
+import { SchedulerService } from './payments/scheduler.service.js';
 import { AgentOrdersController, PortalOrdersController } from './orders/orders.controller.js';
 import { AgentMarketController, PortalMarketController } from './market/market.controller.js';
 import {
@@ -36,7 +44,11 @@ export const portalDist = join(
 @Module({})
 export class AppModule {
   static forRoot(config: AppConfig): DynamicModule {
-    const imports: DynamicModule['imports'] = [ConfigModule.forRoot(config), DatabaseModule];
+    const imports: DynamicModule['imports'] = [
+      ConfigModule.forRoot(config),
+      DatabaseModule,
+      PaymentsModule,
+    ];
     if (existsSync(portalDist)) {
       imports.push(
         ServeStaticModule.forRoot({
@@ -61,12 +73,17 @@ export class AppModule {
         PortalNegotiationController,
         AgentOrdersController,
         PortalOrdersController,
+        PortalPaymentsController,
+        AgentPaymentsController,
+        PayPalReturnController,
+        PayPalWebhookController,
         CatalogController,
         AgentCatalogController,
       ],
       providers: [
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_FILTER, useClass: DomainExceptionFilter },
+        SchedulerService,
       ],
     };
   }

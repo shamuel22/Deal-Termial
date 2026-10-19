@@ -60,6 +60,9 @@ importers:
       '@deal/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@deal/paypal':
+        specifier: workspace:*
+        version: link:../../packages/paypal
       '@deal/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -125,6 +128,8 @@ importers:
       drizzle-kit:
         specifier: 0.31.11
         version: 0.31.11
+
+  packages/paypal: {}
 
   packages/shared:
     dependencies:

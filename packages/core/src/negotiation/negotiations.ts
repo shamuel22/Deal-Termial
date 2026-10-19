@@ -120,7 +120,7 @@ async function loadOfferContext(
   lock: boolean,
 ): Promise<OfferContext> {
   const query = tx.select().from(schema.offers).where(eq(schema.offers.id, offerId));
-  const [offer] = lock ? await query.for('update') : await query;
+  const [offer] = lock ? await query.for('no key update') : await query;
   if (!offer) throw new DomainError('NOT_FOUND', 'Oferta no encontrada');
   const [[product], tiers, [rules], [reserved]] = await Promise.all([
     tx.select().from(schema.products).where(eq(schema.products.id, offer.productId)),
@@ -198,7 +198,7 @@ async function loadBuyerNegotiation(
         eq(schema.negotiations.buyerOrgId, actor.orgId),
       ),
     );
-  const [row] = lock ? await query.for('update', { of: schema.negotiations }) : await query;
+  const [row] = lock ? await query.for('no key update', { of: schema.negotiations }) : await query;
   if (!row || (actor.kind === 'agent' && row.request.agentId !== actor.agentId)) {
     throw new DomainError('NOT_FOUND', 'Negociación no encontrada');
   }
@@ -226,7 +226,7 @@ async function loadSupplierNegotiation(
         eq(schema.negotiations.supplierOrgId, actor.orgId),
       ),
     );
-  const [row] = lock ? await query.for('update', { of: schema.negotiations }) : await query;
+  const [row] = lock ? await query.for('no key update', { of: schema.negotiations }) : await query;
   if (!row) throw new DomainError('NOT_FOUND', 'Negociación no encontrada');
   return row;
 }

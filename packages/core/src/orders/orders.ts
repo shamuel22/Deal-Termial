@@ -145,7 +145,7 @@ async function lockForAcceptance(tx: Tx, actor: Actor, negotiationId: string, qu
     .select({ id: schema.organizations.id })
     .from(schema.organizations)
     .where(eq(schema.organizations.id, actor.orgId))
-    .for('update');
+    .for('no key update');
 
   const [row] = await tx
     .select({ negotiation: schema.negotiations, request: schema.purchaseRequests })
@@ -168,18 +168,18 @@ async function lockForAcceptance(tx: Tx, actor: Actor, negotiationId: string, qu
       .select({ id: schema.purchaseAuthorizations.id })
       .from(schema.purchaseAuthorizations)
       .where(eq(schema.purchaseAuthorizations.id, row.request.authorizationId))
-      .for('update');
+      .for('no key update');
   }
   const [offer] = await tx
     .select()
     .from(schema.offers)
     .where(eq(schema.offers.id, row.negotiation.offerId))
-    .for('update');
+    .for('no key update');
   const [negotiation] = await tx
     .select()
     .from(schema.negotiations)
     .where(eq(schema.negotiations.id, negotiationId))
-    .for('update');
+    .for('no key update');
   const [quote] = await tx
     .select()
     .from(schema.quotes)
@@ -517,7 +517,7 @@ async function loadOrder(db: Executor, actor: Actor, orderId: string, lock = fal
   if (!z.uuid().safeParse(orderId).success)
     throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
   const query = db.select().from(schema.orders).where(eq(schema.orders.id, orderId));
-  const [order] = lock ? await query.for('update') : await query;
+  const [order] = lock ? await query.for('no key update') : await query;
   if (!order) throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
   const side =
     order.buyerOrgId === actor.orgId
@@ -665,12 +665,8 @@ async function hasPaymentInFlight(tx: Executor, orderId: string): Promise<boolea
     .where(
       and(
         eq(schema.paymentAttempts.orderId, orderId),
-        inArray(schema.paymentAttempts.status, [
-          'processing',
-          'requires_action',
-          'unknown',
-          'completed',
-        ]),
+        // Un checkout pendiente de aprobación no bloquea: solo se captura si el pedido sigue pagable.
+        inArray(schema.paymentAttempts.status, ['created', 'processing', 'unknown', 'completed']),
       ),
     )
     .limit(1);
@@ -767,7 +763,7 @@ export async function expireUnpaidOrders(db: Executor, now: Date): Promise<numbe
         .select()
         .from(schema.orders)
         .where(eq(schema.orders.id, orderId))
-        .for('update');
+        .for('no key update');
       if (!order || !['pending_review', 'pending_payment'].includes(order.status)) return false;
       if (await hasPaymentInFlight(tx, orderId)) return false;
       await tx

@@ -26,6 +26,8 @@ beforeAll(async () => {
       PORT: String(port),
       HOST: '127.0.0.1',
       DATABASE_URL: process.env.TEST_DATABASE_URL,
+      PAYPAL_PARTNER_MERCHANT_ID: process.env.PAYPAL_PARTNER_MERCHANT_ID ?? 'ci',
+      SCHEDULER_INTERVAL_MS: '0',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -435,6 +437,20 @@ describe('API de identidad (e2e)', () => {
     expect((supplierList.body as unknown as Array<{ id: string }>).map((n) => n.id)).toContain(
       negotiation.body.id,
     );
+  });
+
+  it('webhook de PayPal: fuera de /api y rechaza eventos sin firma válida', async () => {
+    const res = await fetch(`http://127.0.0.1:${port}/webhooks/paypal`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        id: 'WH-FALSO',
+        event_type: 'PAYMENT.CAPTURE.COMPLETED',
+        resource: {},
+      }),
+    });
+    expect(res.status).toBe(401);
+    expect((await fetch(`${base}/webhooks/paypal`, { method: 'POST' })).status).toBe(404);
   });
 
   it('publica OpenAPI con las rutas y los esquemas de entrada', async () => {

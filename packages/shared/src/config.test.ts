@@ -7,6 +7,7 @@ const validEnv = {
   PAYPAL_CLIENT_ID: 'id',
   PAYPAL_CLIENT_SECRET: 'secret',
   PAYPAL_WEBHOOK_ID: 'wh',
+  PAYPAL_PARTNER_MERCHANT_ID: 'partner',
 };
 
 describe('loadConfig', () => {

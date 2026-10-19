@@ -155,7 +155,7 @@ async function findOwnOffer(
   db: Executor,
   orgId: string,
   offerId: string,
-  lock: 'update' | 'share',
+  lock: 'no key update' | 'share',
 ) {
   assertUuid(offerId, 'Oferta no encontrada');
   const [row] = await db
@@ -351,7 +351,7 @@ export async function updateOffer(
   requireSellerScope(actor, 'publish_offers');
   const data = updateOfferInput.parse(input);
   return inTransaction(db, async (tx) => {
-    const previous = await findOwnOffer(tx, actor.orgId, offerId, 'update');
+    const previous = await findOwnOffer(tx, actor.orgId, offerId, 'no key update');
     if (previous.status === 'archived') {
       throw new DomainError('INVALID_STATE', 'Una oferta archivada no se puede modificar');
     }
@@ -389,7 +389,7 @@ export async function setOfferStatus(
   requireSellerScope(actor, 'publish_offers');
   const data = offerStatusInput.parse({ status });
   return inTransaction(db, async (tx) => {
-    const previous = await findOwnOffer(tx, actor.orgId, offerId, 'update');
+    const previous = await findOwnOffer(tx, actor.orgId, offerId, 'no key update');
     if (previous.status === data.status) return supplierView(tx, previous);
     if (previous.status === 'archived') {
       throw new DomainError('INVALID_STATE', 'Una oferta archivada no se puede modificar');

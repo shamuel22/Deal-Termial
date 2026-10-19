@@ -39,6 +39,7 @@ jobs:
       PAYPAL_CLIENT_ID: ci
       PAYPAL_CLIENT_SECRET: ci
       PAYPAL_WEBHOOK_ID: ci
+      PAYPAL_PARTNER_MERCHANT_ID: ci
 
     steps:
       - name: Checkout

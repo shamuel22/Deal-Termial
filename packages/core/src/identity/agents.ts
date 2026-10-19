@@ -191,7 +191,7 @@ export async function setAgentAccess(
       .select({ id: schema.agents.id })
       .from(schema.agents)
       .where(eq(schema.agents.id, agent.id))
-      .for('update');
+      .for('no key update');
     const previous = await currentGrant(tx, agent.id);
     if (!previous) throw new Error(`Agente ${agent.id} sin concesión vigente`);
     await tx

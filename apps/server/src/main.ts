@@ -20,8 +20,12 @@ async function bootstrap(): Promise<void> {
   const migration = await runMigrations(config.DATABASE_URL);
   logger.log(migration.applied ? 'Migraciones al día' : 'Sin migraciones que aplicar');
 
-  const app = await NestFactory.create(AppModule.forRoot(config), { bufferLogs: false });
-  app.setGlobalPrefix('api');
+  // rawBody: la firma de los webhooks de PayPal se verifica sobre el cuerpo original.
+  const app = await NestFactory.create(AppModule.forRoot(config), {
+    bufferLogs: false,
+    rawBody: true,
+  });
+  app.setGlobalPrefix('api', { exclude: ['webhooks/{*path}'] });
   app.enableShutdownHooks();
 
   const openapi = new DocumentBuilder()

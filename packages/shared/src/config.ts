@@ -14,6 +14,11 @@ export const configSchema = z.object({
   PAYPAL_CLIENT_ID: z.string().min(1),
   PAYPAL_CLIENT_SECRET: z.string().min(1),
   PAYPAL_WEBHOOK_ID: z.string().min(1),
+  /** Merchant ID de la cuenta partner (plataforma) en PayPal. */
+  PAYPAL_PARTNER_MERCHANT_ID: z.string().min(1),
+  PAYPAL_BN_CODE: z.string().min(1).optional(),
+  /** Intervalo de tareas periódicas (vencimientos, reconciliación). 0 = desactivadas. */
+  SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

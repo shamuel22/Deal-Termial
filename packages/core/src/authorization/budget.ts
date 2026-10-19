@@ -77,7 +77,7 @@ export async function reserveBudget(tx: Tx, args: ReserveArgs): Promise<ReserveR
     .select({ id: schema.organizations.id, monthlyLimit: schema.organizations.monthlySpendLimit })
     .from(schema.organizations)
     .where(eq(schema.organizations.id, args.orgId))
-    .for('update');
+    .for('no key update');
   if (!org) throw new DomainError('NOT_FOUND', 'Organización no encontrada');
   if (args.authorizationId) {
     await tx
@@ -89,7 +89,7 @@ export async function reserveBudget(tx: Tx, args: ReserveArgs): Promise<ReserveR
           eq(schema.purchaseAuthorizations.orgId, args.orgId),
         ),
       )
-      .for('update');
+      .for('no key update');
   }
 
   // 2. Idempotencia: un reintento para el mismo pedido devuelve la reserva existente.
@@ -190,7 +190,7 @@ export async function consumeBudget(tx: Tx, orderId: string, now: Date): Promise
     .select()
     .from(schema.budgetReservations)
     .where(eq(schema.budgetReservations.orderId, orderId))
-    .for('update');
+    .for('no key update');
   if (!reservation) throw new Error(`Pedido ${orderId} sin reserva de presupuesto`);
   if (reservation.status === 'consumed') return;
   // Un pago confirmado después de liberar la reserva se registra igualmente como gasto.
