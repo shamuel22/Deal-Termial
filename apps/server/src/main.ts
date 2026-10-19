@@ -25,7 +25,7 @@ async function bootstrap(): Promise<void> {
     bufferLogs: false,
     rawBody: true,
   });
-  app.setGlobalPrefix('api', { exclude: ['webhooks/{*path}'] });
+  app.setGlobalPrefix('api', { exclude: ['webhooks/{*path}', 'mcp'] });
   app.enableShutdownHooks();
 
   const openapi = new DocumentBuilder()

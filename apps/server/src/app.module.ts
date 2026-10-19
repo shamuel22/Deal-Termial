@@ -16,6 +16,7 @@ import {
 import { CatalogController, AgentCatalogController } from './catalog/catalog.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { HealthController } from './health/health.controller.js';
+import { McpController } from './mcp/mcp.controller.js';
 import {
   AgentPaymentsController,
   PayPalReturnController,
@@ -77,6 +78,7 @@ export class AppModule {
         AgentPaymentsController,
         PayPalReturnController,
         PayPalWebhookController,
+        McpController,
         CatalogController,
         AgentCatalogController,
       ],
