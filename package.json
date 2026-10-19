@@ -10,6 +10,7 @@
   "scripts": {
     "build": "pnpm -r --workspace-concurrency=1 run build",
     "start": "node apps/server/dist/main.js",
+    "seed:demo": "node apps/server/dist/seed/cli.js",
     "test": "pnpm -r --workspace-concurrency=1 run test",
     "typecheck": "tsc -b && tsc -p tsconfig.tests.json && pnpm --filter @deal/portal run typecheck",
     "lint": "eslint .",

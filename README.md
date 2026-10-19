@@ -38,6 +38,25 @@ pnpm test        # tests (usa TEST_DATABASE_URL)
 Estructura: `apps/server` (NestJS), `apps/portal` (React + Vite), `packages/shared` (configuración y esquemas),
 `packages/db` (Drizzle y migraciones).
 
+## Datos de demostración
+
+Con `DATABASE_URL` configurada (también se carga el `.env` de la raíz si existe):
+
+```bash
+pnpm build
+pnpm seed:demo
+```
+
+Aplica migraciones y crea en una sola transacción tres empresas, cinco agentes con credenciales,
+seis ofertas activas y dos autorizaciones de US$80. La salida muestra cuentas, contraseña, API keys
+e IDs de autorización; guarda las claves al ejecutarlo. Si ya existe el dueño comprador, termina
+con código 1 sin duplicar datos.
+
+Puedes configurar `DEMO_PASSWORD` (por defecto `DealTerminal-demo-2026`),
+`DEMO_SELLER_A_MERCHANT_ID` (por defecto `4Z22N6RZVZKAC`) y
+`DEMO_SELLER_B_MERCHANT_ID` (por defecto `VW92JVJ8JBR7Q`). Consulta las
+[cuentas, catálogo y condiciones de la demo](./docs/demo-data.md).
+
 ## Integración continua
 
 GitHub Actions ejecuta el CI en cada push a `main` y en cada pull request hacia `main`,
