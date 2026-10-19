@@ -8,3 +8,4 @@ coverage/
 .DS_Store
 credencialsPayPal.md
 *.secret.md
+*.tsbuildinfo
