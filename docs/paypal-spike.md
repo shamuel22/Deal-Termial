@@ -46,6 +46,27 @@ Conclusiones parciales:
   el requisito del brief de no tratarlo como token de pago.
 - Queda por validar el punto crítico: pagar a proveedores distintos de la plataforma con el token `MERCHANT`.
 
+### Pago a proveedores distintos de la plataforma (2026-10-19)
+
+Cuentas: plataforma `EY95RKLNXCGUW` (dueña de la app), proveedor A `4Z22N6RZVZKAC`, proveedor B `VW92JVJ8JBR7Q`.
+
+| Prueba                                                                                                     | Resultado                                                                     |
+| ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Conexión de A y B por Partner Referrals (`PAYMENT`, `REFUND`)                                              | ✅ `payments_receivable: true`, `primary_email_confirmed: true`               |
+| Orden con token `MERCHANT` de la plataforma y `payee` = A / B                                              | ❌ `422 BILLING_AGREEMENT_NOT_FOUND` (debug `f875749a668a0`, `f407519de6005`) |
+| Setup token en nombre de A (`PayPal-Auth-Assertion`)                                                       | ❌ `403 NOT_AUTHORIZED`: A no concedió permisos de vault                      |
+| Partner Referrals con `VAULT`, `BILLING_AGREEMENT`, `ADVANCED_VAULTING`, `PAYPAL_WALLET_VAULTING_ADVANCED` | ✅ `201`; pendiente que A y B completen la reconexión                         |
+
+**Conclusión:** un acuerdo de pago guardado a nivel comerciante solo sirve para pagar al comerciante que lo creó.
+Hay dos caminos que cumplen el brief (pago dirigido al proveedor, sin checkout por compra):
+
+1. **Vault a nivel plataforma** (preferido): un consentimiento sirve para todos los proveedores. Requiere habilitación de PayPal (solicitada).
+2. **Vault por proveedor** (alternativa prevista en §8): la plataforma, en nombre de cada proveedor conectado, obtiene
+   un consentimiento del comprador una vez por proveedor; las compras siguientes a ese proveedor no requieren checkout.
+
+El diseño del producto soportará ambos: la conexión financiera del comprador guarda tokens con su alcance
+(`platform` o `merchant:<id>`), y la autorización financiera de una compra exige un token cuyo alcance cubra al proveedor.
+
 ### Interpretación
 
 - La app puede guardar medios de pago PayPal **a nivel comerciante** (el token pertenece a la cuenta de la plataforma),

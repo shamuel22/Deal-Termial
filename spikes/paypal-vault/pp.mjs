@@ -49,3 +49,9 @@ export function show(label, r) {
   console.log(`\n=== ${label} → ${r.status} (debug ${r.debugId})`);
   console.log(JSON.stringify(r.body, null, 2));
 }
+
+/** Cabecera PayPal-Auth-Assertion para actuar en nombre de un comerciante conectado (JWT sin firma). */
+export function authAssertion(merchantId) {
+  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  return `${b64({ alg: 'none' })}.${b64({ iss: PAYPAL_CLIENT_ID, payer_id: merchantId })}.`;
+}
