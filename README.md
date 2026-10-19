@@ -38,6 +38,14 @@ pnpm test        # tests (usa TEST_DATABASE_URL)
 Estructura: `apps/server` (NestJS), `apps/portal` (React + Vite), `packages/shared` (configuración y esquemas),
 `packages/db` (Drizzle y migraciones).
 
+## Integración continua
+
+GitHub Actions ejecuta el CI en cada push a `main` y en cada pull request hacia `main`,
+con Node.js 24 y pnpm 11.22.0. Instala las dependencias con el lockfile congelado y comprueba,
+en orden, formato, lint, tipos, compilación y tests de todo el monorepo.
+Los tests disponen de PostgreSQL 18 y variables de configuración de prueba, sin secretos.
+Una nueva ejecución cancela la anterior de la misma rama.
+
 ## Licencia
 
 MIT

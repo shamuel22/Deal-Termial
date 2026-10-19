@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: deal_terminal_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d deal_terminal_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      TEST_DATABASE_URL: postgresql://ci:ci@localhost:5432/deal_terminal_test
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/deal_terminal_test
+      PUBLIC_BASE_URL: http://localhost:3000
+      PAYPAL_CLIENT_ID: ci
+      PAYPAL_CLIENT_SECRET: ci
+      PAYPAL_WEBHOOK_ID: ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Comprobar formato
+        run: pnpm format:check
+
+      - name: Comprobar lint
+        run: pnpm lint
+
+      - name: Comprobar tipos
+        run: pnpm typecheck
+
+      - name: Compilar
+        run: pnpm build
+
+      - name: Ejecutar tests
+        run: pnpm test
