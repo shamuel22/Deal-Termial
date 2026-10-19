@@ -17,6 +17,10 @@ import { CatalogController, AgentCatalogController } from './catalog/catalog.con
 import { AuthGuard } from './auth/auth.guard.js';
 import { HealthController } from './health/health.controller.js';
 import { AgentMarketController, PortalMarketController } from './market/market.controller.js';
+import {
+  AgentNegotiationController,
+  PortalNegotiationController,
+} from './negotiation/negotiation.controller.js';
 import { DomainExceptionFilter } from './http/domain-exception.filter.js';
 
 /** Portal React compilado (apps/portal/dist), servido por el mismo proceso. */
@@ -52,6 +56,8 @@ export class AppModule {
         AgentAuthorizationController,
         AgentMarketController,
         PortalMarketController,
+        AgentNegotiationController,
+        PortalNegotiationController,
         CatalogController,
         AgentCatalogController,
       ],

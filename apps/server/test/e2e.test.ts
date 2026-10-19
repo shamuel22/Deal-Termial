@@ -301,6 +301,123 @@ describe('API de identidad (e2e)', () => {
     ).toBe(404);
   });
 
+  it('negociación por HTTP: el agente negocia y deja la propuesta para el dueño', async () => {
+    const supplier = await company('proveedorneg');
+    const product = await call('POST', `/orgs/${supplier.orgId}/products`, {
+      cookie: supplier.cookie,
+      body: {
+        sku: 'KR16',
+        name: 'Envase kraft 16 oz',
+        category: 'food_containers',
+        attributes: {
+          material: 'kraft_paper',
+          capacity_oz: 16,
+          hot_food_safe: true,
+          has_lid: true,
+          pack_size: 50,
+        },
+      },
+    });
+    const offer = await call('POST', `/orgs/${supplier.orgId}/offers`, {
+      cookie: supplier.cookie,
+      body: {
+        productId: product.body.id,
+        status: 'active',
+        stockAvailable: 4000,
+        minOrderQty: 50,
+        shipRegions: ['TX'],
+        leadTimeDays: 2,
+        shippingFlat: '5.00',
+        taxRate: '0.0825',
+        priceTiers: [
+          { minQty: 50, unitPrice: '0.31' },
+          { minQty: 250, unitPrice: '0.24' },
+        ],
+        negotiationRules: {
+          maxDiscount: '0.1',
+          floorUnitPrice: '0.22',
+          minQtyForDiscount: 250,
+          minLeadTimeDays: 1,
+        },
+      },
+    });
+    expect(offer.status).toBe(201);
+
+    const buyer = await company('compradorneg');
+    const agent = await call('POST', `/orgs/${buyer.orgId}/agents`, {
+      cookie: buyer.cookie,
+      body: { name: 'Negociador', access: { buyerLevel: 'negotiate' } },
+    });
+    const { apiKey } = (
+      await call('POST', `/orgs/${buyer.orgId}/agents/${agent.body.id}/credentials`, {
+        cookie: buyer.cookie,
+      })
+    ).body as { apiKey: string };
+
+    const request = await call('POST', '/agent/requests', {
+      bearer: apiKey,
+      body: {
+        criteria: {
+          category: 'food_containers',
+          requiredAttributes: { hot_food_safe: { eq: true }, has_lid: { eq: true } },
+          quantity: 300,
+          deliveryAddress: {
+            line1: '1100 E 6th St',
+            city: 'Austin',
+            state: 'TX',
+            postalCode: '78702',
+          },
+          deliverBy: '2099-01-01',
+          maxTotal: '80.00',
+        },
+      },
+    });
+    expect(request.status).toBe(201);
+
+    const matches = await call('POST', `/agent/requests/${request.body.id}/matches`, {
+      bearer: apiKey,
+      body: { options: { includeIncompatible: true } },
+    });
+    const match = (matches.body.matches as Array<{ offerId: string }>).find(
+      (m) => m.offerId === offer.body.id,
+    );
+    expect(match).toBeDefined();
+
+    const negotiation = await call('POST', '/agent/negotiations', {
+      bearer: apiKey,
+      body: { requestId: request.body.id, offerId: offer.body.id },
+    });
+    expect(negotiation.status).toBe(201);
+    expect(negotiation.body).toMatchObject({ status: 'awaiting_buyer' });
+
+    const countered = await call('POST', `/agent/negotiations/${negotiation.body.id}/counter`, {
+      bearer: apiKey,
+      body: { unitPrice: '0.20' },
+    });
+    expect(countered.status).toBe(200);
+    const last = (countered.body.quotes as Array<{ unitPrice: string; ruleTrace?: unknown }>).at(
+      -1,
+    )!;
+    expect(last.unitPrice).toBe('0.2200');
+    expect(last.ruleTrace).toBeUndefined();
+
+    const review = await call(
+      'POST',
+      `/agent/negotiations/${negotiation.body.id}/submit-for-review`,
+      { bearer: apiKey, body: {} },
+    );
+    expect(review.body).toMatchObject({ status: 'pending_owner_review' });
+
+    const supplierList = await call(
+      'GET',
+      `/orgs/${supplier.orgId}/supplier/negotiations?status=all`,
+      { cookie: supplier.cookie },
+    );
+    expect((supplierList.body as unknown as Array<{ id: string }>).map((n) => n.id)).toContain(
+      negotiation.body.id,
+    );
+  });
+
   it('publica OpenAPI con las rutas y los esquemas de entrada', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/docs-json`);
     expect(res.status).toBe(200);

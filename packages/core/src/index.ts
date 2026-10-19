@@ -15,3 +15,6 @@ export * from './catalog/pricing.js';
 export * from './catalog/search.js';
 export * from './catalog/requests.js';
 export * from './catalog/offers.js';
+export * from './notifications/notify.js';
+export * from './negotiation/rules.js';
+export * from './negotiation/negotiations.js';
