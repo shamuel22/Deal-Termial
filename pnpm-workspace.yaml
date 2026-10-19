@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Solo se permiten scripts de instalación de dependencias revisadas.
+allowBuilds:
+  esbuild: true
+  '@scarf/scarf': false

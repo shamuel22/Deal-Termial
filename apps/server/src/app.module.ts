@@ -1,0 +1,38 @@
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Module, type DynamicModule } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import type { AppConfig } from '@deal/shared';
+import { ConfigModule } from './config.module.js';
+import { DatabaseModule } from './database.module.js';
+import { HealthController } from './health/health.controller.js';
+
+/** Portal React compilado (apps/portal/dist), servido por el mismo proceso. */
+export const portalDist = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  'portal',
+  'dist',
+);
+
+@Module({})
+export class AppModule {
+  static forRoot(config: AppConfig): DynamicModule {
+    const imports: DynamicModule['imports'] = [ConfigModule.forRoot(config), DatabaseModule];
+    if (existsSync(portalDist)) {
+      imports.push(
+        ServeStaticModule.forRoot({
+          rootPath: portalDist,
+          exclude: ['/api/{*path}', '/mcp/{*path}', '/webhooks/{*path}'],
+        }),
+      );
+    }
+    return {
+      module: AppModule,
+      imports,
+      controllers: [HealthController],
+    };
+  }
+}

@@ -1,0 +1,7 @@
+dist
+node_modules
+coverage
+pnpm-lock.yaml
+packages/db/migrations
+BRIEF_API_COMERCIO_ENTRE_AGENTES.md
+credencialsPayPal.md
