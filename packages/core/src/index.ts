@@ -11,3 +11,6 @@ export * from './authorization/policy.js';
 export * from './authorization/budget.js';
 export * from './authorization/authorizations.js';
 export * from './authorization/change-requests.js';
+export * from './catalog/pricing.js';
+export * from './catalog/search.js';
+export * from './catalog/requests.js';

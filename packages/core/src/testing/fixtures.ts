@@ -165,3 +165,72 @@ export async function newOrder(
     .returning();
   return order!.id;
 }
+
+export interface OfferFixture {
+  attributes?: Record<string, unknown>;
+  status?: 'draft' | 'active' | 'paused' | 'archived';
+  stockAvailable?: number;
+  minOrderQty?: number;
+  maxOrderQty?: number | null;
+  shipRegions?: string[];
+  leadTimeDays?: number;
+  shippingFlat?: string;
+  taxRate?: string;
+  tiers?: Array<{ minQty: number; unitPrice: string }>;
+  rules?: Partial<typeof schema.negotiationRules.$inferInsert>;
+}
+
+/** Inserta directamente producto + oferta + tramos + reglas (sin pasar por el servicio). */
+export async function newOffer(
+  db: Database,
+  supplierOrgId: string,
+  o: OfferFixture = {},
+): Promise<{ offerId: string; productId: string }> {
+  const [product] = await db
+    .insert(schema.products)
+    .values({
+      supplierOrgId,
+      sku: `SKU-${next()}`,
+      name: 'Envase kraft 16 oz con tapa',
+      category: 'food_containers',
+      attributes: o.attributes ?? {
+        material: 'kraft_paper',
+        capacity_oz: 16,
+        hot_food_safe: true,
+        has_lid: true,
+        pack_size: 50,
+      },
+    })
+    .returning();
+  const [offer] = await db
+    .insert(schema.offers)
+    .values({
+      productId: product!.id,
+      supplierOrgId,
+      status: o.status ?? 'active',
+      stockAvailable: o.stockAvailable ?? 5000,
+      minOrderQty: o.minOrderQty ?? 50,
+      maxOrderQty: o.maxOrderQty ?? null,
+      shipRegions: o.shipRegions ?? ['TX', 'OK'],
+      leadTimeDays: o.leadTimeDays ?? 2,
+      shippingFlat: o.shippingFlat ?? '6.00',
+      taxRate: o.taxRate ?? '0.0825',
+    })
+    .returning();
+  await db.insert(schema.offerPriceTiers).values(
+    (
+      o.tiers ?? [
+        { minQty: 50, unitPrice: '0.3200' },
+        { minQty: 250, unitPrice: '0.2600' },
+      ]
+    ).map((t) => ({ offerId: offer!.id, ...t })),
+  );
+  await db.insert(schema.negotiationRules).values({
+    offerId: offer!.id,
+    maxDiscount: '0.1000',
+    floorUnitPrice: '0.2300',
+    minLeadTimeDays: 1,
+    ...o.rules,
+  });
+  return { offerId: offer!.id, productId: product!.id };
+}
