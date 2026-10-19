@@ -17,7 +17,7 @@ import {
   type UserActor,
 } from '@deal/core';
 import { DB } from '../database.module.js';
-import { ApiZodBody, ZodPipe } from '../http/zod.js';
+import { ApiZodBody } from '../http/zod.js';
 import { Auth, CurrentAgent, CurrentUser } from '../auth/auth.guard.js';
 
 @ApiTags('portal: agentes')
@@ -35,10 +35,7 @@ export class AgentsController {
   @Post()
   @ApiOperation({ summary: 'Conecta un agente nuevo y fija su nivel inicial' })
   @ApiZodBody(createAgentInput)
-  create(
-    @CurrentUser() actor: UserActor,
-    @Body(new ZodPipe(createAgentInput)) body: CreateAgentInput,
-  ) {
+  create(@CurrentUser() actor: UserActor, @Body() body: CreateAgentInput) {
     return createAgent(this.handle.db, actor, body);
   }
 
@@ -53,7 +50,7 @@ export class AgentsController {
   setAccess(
     @CurrentUser() actor: UserActor,
     @Param('agentId') agentId: string,
-    @Body(new ZodPipe(accessInput)) body: AccessInput,
+    @Body() body: AccessInput,
   ) {
     return setAgentAccess(this.handle.db, actor, agentId, body);
   }

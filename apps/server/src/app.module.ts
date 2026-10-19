@@ -9,6 +9,10 @@ import { DatabaseModule } from './database.module.js';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AgentSelfController, AgentsController } from './agents/agents.controller.js';
 import { AuthController } from './auth/auth.controller.js';
+import {
+  AgentAuthorizationController,
+  AuthorizationsController,
+} from './authorizations/authorizations.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { HealthController } from './health/health.controller.js';
 import { DomainExceptionFilter } from './http/domain-exception.filter.js';
@@ -37,7 +41,14 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [HealthController, AuthController, AgentsController, AgentSelfController],
+      controllers: [
+        HealthController,
+        AuthController,
+        AgentsController,
+        AgentSelfController,
+        AuthorizationsController,
+        AgentAuthorizationController,
+      ],
       providers: [
         { provide: APP_GUARD, useClass: AuthGuard },
         { provide: APP_FILTER, useClass: DomainExceptionFilter },

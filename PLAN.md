@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapas 0, 2 y 3 ✅ · Etapa 1 ⛔ en espera de PayPal (vault plataforma) · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0, 2, 3 y 4 ✅ · Etapa 1 ⛔ en espera de PayPal (vault plataforma) · **Última actualización:** 2026-10-19
 
 ---
 
@@ -131,12 +131,12 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                                                             | Quién             | Estado |
 | --- | ----------------------------------------------------------------------------------------------------------------- | ----------------- | ------ |
-| 4.1 | Niveles por agente; cambio de nivel y revocación solo por sesión de propietario                                   | C                 | ⬜     |
-| 4.2 | Autorización de compra versionada (encargo, atributos, cantidades, proveedores, presupuesto, entrega, expiración) | C                 | ⬜     |
-| 4.3 | Motor de políticas puro: `check(actor, acción, recurso) → permitido                                               | error accionable` | C      | ⬜  |
-| 4.4 | Libro de presupuesto: reservar/consumir/liberar por encargo y mes UTC, transaccional con bloqueo                  | C                 | ⬜     |
-| 4.5 | Solicitudes de cambio de permisos por el agente (solo propuesta)                                                  | C                 | ⬜     |
-| 4.6 | Tests de concurrencia: dos compras simultáneas no superan presupuesto                                             | C                 | ⬜     |
+| 4.1 | Niveles por agente; cambio de nivel y revocación solo por sesión de propietario                                   | C                 | ✅     |
+| 4.2 | Autorización de compra versionada (encargo, atributos, cantidades, proveedores, presupuesto, entrega, expiración) | C                 | ✅     |
+| 4.3 | Motor de políticas puro: `check(actor, acción, recurso) → permitido                                               | error accionable` | C      | ✅  |
+| 4.4 | Libro de presupuesto: reservar/consumir/liberar por encargo y mes UTC, transaccional con bloqueo                  | C                 | ✅     |
+| 4.5 | Solicitudes de cambio de permisos por el agente (solo propuesta)                                                  | C                 | ✅     |
+| 4.6 | Tests de concurrencia: dos compras simultáneas no superan presupuesto                                             | C                 | ✅     |
 
 ### Etapa 5 — Catálogo y búsqueda
 
@@ -144,7 +144,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #   | Tarea                                                                                                | Quién | Estado |
 | --- | ---------------------------------------------------------------------------------------------------- | ----- | ------ |
-| 5.1 | Taxonomía normalizada de envases (material, capacidad, apto caliente, tapa, presentación)            | C     | ⬜     |
+| 5.1 | Taxonomía normalizada de envases (material, capacidad, apto caliente, tapa, presentación)            | C     | ✅     |
 | 5.2 | CRUD de productos/ofertas del proveedor con tramos por cantidad, stock, zonas y plazos               | X     | ⬜     |
 | 5.3 | Motor de coincidencia por atributos, presupuesto, zona y fecha; cálculo de totales; campos faltantes | C     | ⬜     |
 | 5.4 | Solicitudes privadas (`create_request`, `get_request`)                                               | C     | ⬜     |
@@ -271,6 +271,10 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 2026-10-19 | Contraseñas con scrypt (N=2^17); sesiones y credenciales de agente como tokens de 256 bits guardados solo como SHA-256; cookie httpOnly + SameSite=Lax                                      | Sin dependencias criptográficas externas                                              |
 | 2026-10-19 | Recursos de otra organización responden 404 (no 403)                                                                                                                                        | No revelar su existencia                                                              |
 | 2026-10-19 | Rutas del portal bajo `/api/orgs/:orgId/...` (sesión + membresía); rutas de agente bajo `/api/agent/...` (Bearer)                                                                           | Aislamiento explícito y verificable                                                   |
+| 2026-10-19 | Reserva de presupuesto con `SELECT … FOR UPDATE` sobre organización y encargo, en ese orden fijo; sumas de reservas activas + consumidas                                                    | Serializa gasto concurrente sin interbloqueos; probado con test de mutación           |
+| 2026-10-19 | La verificación usa siempre el nivel vigente del agente y la versión vigente de la autorización; vencimiento evaluado en cada lectura y barrido periódico                                   | Revocar o bajar nivel surte efecto inmediato                                          |
+| 2026-10-19 | Compras aceptadas por el dueño se registran en el libro (cuentan en el mes) pero no se bloquean por límites delegados                                                                       | El límite restringe al agente, no al dueño                                            |
+| 2026-10-19 | La validación de entrada vive en los servicios de core (zod); los controladores solo enrutan                                                                                                | Un solo punto de validación compartido por API y MCP                                  |
 | 2026-10-19 | Herramientas añadidas: `submit_for_review`, `request_authorization_change`, `list_pending_negotiations`, `approve_refund`                                                                   | Cubren huecos del §3, §4 y §9 del brief                                               |
 
 ## 8. Pendientes de decisión / insumos del equipo
@@ -307,3 +311,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — Proveedores A y B conectados. El token de la plataforma no sirve para pagarles (`BILLING_AGREEMENT_NOT_FOUND`); el vault en su nombre y a nivel plataforma requieren habilitación de PayPal. Solicitud enviada. Detalle en `docs/paypal-spike.md`.
 - **2026-10-19** — Etapa 2 completa: esquema de 28 tablas con migración inicial, `@deal/core` con módulo de dinero, catálogo de errores accionables, tests de integración sobre Postgres de test.
 - **2026-10-19** — Etapa 3 completa: alta y sesión de dueños, agentes con credenciales y niveles versionados, guard único (cookie o Bearer), errores accionables, aislamiento probado en core y e2e (criterios 8 y 16). 33 tests.
+- **2026-10-19** — Etapa 4 completa: autorizaciones versionadas, motor de políticas puro, libro de presupuesto por encargo y mensual UTC, solicitudes de cambio del agente, API de portal y de agente. Concurrencia verificada (criterio 11) con test de mutación. 85 tests.

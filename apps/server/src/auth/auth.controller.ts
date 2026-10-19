@@ -15,7 +15,7 @@ import {
 import type { AppConfig } from '@deal/shared';
 import { APP_CONFIG } from '../config.module.js';
 import { DB } from '../database.module.js';
-import { ApiZodBody, ZodPipe } from '../http/zod.js';
+import { ApiZodBody } from '../http/zod.js';
 import { Auth, CurrentSession, SESSION_COOKIE } from './auth.guard.js';
 
 @ApiTags('portal: cuenta')
@@ -40,10 +40,7 @@ export class AuthController {
   @Post('auth/register')
   @ApiOperation({ summary: 'Alta de empresa y de su usuario dueño; inicia sesión' })
   @ApiZodBody(registerInput)
-  async register(
-    @Body(new ZodPipe(registerInput)) body: RegisterInput,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async register(@Body() body: RegisterInput, @Res({ passthrough: true }) res: Response) {
     const { userId, orgId } = await registerOwner(this.handle.db, body);
     const session = await login(this.handle.db, { email: body.email, password: body.password });
     this.setSessionCookie(res, session.token, session.expiresAt);
@@ -54,10 +51,7 @@ export class AuthController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Inicio de sesión del portal (cookie httpOnly)' })
   @ApiZodBody(loginInput)
-  async login(
-    @Body(new ZodPipe(loginInput)) body: LoginInput,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Body() body: LoginInput, @Res({ passthrough: true }) res: Response) {
     const session = await login(this.handle.db, body);
     this.setSessionCookie(res, session.token, session.expiresAt);
     return { userId: session.userId, expiresAt: session.expiresAt };

@@ -167,6 +167,76 @@ describe('API de identidad (e2e)', () => {
     ).toBe(404);
   });
 
+  it('autorizaciones: el dueño concede, el agente consulta y propone, el dueño revoca', async () => {
+    const { cookie, orgId } = await company('delegacion');
+    const agent = await call('POST', `/orgs/${orgId}/agents`, {
+      cookie,
+      body: { name: 'Comprador', access: { buyerLevel: 'full_autonomy' } },
+    });
+    const { apiKey } = (
+      await call('POST', `/orgs/${orgId}/agents/${agent.body.id}/credentials`, { cookie })
+    ).body as { apiKey: string };
+
+    const terms = {
+      mandate: '300 envases con tapa para caliente, sin foam, hasta US$80',
+      category: 'food_containers',
+      requiredAttributes: {
+        hot_food_safe: { eq: true },
+        has_lid: { eq: true },
+        material: { not_in: ['foam_eps'] },
+      },
+      quantityMin: 300,
+      quantityMax: 300,
+      budgetTotal: '80.00',
+      deliveryAddress: { line1: '120 Main St', city: 'Austin', state: 'TX', postalCode: '78701' },
+      deliverBy: '2099-01-01',
+      expiresAt: '2099-12-31T23:59:59Z',
+    };
+    const created = await call('POST', `/orgs/${orgId}/authorizations`, {
+      cookie,
+      body: { agentId: agent.body.id, terms },
+    });
+    expect(created.status).toBe(201);
+    expect(created.body).toMatchObject({ status: 'active', budget: { available: '80.00' } });
+
+    const status = await call('GET', '/agent/authorization-status', { bearer: apiKey });
+    expect(status.status).toBe(200);
+    expect(status.body).toMatchObject({
+      agent: { buyerLevel: 'full_autonomy' },
+      financialAuthorization: { active: false, scopes: [] },
+    });
+
+    // El agente no puede ampliarse el presupuesto: solo proponerlo.
+    const selfAmend = await call('PUT', `/orgs/${orgId}/authorizations/${created.body.id}/terms`, {
+      bearer: apiKey,
+      body: { ...terms, budgetTotal: '500.00' },
+    });
+    expect(selfAmend.status).toBe(401);
+    const proposal = await call('POST', '/agent/change-requests', {
+      bearer: apiKey,
+      body: {
+        kind: 'amend_authorization',
+        authorizationId: created.body.id,
+        terms: { ...terms, budgetTotal: '95.00' },
+        reason: 'El proveedor cobra transporte',
+      },
+    });
+    expect(proposal.status).toBe(201);
+    expect(proposal.body).toMatchObject({ status: 'pending' });
+
+    const revoked = await call('POST', `/orgs/${orgId}/authorizations/${created.body.id}/revoke`, {
+      cookie,
+    });
+    expect(revoked.body).toMatchObject({ status: 'revoked' });
+
+    const invalid = await call('POST', `/orgs/${orgId}/authorizations`, {
+      cookie,
+      body: { agentId: agent.body.id, terms: { ...terms, budgetTotal: '80.001' } },
+    });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error).toMatchObject({ code: 'VALIDATION_FAILED' });
+  });
+
   it('publica OpenAPI con las rutas y los esquemas de entrada', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/docs-json`);
     expect(res.status).toBe(200);
