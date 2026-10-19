@@ -122,8 +122,28 @@ describe('find_matches', () => {
     expect(matches[0]!.mismatches.map((x) => x.code).sort()).toEqual([
       'INSUFFICIENT_STOCK',
       'MISSES_DEADLINE',
-      'OVER_BUDGET',
       'REGION_NOT_SERVED',
+    ]);
+    // Superar el presupuesto no es una incompatibilidad: se informa para negociar.
+    expect(matches[0]!.budget).toEqual({ maxTotal: '50.00', withinBudget: false, overBy: '40.93' });
+  });
+
+  it('una oferta por encima del presupuesto sigue apareciendo para negociarla', async () => {
+    const m = await market();
+    const cheap = await newOffer(h.db, m.supA.orgId, {
+      tiers: [{ minQty: 50, unitPrice: '0.2000' }],
+    });
+    const pricey = await newOffer(h.db, m.supB.orgId);
+    const res = await findMatches(
+      h.db,
+      m.agent,
+      { ...DEMO, supplierOrgIds: m.ids, maxTotal: '80.00' },
+      {},
+      NOW,
+    );
+    expect(res.matches.map((x) => [x.offerId, x.status, x.budget?.withinBudget])).toEqual([
+      [cheap.offerId, 'compatible', true],
+      [pricey.offerId, 'compatible', false],
     ]);
   });
 
@@ -159,7 +179,6 @@ describe('find_matches', () => {
     expect(big.matches[0]!.mismatches.map((x) => x.code).sort()).toEqual([
       'ABOVE_MAX_ORDER',
       'INSUFFICIENT_STOCK',
-      'OVER_BUDGET',
     ]);
   });
 

@@ -5,7 +5,7 @@ import { assertBuyerAction } from '../authorization/policy.js';
 import { moneyString, isoDate, US_STATES } from '../authorization/schemas.js';
 import type { Executor } from '../db.js';
 import { requireAdmin, type Actor } from '../identity/actor.js';
-import { compareMoney, gt } from '../money.js';
+import { compareMoney, gt, subMoney } from '../money.js';
 import {
   attributeConstraints,
   checkAttributes,
@@ -45,8 +45,7 @@ export type MismatchCode =
   | 'INSUFFICIENT_STOCK'
   | 'BELOW_MIN_ORDER'
   | 'ABOVE_MAX_ORDER'
-  | 'MISSES_DEADLINE'
-  | 'OVER_BUDGET';
+  | 'MISSES_DEADLINE';
 
 export interface OfferMatch {
   offerId: string;
@@ -65,6 +64,11 @@ export interface OfferMatch {
   unconfirmedAttributes: string[];
   mismatches: Array<{ code: MismatchCode; message: string }>;
   pricing: (PriceBreakdown & { currency: string }) | null;
+  /**
+   * Comparación del total de lista con el máximo pedido. Superarlo no descarta la oferta:
+   * es el punto de partida de la negociación.
+   */
+  budget: { maxTotal: string; withinBudget: boolean; overBy: string | null } | null;
   delivery: {
     regions: string[];
     leadTimeDays: number;
@@ -145,12 +149,16 @@ export function evaluateOffer(
     shippingFlat: offer.shippingFlat,
     taxRate: offer.taxRate,
   });
-  if (pricing && criteria.maxTotal && gt(pricing.total, criteria.maxTotal)) {
-    mismatches.push({
-      code: 'OVER_BUDGET',
-      message: `Total de lista ${pricing.total} supera ${criteria.maxTotal} (puede negociarse)`,
-    });
-  }
+  const budget =
+    pricing && criteria.maxTotal
+      ? {
+          maxTotal: criteria.maxTotal,
+          withinBudget: !gt(pricing.total, criteria.maxTotal),
+          overBy: gt(pricing.total, criteria.maxTotal)
+            ? subMoney(pricing.total, criteria.maxTotal)
+            : null,
+        }
+      : null;
 
   const status: MatchStatus =
     mismatches.length > 0
@@ -163,6 +171,7 @@ export function evaluateOffer(
     mismatches,
     unconfirmed,
     pricing,
+    budget,
     earliestDate,
     meetsDeadline,
     available,
@@ -262,6 +271,7 @@ export async function findMatches(
       unconfirmedAttributes: result.unconfirmed,
       mismatches: result.mismatches,
       pricing: result.pricing ? { ...result.pricing, currency: row.offer.currency } : null,
+      budget: result.budget,
       delivery: {
         regions: row.offer.shipRegions,
         leadTimeDays: row.offer.leadTimeDays,
@@ -277,6 +287,9 @@ export async function findMatches(
   all.sort((a, b) => {
     const byStatus = RANK[a.status] - RANK[b.status];
     if (byStatus !== 0) return byStatus;
+    // Dentro del mismo estado, primero las que ya caben en el presupuesto.
+    const fits = Number(b.budget?.withinBudget ?? true) - Number(a.budget?.withinBudget ?? true);
+    if (fits !== 0) return fits;
     if (a.pricing && b.pricing) return compareMoney(a.pricing.total, b.pricing.total);
     return a.pricing ? -1 : b.pricing ? 1 : 0;
   });

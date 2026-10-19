@@ -197,7 +197,6 @@ describe('seedDemo sobre PostgreSQL real', () => {
       deliveryState: terms.deliveryAddress.state,
       deliverBy: terms.deliverBy,
     };
-    // Sin maxTotal se comprueba compatibilidad técnica; los precios de lista requieren negociar.
     const found = await findMatches(handle.db, actor, criteria, {}, options.now);
     expect(found.matches.map((match) => match.product.sku).sort()).toEqual([
       'ENV-KR16-L',
@@ -217,10 +216,12 @@ describe('seedDemo sobre PostgreSQL real', () => {
       { includeIncompatible: true },
       options.now,
     );
+    // Por encima de US$80 a precio de lista: siguen siendo compatibles y se negocian.
     for (const sku of ['ENV-KR16-L', 'ENV-PP32-L', 'GB-BAG24']) {
       expect(bounded.matches.find((match) => match.product.sku === sku)).toMatchObject({
-        status: 'incompatible',
-        mismatches: [{ code: 'OVER_BUDGET' }],
+        status: 'compatible',
+        mismatches: [],
+        budget: { withinBudget: false },
       });
     }
     for (const sku of ['ENV-FOAM9', 'GB-PET16']) {
