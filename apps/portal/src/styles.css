@@ -439,3 +439,69 @@ button:disabled {
     padding: 20px 16px;
   }
 }
+
+/* Páginas de configuración y trazabilidad del portal. */
+.portal-table {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.portal-caption {
+  text-align: left;
+  color: var(--muted);
+  padding-bottom: 8px;
+}
+
+.portal-json {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 48rem;
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.portal-id {
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+
+.portal-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.portal-outcome.succeeded .badge,
+.portal-outcome.allowed .badge {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.portal-outcome.failed .badge,
+.portal-outcome.denied .badge {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+form.stack[hidden] {
+  display: none;
+}
+
+.content > .card fieldset {
+  min-width: 0;
+}
+
+.content > .card progress {
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .content > .card dl.kv {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .content > .card dl.kv dd {
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
+  }
+}
