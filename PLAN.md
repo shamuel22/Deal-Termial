@@ -227,7 +227,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 11.1 | Matriz criterio → test/evidencia (`docs/acceptance.md`)                | C     | ✅     |
 | 11.2 | Script e2e de los recorridos principal y complementarios               | C     | ⬜     |
 | 11.3 | Revisión de seguridad (aislamiento, secretos, permisos)                | C     | ⬜     |
-| 11.4 | Despliegue en el VPS y prueba desde cero con el contrato de despliegue | C     | ⬜     |
+| 11.4 | Despliegue en el VPS y prueba desde cero con el contrato de despliegue | C     | ✅     |
 
 ### Etapa 12 — Documentación y entrega
 
@@ -304,7 +304,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | P1  | Cuentas sandbox: app ✅, compradora ✅, plataforma ✅; faltan 2 business de proveedores                                                                                                | —                                     | ⛔ Bloquea Etapa 1                                                     |
 | P2  | Fecha límite del hackatón                                                                                                                                                              | —                                     | Abierto                                                                |
 | P3  | Cliente MCP de referencia                                                                                                                                                              | Claude Code / Claude Desktop vía HTTP | ✅ Streamable HTTP + Bearer; probado con SDK oficial y Codex (GPT-6.1) |
-| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Abierto                                                                |
+| P4  | Dominio y TLS del VPS (necesario para webhooks y retorno de PayPal)                                                                                                                    | nginx + Let's Encrypt                 | Resuelto: dealterminal.lucuo.dev, Cloudflare + nginx (2026-10-20)      |
 | P5  | Licencia                                                                                                                                                                               | MIT                                   | Asumido (MIT)                                                          |
 | P7  | Habilitación de vault PayPal a nivel plataforma (`usage_type: PLATFORM`) en la app sandbox                                                                                             | Solicitar a PayPal                    | ❌ PayPal no lo habilita (2026-10-19)                                  |
 | P8  | Webhook en PayPal apunta a la raíz; debe ser `https://dealterminal.lucuo.dev/webhooks/paypal`                                                                                          | Actualizar en el dashboard            | Abierto                                                                |
