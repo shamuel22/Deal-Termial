@@ -220,7 +220,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #    | Tarea                                                                  | Quién | Estado |
 | ---- | ---------------------------------------------------------------------- | ----- | ------ |
-| 11.1 | Matriz criterio → test/evidencia (`docs/acceptance.md`)                | C     | ⬜     |
+| 11.1 | Matriz criterio → test/evidencia (`docs/acceptance.md`)                | C     | ✅     |
 | 11.2 | Script e2e de los recorridos principal y complementarios               | C     | ⬜     |
 | 11.3 | Revisión de seguridad (aislamiento, secretos, permisos)                | C     | ⬜     |
 | 11.4 | Despliegue en el VPS y prueba desde cero con el contrato de despliegue | C     | ⬜     |
