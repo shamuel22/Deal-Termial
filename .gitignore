@@ -10,3 +10,6 @@ credencialsPayPal.md
 *.secret.md
 *.tsbuildinfo
 datos_paypal.md
+# Salida de pnpm seed:demo (contiene credenciales de agentes)
+demo_data.md
+seed-output*.txt
