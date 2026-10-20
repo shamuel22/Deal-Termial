@@ -237,7 +237,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 | 12.2 | Catálogo de herramientas MCP y guía de conexión del cliente               | X     | ✅     |
 | 12.3 | Especificación comercial y de autorizaciones v0.2                         | C     | ⬜     |
 | 12.4 | Instrucciones para jueces y cuentas sandbox                               | C     | ⬜     |
-| 12.5 | Guion del video (< 3 min) y explicación del papel de los modelos y PayPal | C     | ⬜     |
+| 12.5 | Guion del video (< 3 min) y explicación del papel de los modelos y PayPal | C     | ✅     |
 
 ## 5. Protocolo de trabajo con Codex
 
