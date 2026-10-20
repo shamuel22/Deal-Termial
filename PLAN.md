@@ -8,6 +8,10 @@
 
 ---
 
+## Planes relacionados
+
+- [Landing pública y Base de conocimientos](./PLAN_LANDING.md) — ⏸ en espera del kit de marca del equipo de diseño.
+
 ## 1. Principios de trabajo
 
 1. **Etapas pequeñas y verificables.** Cada etapa termina con un resultado demostrable, tests en verde y un commit (o varios) publicado en GitHub.
@@ -334,3 +338,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — PayPal confirma que no habilita vault multi-vendedor. Etapa 8 completa: cliente PayPal, checkout manual, execute_purchase (pendiente del dueño sin autorización financiera), reconciliación, webhooks verificados, reembolsos, conexión de proveedores, planificador. Validado en sandbox real: pago de 76.86 a EcoPack y reembolso parcial en su nombre. 185 tests.
 - **2026-10-19** — Etapa 9 completa: servidor MCP con 24 herramientas, guía de conexión y catálogo generado. Criterio 1 validado con un modelo real: Codex (GPT-6.1) ejecutó el encargo por MCP sin acceso al código (`docs/evidence/mcp-real-agent.md`). 191 tests.
 - **2026-10-19** — Etapa 10 completa: portal (sesión, resumen, propuestas con pago PayPal, pedidos, pagos; agentes, autorizaciones con revisión obligatoria, catálogo, negociaciones y devoluciones del proveedor, consola de actividad y notificaciones — Codex, revisado). Limitador de login, matriz de aceptación y guía de despliegue.
+- **2026-10-19** — Portal validado visualmente por el responsable. Creado `PLAN_LANDING.md` (landing + base de conocimientos), en espera del kit de marca.
