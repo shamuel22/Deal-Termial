@@ -64,8 +64,8 @@ function AuthorizationForm({ base }: { base: string }) {
       setValidation(
         new ApiError(0, {
           code: 'VALIDATION_FAILED',
-          message: 'Revisa cantidades, presupuesto y vencimiento.',
-          hint: 'La cantidad máxima debe ser mayor o igual a la mínima, el presupuesto positivo y el vencimiento futuro.',
+          message: 'Check quantities, budget and expiration.',
+          hint: 'The maximum quantity must be at least the minimum, the budget must be positive and the expiration must be in the future.',
         }),
       );
       return;
@@ -105,61 +105,60 @@ function AuthorizationForm({ base }: { base: string }) {
   return (
     <>
       <PageHeader
-        title="Nueva autorización"
-        subtitle="Primero define el encargo. Después revisa exactamente qué facultades vas a conceder."
-        actions={<Link to="/console/authorizations">Volver a autorizaciones</Link>}
+        title="New purchase authorization"
+        subtitle="Define the assignment, then review the permissions you’ll grant."
+        actions={<Link to="/console/authorizations">Back to purchase authorizations</Link>}
       />
       <ErrorBox error={agents.error} />
       {agents.loading && <Loading />}
       {!agents.loading && agents.data && !eligible.length && (
         <Empty>
-          Necesitas un agente activo con nivel de compra.{' '}
-          <Link to="/console/agents">Configurar agentes</Link>
+          You need an active agent with a purchase level.{' '}
+          <Link to="/console/agents">Set up agents</Link>
         </Empty>
       )}
       {eligible.length > 0 && (
         <>
           <form ref={formRef} className="card stack" onSubmit={preview} hidden={!!review}>
             <label>
-              Agente
+              Agent
               <select name="agentId" required defaultValue="">
                 <option value="" disabled>
-                  Selecciona un agente
+                  Select an agent
                 </option>
                 {eligible.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} ·{' '}
                     {a.access.buyerLevel === 'search_only'
-                      ? 'Solo búsqueda'
+                      ? 'Search only'
                       : a.access.buyerLevel === 'negotiate'
-                        ? 'Solo negociación'
-                        : 'Autonomía total'}
+                        ? 'Negotiate only'
+                        : 'Full autonomy — Within your authorized limits.'}
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              Encargo en tus palabras
+              Assignment in your own words
               <textarea
                 name="mandate"
                 rows={4}
                 required
                 maxLength={2000}
-                placeholder="Necesito 300 envases con tapa para comida caliente…"
+                placeholder="I need 300 containers with lids for hot food…"
               />
             </label>
             <p>
-              Categoría: Envases para alimentos. Las condiciones obligatorias son las que marcas a
-              continuación; incluirlas solo en el encargo escrito no crea una restricción
-              verificable.
+              Category: Food containers. Select the required conditions below. Including them only
+              in the written assignment does not create an enforceable restriction.
             </p>
             <fieldset className="stack">
-              <legend>Atributos obligatorios</legend>
-              <Check title="Apto para comida caliente" name="hot_food_safe" defaultChecked />
-              <Check title="Con tapa" name="has_lid" defaultChecked />
-              <Check title="Apto para microondas" name="microwave_safe" />
+              <legend>Required attributes</legend>
+              <Check title="Safe for hot food" name="hot_food_safe" defaultChecked />
+              <Check title="With lid" name="has_lid" defaultChecked />
+              <Check title="Microwave safe" name="microwave_safe" />
               <Field
-                title="Capacidad mínima (oz, opcional)"
+                title="Minimum capacity (oz, optional)"
                 name="capacity"
                 type="number"
                 min="0.01"
@@ -167,7 +166,7 @@ function AuthorizationForm({ base }: { base: string }) {
                 step="any"
               />
               <fieldset>
-                <legend>Materiales excluidos</legend>
+                <legend>Excluded materials</legend>
                 {Object.entries(materials).map(([value, title]) => (
                   <Check
                     key={value}
@@ -181,7 +180,7 @@ function AuthorizationForm({ base }: { base: string }) {
             </fieldset>
             <div className="row">
               <Field
-                title="Cantidad mínima (unidades)"
+                title="Minimum quantity (units)"
                 name="quantityMin"
                 type="number"
                 min="1"
@@ -189,7 +188,7 @@ function AuthorizationForm({ base }: { base: string }) {
                 required
               />
               <Field
-                title="Cantidad máxima (unidades)"
+                title="Maximum quantity (units)"
                 name="quantityMax"
                 type="number"
                 min="1"
@@ -198,13 +197,13 @@ function AuthorizationForm({ base }: { base: string }) {
               />
             </div>
             <MoneyField
-              title="Presupuesto total acumulado (USD, incluye transporte e impuestos)"
+              title="Authorized budget (USD, includes shipping and taxes)"
               name="budgetTotal"
             />
             <fieldset className="stack">
-              <legend>Dirección de entrega en Estados Unidos</legend>
+              <legend>Delivery address in the United States</legend>
               <Field
-                title="Dirección, línea 1"
+                title="Address line 1"
                 name="line1"
                 required
                 maxLength={200}
@@ -212,23 +211,23 @@ function AuthorizationForm({ base }: { base: string }) {
               />
               <div className="row">
                 <Field
-                  title="Ciudad"
+                  title="City"
                   name="city"
                   required
                   maxLength={100}
                   autoComplete="address-level2"
                 />
                 <label>
-                  Estado
+                  State
                   <select name="state" required defaultValue="">
                     <option value="" disabled>
-                      Selecciona un estado
+                      Select a state
                     </option>
                     <StateOptions />
                   </select>
                 </label>
                 <Field
-                  title="Código postal"
+                  title="ZIP code"
                   name="postalCode"
                   required
                   pattern="[0-9]{5}(-[0-9]{4})?"
@@ -238,42 +237,43 @@ function AuthorizationForm({ base }: { base: string }) {
             </fieldset>
             <div className="row">
               <Field
-                title="Fecha límite de entrega"
+                title="Deliver by"
                 name="deliverBy"
                 type="date"
                 required
                 min={new Date().toISOString().slice(0, 10)}
               />
               <Field
-                title="Vencimiento de la autorización (tu zona horaria)"
+                title="Purchase authorization expiration (your time zone)"
                 name="expiresAt"
                 type="datetime-local"
                 required
               />
             </div>
             <ErrorBox error={validation} />
-            <button className="primary">Revisar</button>
+            <button className="primary">Review</button>
           </form>
           {review && (
             <section className="card stack">
               <h2 ref={heading} tabIndex={-1}>
-                Revisa antes de activar
+                Review before activating
               </h2>
               <p>
-                Concedes este encargo a <strong>{selected?.name ?? review.agentId}</strong>{' '}
+                You’re granting this assignment to{' '}
+                <strong>{selected?.name ?? review.agentId}</strong>{' '}
                 <Badge value={selected?.access.buyerLevel} />.
               </p>
               <TermsSummary terms={review.terms} />
               <div className="alert info">
                 <p>{levelHelp[selected?.access.buyerLevel ?? 'none']}</p>
                 <p>
-                  El presupuesto es un máximo acumulado entre todos los pedidos e intentos
-                  pendientes de este encargo. El agente no podrá superar los límites, comprar fuera
-                  de estas condiciones ni ampliar sus propios permisos.
+                  The authorized budget covers all orders and pending purchase attempts for this
+                  assignment. The agent cannot exceed the limits, buy outside these terms or expand
+                  its own permissions.
                 </p>
                 <p>
-                  Los atributos sin marcar no serán obligatorios. Se permite cualquier proveedor
-                  compatible. No estás concediendo un consentimiento financiero de PayPal.
+                  Unchecked attributes are optional. Any eligible supplier is allowed. You are not
+                  granting PayPal consent.
                 </p>
               </div>
               <ErrorBox error={create.error} />
@@ -285,14 +285,14 @@ function AuthorizationForm({ base }: { base: string }) {
                     requestAnimationFrame(() => formRef.current?.querySelector('select')?.focus());
                   }}
                 >
-                  Volver a editar
+                  Back to editing
                 </button>
                 <button
                   className="primary"
                   disabled={create.pending || !selected}
                   onClick={() => void confirm()}
                 >
-                  {create.pending ? 'Activando…' : 'Confirmar y activar'}
+                  {create.pending ? 'Activating…' : 'Confirm and activate'}
                 </button>
               </div>
             </section>

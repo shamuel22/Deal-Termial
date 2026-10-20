@@ -87,7 +87,7 @@ export async function listActivity(db: Executor, orgId: string, filter: Activity
         ? (names.get(r.actorId) ?? null)
         : r.actorType === 'paypal'
           ? 'PayPal'
-          : 'Sistema',
+          : 'System',
     },
     action: r.action,
     resourceType: r.resourceType,

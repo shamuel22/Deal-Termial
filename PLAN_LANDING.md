@@ -85,16 +85,17 @@ máxima fidelidad.
 
 ## 6. Etapas
 
-| #   | Etapa                                                                   | Resultado verificable                                                                | Estado |
-| --- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------ |
-| L0  | Recepción del kit y decisiones abiertas (§8)                            | Insumos D1–D10 y decisiones confirmadas                                              | ✅     |
-| L1  | Sistema de diseño en código                                             | Tokens, tipografías, componentes base; página de muestra validada por diseño         | ✅     |
-| L2  | Reestructura de rutas (`/`, `/knowledge`, `/console`, según DESIGN §10) | Portal funcionando en `/app`; retornos de PayPal actualizados; tests en verde        | ✅     |
-| L3  | Landing                                                                 | Fiel a los diseños en desktop, tablet y móvil; tema claro y oscuro                   | ✅     |
-| L4  | Motor de la Base de conocimientos                                       | Markdown → páginas, navegación lateral, tabla de contenidos, enlaces entre artículos | ✅     |
-| L5  | Búsqueda                                                                | Índice en build, búsqueda instantánea con resaltado y navegación por teclado         | ✅     |
-| L6  | Contenido                                                               | Artículos de §4 redactados y revisados; secciones generadas desde el código          | ✅     |
-| L7  | Calidad y pulido                                                        | Criterios de §7 cumplidos y revisión final con el equipo de diseño                   | 🔄     |
+| #   | Etapa                                                                   | Resultado verificable                                                                 | Estado |
+| --- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------ |
+| L0  | Recepción del kit y decisiones abiertas (§8)                            | Insumos D1–D10 y decisiones confirmadas                                               | ✅     |
+| L1  | Sistema de diseño en código                                             | Tokens, tipografías, componentes base; página de muestra validada por diseño          | ✅     |
+| L2  | Reestructura de rutas (`/`, `/knowledge`, `/console`, según DESIGN §10) | Portal funcionando en `/app`; retornos de PayPal actualizados; tests en verde         | ✅     |
+| L3  | Landing                                                                 | Fiel a los diseños en desktop, tablet y móvil; solo tema oscuro (decisión 2026-10-20) | ✅     |
+| L4  | Motor de la Base de conocimientos                                       | Markdown → páginas, navegación lateral, tabla de contenidos, enlaces entre artículos  | ✅     |
+| L5  | Búsqueda                                                                | Índice en build, búsqueda instantánea con resaltado y navegación por teclado          | ✅     |
+| L6  | Contenido                                                               | Artículos de §4 redactados y revisados; secciones generadas desde el código           | ✅     |
+| L7  | Calidad y pulido                                                        | Criterios de §7 cumplidos y revisión final con el equipo de diseño                    | 🔄     |
+| L8  | Consola con la identidad del sitio                                      | ConsoleShell (DESIGN §15), tokens compartidos, textos en inglés, móvil con drawer     | ✅     |
 
 ## 7. Criterios de calidad
 
@@ -102,7 +103,7 @@ máxima fidelidad.
 - Accesibilidad WCAG 2.2 AA: contraste, foco visible, navegación completa por teclado, textos alternativos.
 - Responsive desde 320 px; sin desplazamiento horizontal.
 - Rendimiento: Lighthouse ≥ 95 en rendimiento, accesibilidad, buenas prácticas y SEO para landing y artículos.
-- Tema claro y oscuro según el sistema del usuario.
+- Solo tema oscuro (fondo `#151a18`), por decisión del responsable de producto del 2026-10-20. Contrastes verificados: texto ≥ 4.5:1 y controles ≥ 3:1.
 - Contenido técnico verificado contra el código (los ejemplos de MCP y API se prueban).
 
 ## 8. Decisiones abiertas
@@ -119,3 +120,4 @@ máxima fidelidad.
 
 - **2026-10-19** — Plan creado. En espera del kit de marca y los diseños del equipo de diseño.
 - **2026-10-19** — Recibido `DESIGN.md` con logo, icono y mockup. Construidos landing (`/`), Knowledge (`/knowledge`, 13 artículos en inglés, búsqueda) y acceso (`/login`, `/register`) sobre los tokens del kit; consola movida a `/console`. Revisión con capturas a 375/768/1024/1440 px y auditoría de Web Interface Guidelines. Pendiente: revisión del equipo de diseño, consola con la nueva identidad y en inglés, versión vectorial del logo.
+- **2026-10-20** — Reskin a **dark mode only** (fondo `#151a18`) por decisión del responsable de producto: los tokens de `tokens.css` pasan a la paleta oscura, el primario es marfil sobre tinta y el esmeralda queda como acento. Variantes `*-inverse` del logo y del símbolo derivadas de los archivos aprobados (solo cambia la tinta a marfil; pendiente de validar por diseño), favicon en tesela tinta. Corregido el logo y el símbolo duplicados en la cabecera de Knowledge. Consola rediseñada sobre los mismos tokens y tipografías (barra lateral con marca, organización, badge Sandbox, migas, drawer en móvil, badges con icono) y traducida al inglés (Codex, revisado). Pendiente: mensajes de error del servidor y datos de demo en inglés.

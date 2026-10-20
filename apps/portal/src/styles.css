@@ -1,260 +1,588 @@
-:root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --border: #e2e5ea;
-  --text: #16191f;
-  --muted: #5d6573;
-  --accent: #1f5eff;
-  --accent-text: #ffffff;
-  --ok: #137a3f;
-  --ok-bg: #e5f5ec;
-  --warn: #8a5a00;
-  --warn-bg: #fdf3dc;
-  --bad: #b42318;
-  --bad-bg: #fde8e7;
-  --info: #1d4ed8;
-  --info-bg: #e6edff;
-  --radius: 10px;
-  --shadow: 0 1px 2px rgb(16 24 40 / 6%);
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1115;
-    --surface: #171a21;
-    --surface-2: #1f232c;
-    --border: #2b303b;
-    --text: #e7e9ee;
-    --muted: #9aa3b2;
-    --accent: #5b8cff;
-    --ok: #4ade80;
-    --ok-bg: #12301f;
-    --warn: #fbbf24;
-    --warn-bg: #352a0d;
-    --bad: #f87171;
-    --bad-bg: #3a1514;
-    --info: #93b4ff;
-    --info-bg: #17223d;
-    color-scheme: dark;
-  }
-}
+/* Consola del dueño (/console). DESIGN.md §7, §13–§15, §17. Todo bajo .dt-console y sobre los tokens de site/tokens.css. */
 
 .dt-console,
-.dt-console * {
+.dt-console *,
+.dt-console *::before,
+.dt-console *::after {
   box-sizing: border-box;
 }
 
 .dt-console {
+  color-scheme: dark;
   min-height: 100vh;
   display: flow-root;
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font:
-    15px/1.5 system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 .dt-console a {
-  color: var(--accent);
+  color: var(--text-link);
+  text-underline-offset: 3px;
+}
+
+.dt-console :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
 }
 
 .dt-console h1 {
-  font-size: 1.5rem;
   margin: 0;
+  font-size: clamp(26px, 2.6vw, 32px);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: var(--tracking-heading);
+  text-wrap: balance;
 }
 
 .dt-console h2 {
-  font-size: 1.1rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-4);
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.dt-console .muted {
-  color: var(--muted);
-}
-
-.dt-console .center {
-  text-align: center;
-  margin-top: 20vh;
-}
-
-/* Estructura */
-.dt-console .shell {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  min-height: 100vh;
-}
-
-.dt-console .sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 20px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-}
-
-.dt-console .brand {
-  font-weight: 700;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.dt-console .logo {
-  color: var(--accent);
-}
-
-.dt-console .org-name,
-.dt-console .org-select {
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.dt-console nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.dt-console .nav-title {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  margin: 12px 8px 4px;
-}
-
-.dt-console nav a {
-  color: var(--text);
-  text-decoration: none;
-  padding: 7px 10px;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.dt-console nav a:hover {
-  background: var(--surface-2);
-}
-
-.dt-console nav a.active {
-  background: var(--info-bg);
-  color: var(--info);
+.dt-console h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 15px;
   font-weight: 600;
 }
 
+.dt-console p {
+  margin: 0 0 var(--space-3);
+}
+
+.dt-console p:last-child {
+  margin-bottom: 0;
+}
+
+.dt-console code,
+.dt-console pre {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.dt-console :not(pre) > code {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}
+
+.dt-console .muted {
+  color: var(--text-secondary);
+}
+
+.dt-console .center {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.dt-console .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dt-console .skip {
+  position: absolute;
+  left: var(--space-4);
+  top: -100px;
+  z-index: var(--z-toast);
+  background: var(--action-primary);
+  color: var(--action-primary-text);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+}
+
+.dt-console .skip:focus {
+  top: var(--space-4);
+}
+
+/* ---------- ConsoleShell ---------- */
+.dt-console .shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.dt-console .sidebar,
+.dt-console .drawer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  background: var(--bg-page);
+  padding: var(--space-5) var(--space-4);
+}
+
+.dt-console .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.dt-console .sidebar-brand {
+  padding: 0 var(--space-2);
+}
+
+.dt-console .dt-brand {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+
+.dt-console .dt-brand img {
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+.dt-console .org {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+}
+
+.dt-console .org-label,
+.dt-console .nav-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dt-console .org-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.dt-console .org .org-select {
+  min-height: 36px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.dt-console nav[aria-label='Console'] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  flex: 1;
+  overflow-y: auto;
+  margin-inline: calc(var(--space-2) * -1);
+  padding-inline: var(--space-2);
+}
+
+.dt-console .nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dt-console .nav-title {
+  padding: 0 var(--space-3) var(--space-2);
+}
+
+.dt-console .nav-group a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.dt-console .nav-group a:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.dt-console .nav-group a.active {
+  background: var(--bg-selected);
+  color: var(--text-primary);
+  box-shadow: inset 2px 0 0 var(--border-active);
+}
+
+.dt-console .nav-group a.active svg {
+  color: var(--text-link);
+}
+
+.dt-console .nav-label {
+  flex: 1;
+}
+
 .dt-console .count {
-  background: var(--accent);
-  color: var(--accent-text);
-  border-radius: 999px;
-  font-size: 0.75rem;
-  padding: 0 7px;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--action-accent);
+  color: var(--action-accent-text);
+  font: 600 12px/20px var(--font-sans);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .dt-console .user {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 0.9rem;
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.dt-console .user-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dt-console .user-name {
+  font-weight: 600;
+}
+
+.dt-console .user-email {
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dt-console .main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dt-console .topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: 0 clamp(16px, 3vw, 32px);
+  background: rgb(21 26 24 / 92%);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dt-console .menu-button,
+.dt-console .topbar-symbol {
+  display: none;
+}
+
+.dt-console .crumbs {
+  flex: 1;
+  min-width: 0;
+}
+
+.dt-console .crumbs ol {
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.dt-console .crumbs li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dt-console .crumbs li + li::before {
+  content: '/';
+  margin-right: var(--space-2);
+  color: var(--text-muted);
+}
+
+.dt-console .crumbs a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.dt-console .crumbs a:hover {
+  color: var(--text-primary);
+}
+
+.dt-console .crumbs [aria-current] {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.dt-console .env {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-pill);
+  font: 500 11px var(--font-mono);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--warning-fg);
+}
+
+.dt-console .env::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
 }
 
 .dt-console .content {
-  padding: 28px 32px;
-  max-width: 1200px;
   width: 100%;
+  max-width: 1440px;
+  padding: clamp(20px, 3vw, 32px);
+  outline: none;
 }
 
+.dt-console .drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--bg-overlay);
+}
+
+.dt-console .drawer {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(300px, 86vw);
+  overflow-y: auto;
+  border-right: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-float);
+}
+
+.dt-console .drawer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: var(--space-2);
+}
+
+@media (max-width: 1023px) {
+  .dt-console .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dt-console .sidebar {
+    display: none;
+  }
+
+  .dt-console .menu-button {
+    display: inline-flex;
+  }
+
+  .dt-console .topbar-symbol {
+    display: inline-flex;
+    border-radius: var(--radius-sm);
+  }
+}
+
+@media (max-width: 479px) {
+  .dt-console .crumbs li:first-child:not(:only-child) {
+    display: none;
+  }
+
+  .dt-console .crumbs li + li::before {
+    content: none;
+  }
+}
+
+/* ---------- Encabezado de página ---------- */
 .dt-console .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 20px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .dt-console .page-header p {
-  margin: 4px 0 0;
+  margin: var(--space-2) 0 0;
+  max-width: 68ch;
 }
 
 .dt-console .actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: wrap;
+  align-items: center;
 }
 
-/* Bloques */
+/* ---------- SurfaceCard ---------- */
 .dt-console .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+
+.dt-console .card > * + * {
+  margin-top: var(--space-4);
+}
+
+.dt-console .card > h2 + *,
+.dt-console .card > h3 + * {
+  margin-top: 0;
 }
 
 .dt-console .grid {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: var(--space-4);
+}
+
+.dt-console .grid > .card {
+  margin-bottom: 0;
+}
+
+.dt-console .stat h2 {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 .dt-console .stat .value {
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: clamp(28px, 2.6vw, 36px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: var(--tracking-heading);
+  font-variant-numeric: tabular-nums;
 }
 
+/* EmptyState */
 .dt-console .empty {
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  padding: 32px;
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-card);
+  padding: var(--space-8) var(--space-6);
   text-align: center;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .dt-console dl.kv {
   display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 16px;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-6);
   margin: 0;
 }
 
 .dt-console dl.kv dt {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .dt-console dl.kv dd {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-/* Tablas */
+.dt-console ul {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+}
+
+.dt-console details {
+  margin-top: var(--space-3);
+}
+
+.dt-console summary {
+  cursor: pointer;
+  color: var(--text-link);
+  font-weight: 500;
+  min-height: 32px;
+}
+
+.dt-console hr {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--space-5) 0;
+}
+
+/* ---------- DataTable ---------- */
 .dt-console table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px;
 }
 
 .dt-console th,
 .dt-console td {
   text-align: left;
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--border);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
   vertical-align: top;
 }
 
-.dt-console th {
-  font-size: 0.8rem;
-  color: var(--muted);
+.dt-console tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dt-console tbody tr:hover td {
+  background: rgb(245 243 236 / 2.5%);
+}
+
+.dt-console tbody th,
+.dt-console tfoot th {
   font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dt-console tbody tr:has(> th) > * {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dt-console thead th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .dt-console td.num,
@@ -268,182 +596,338 @@
   white-space: nowrap;
 }
 
-/* Insignias y avisos */
+/* ---------- StatusBadge ---------- */
 .dt-console .badge {
-  display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 600;
-  border-radius: 999px;
-  padding: 1px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 0 9px 0 7px;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 500;
   white-space: nowrap;
+  vertical-align: middle;
+}
+
+.dt-console .badge svg {
+  flex: none;
 }
 
 .dt-console .badge.ok {
-  background: var(--ok-bg);
-  color: var(--ok);
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
 
 .dt-console .badge.warn {
-  background: var(--warn-bg);
-  color: var(--warn);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
 }
 
 .dt-console .badge.bad {
-  background: var(--bad-bg);
-  color: var(--bad);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
 }
 
 .dt-console .badge.info {
   background: var(--info-bg);
-  color: var(--info);
+  color: var(--info-fg);
 }
 
 .dt-console .badge.neutral {
-  background: var(--surface-2);
-  color: var(--muted);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
 }
 
+/* ---------- InlineNotice ---------- */
 .dt-console .alert {
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin: 12px 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-3) 0;
 }
 
 .dt-console .alert p {
-  margin: 4px 0;
+  margin: var(--space-1) 0;
+}
+
+.dt-console .alert code {
+  background: rgb(0 0 0 / 22%);
+}
+
+.dt-console .alert a {
+  color: inherit;
 }
 
 .dt-console .alert.error {
-  background: var(--bad-bg);
-  color: var(--bad);
+  background: var(--danger-bg);
+  border-color: rgb(255 143 152 / 30%);
+  color: var(--danger-fg);
 }
 
 .dt-console .alert.warn {
-  background: var(--warn-bg);
-  color: var(--warn);
+  background: var(--warning-bg);
+  border-color: rgb(240 195 94 / 28%);
+  color: var(--warning-fg);
 }
 
 .dt-console .alert.ok {
-  background: var(--ok-bg);
-  color: var(--ok);
+  background: var(--success-bg);
+  border-color: rgb(95 212 160 / 28%);
+  color: var(--success-fg);
 }
 
 .dt-console .alert.info {
   background: var(--info-bg);
-  color: var(--info);
+  border-color: rgb(143 195 234 / 28%);
+  color: var(--info-fg);
 }
 
 .dt-console .secret {
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-mono);
+  font-size: 13px;
   word-break: break-all;
-  background: var(--surface-2);
-  padding: 10px;
-  border-radius: 8px;
+  background: var(--bg-inverse);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
 }
 
-/* Formularios */
+/* Loading */
+.dt-console .loading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dt-console .spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-control);
+  border-top-color: var(--text-link);
+  border-radius: 50%;
+  animation: dt-spin 0.8s linear infinite;
+}
+
+@keyframes dt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-console .spinner {
+    animation: none;
+  }
+}
+
+/* ---------- Formularios (TextField, Select, TextArea) ---------- */
 .dt-console form.stack,
 .dt-console .stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-4);
+}
+
+.dt-console .stack > button,
+.dt-console .stack > .actions {
+  align-self: flex-start;
+}
+
+.dt-console fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+}
+
+.dt-console fieldset.stack:not(:has(> legend)) {
+  border: 0;
+  padding: 0;
+}
+
+.dt-console fieldset:disabled {
+  opacity: 0.7;
+}
+
+.dt-console legend {
+  padding: 0 var(--space-2);
+  font-weight: 600;
 }
 
 .dt-console label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.9rem;
+  gap: 6px;
+  font-size: 14px;
   font-weight: 500;
+  color: var(--text-primary);
 }
 
 .dt-console label.inline {
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
+  font-weight: 400;
 }
 
 .dt-console input,
 .dt-console select,
 .dt-console textarea {
-  font: inherit;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
+  font: 400 15px/1.4 var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-control);
+  padding: 0 var(--space-3);
+  min-height: 44px;
+  transition: border-color var(--duration-fast) var(--ease-standard);
 }
 
-.dt-console input:focus,
-.dt-console select:focus,
-.dt-console textarea:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
+.dt-console textarea {
+  padding-block: var(--space-3);
+  min-height: 96px;
+  resize: vertical;
+}
+
+.dt-console input::placeholder,
+.dt-console textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.dt-console input:hover,
+.dt-console select:hover,
+.dt-console textarea:hover {
+  border-color: var(--text-secondary);
+}
+
+.dt-console input:focus-visible,
+.dt-console select:focus-visible,
+.dt-console textarea:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+  border-color: var(--border-active);
+}
+
+.dt-console input[aria-invalid='true'] {
+  border-color: var(--danger-fg);
+}
+
+.dt-console input[type='checkbox'],
+.dt-console input[type='radio'] {
+  min-height: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: var(--action-accent);
 }
 
 .dt-console .row {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: end;
 }
 
+.dt-console .row > button {
+  justify-self: start;
+}
+
+/* ---------- Button: secondary por defecto, primary marfil, danger, ghost y link ---------- */
 .dt-console button {
-  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border-control);
+  background: transparent;
+  color: var(--text-primary);
+  font: 500 15px/1 var(--font-sans);
   cursor: pointer;
-  border-radius: 8px;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.dt-console button:hover {
+  background: var(--bg-subtle);
 }
 
 .dt-console button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
-  font-weight: 600;
+  background: var(--action-primary);
+  border-color: var(--action-primary);
+  color: var(--action-primary-text);
+}
+
+.dt-console button.primary:hover {
+  background: var(--action-primary-hover);
 }
 
 .dt-console button.danger {
-  color: var(--bad);
-  border-color: var(--bad);
+  color: var(--danger-fg);
+  border-color: var(--danger-fg);
+}
+
+.dt-console button.danger:hover {
+  background: var(--danger-bg);
+}
+
+.dt-console button.ghost {
+  border-color: transparent;
+}
+
+.dt-console button.icon {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  color: var(--text-secondary);
+}
+
+.dt-console button.icon:hover {
+  color: var(--text-primary);
+}
+
+.dt-console .menu-button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
 }
 
 .dt-console button.link {
+  min-height: 0;
   border: none;
   background: none;
   padding: 0;
-  color: var(--accent);
+  color: var(--text-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.dt-console button:disabled {
-  opacity: 0.55;
+.dt-console button:disabled,
+.dt-console button:disabled:hover {
+  background: var(--action-disabled);
+  border-color: var(--action-disabled);
+  color: var(--action-disabled-text);
   cursor: not-allowed;
 }
 
-/* Acceso */
-.dt-console .auth-page {
-  max-width: 420px;
-  margin: 10vh auto;
-  padding: 0 16px;
+.dt-console button.link:disabled {
+  background: none;
 }
 
-@media (max-width: 760px) {
-  .dt-console .shell {
-    grid-template-columns: 1fr;
-  }
-
-  .dt-console .sidebar {
-    position: static;
-    height: auto;
-  }
-
-  .dt-console .content {
-    padding: 20px 16px;
-  }
+.dt-console td button {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  font-size: 14px;
 }
 
-/* Páginas de configuración y trazabilidad del portal. */
+/* ---------- Trazabilidad ---------- */
 .dt-console .portal-table {
   overflow-x: auto;
   max-width: 100%;
@@ -451,8 +935,8 @@
 
 .dt-console .portal-caption {
   text-align: left;
-  color: var(--muted);
-  padding-bottom: 8px;
+  color: var(--text-secondary);
+  padding-bottom: var(--space-2);
 }
 
 .dt-console .portal-json {
@@ -461,11 +945,17 @@
   max-width: 48rem;
   max-height: 28rem;
   overflow: auto;
+  background: var(--bg-inverse);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-3) var(--space-4);
 }
 
 .dt-console .portal-id {
+  font-family: var(--font-mono);
   overflow-wrap: anywhere;
-  font-size: 0.8rem;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 .dt-console .portal-message {
@@ -475,36 +965,75 @@
 
 .dt-console .portal-outcome.succeeded .badge,
 .dt-console .portal-outcome.allowed .badge {
-  background: var(--ok-bg);
-  color: var(--ok);
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
 
 .dt-console .portal-outcome.failed .badge,
 .dt-console .portal-outcome.denied .badge {
-  background: var(--bad-bg);
-  color: var(--bad);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
 }
 
 .dt-console form.stack[hidden] {
   display: none;
 }
 
-.dt-console .content > .card fieldset {
-  min-width: 0;
-}
-
-.dt-console .content > .card progress {
+.dt-console progress {
+  appearance: none;
   width: 100%;
+  height: 8px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-subtle);
+  overflow: hidden;
 }
 
-@media (max-width: 760px) {
-  .dt-console .content > .card dl.kv {
-    grid-template-columns: 1fr;
+.dt-console progress::-webkit-progress-bar {
+  background: var(--bg-subtle);
+}
+
+.dt-console progress::-webkit-progress-value {
+  background: var(--action-accent);
+  border-radius: var(--radius-pill);
+}
+
+.dt-console progress::-moz-progress-bar {
+  background: var(--action-accent);
+  border-radius: var(--radius-pill);
+}
+
+/* Tablas anchas: desplazamiento dentro de su tarjeta, nunca de la página (DESIGN §7). */
+.dt-console .card:has(> table) {
+  overflow-x: auto;
+}
+
+@media (max-width: 767px) {
+  .dt-console .card {
+    padding: var(--space-4);
+  }
+
+  .dt-console .card > table,
+  .dt-console .portal-table > table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .dt-console .card > table td,
+  .dt-console .portal-table > table td {
+    white-space: nowrap;
+  }
+
+  .dt-console dl.kv {
+    grid-template-columns: minmax(0, 1fr);
     gap: 2px;
   }
 
-  .dt-console .content > .card dl.kv dd {
-    margin-bottom: 8px;
-    overflow-wrap: anywhere;
+  .dt-console dl.kv dd {
+    margin-bottom: var(--space-2);
+  }
+
+  .dt-console .page-header {
+    align-items: flex-start;
   }
 }

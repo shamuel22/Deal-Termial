@@ -43,24 +43,24 @@ export default function PaymentsSettingsPage() {
   return (
     <>
       <PageHeader
-        title="Pagos PayPal"
-        subtitle="Cobros como proveedor y autorizaciones para pagar como comprador."
+        title="PayPal payments"
+        subtitle="Receive payments as a supplier and authorize purchases as a buyer."
       />
 
       <section className="card">
-        <h2>Como proveedor: recibir pagos</h2>
+        <h2>Supplier: receive payments</h2>
         <dl className="kv">
-          <dt>Estado</dt>
+          <dt>Status</dt>
           <dd>
             <Badge value={seller.status} />
           </dd>
           <dt>Merchant ID</dt>
           <dd>{seller.merchantId ?? '—'}</dd>
-          <dt>Puede recibir pagos</dt>
-          <dd>{seller.paymentsReceivable ? 'Sí' : 'No'}</dd>
-          <dt>Email confirmado en PayPal</dt>
-          <dd>{seller.primaryEmailConfirmed ? 'Sí' : 'No'}</dd>
-          <dt>Última comprobación</dt>
+          <dt>Can receive payments</dt>
+          <dd>{seller.paymentsReceivable ? 'Yes' : 'No'}</dd>
+          <dt>Email confirmed in PayPal</dt>
+          <dd>{seller.primaryEmailConfirmed ? 'Yes' : 'No'}</dd>
+          <dt>Last checked</dt>
           <dd>{formatDate(seller.lastCheckedAt, true)}</dd>
         </dl>
         <ErrorBox error={onboard.error ?? refresh.error} />
@@ -71,31 +71,31 @@ export default function PaymentsSettingsPage() {
               disabled={onboard.pending}
               onClick={() => void onboard.run()}
             >
-              Conectar con PayPal
+              Continue in PayPal
             </button>
           )}
           {seller.status !== 'not_connected' && (
             <button disabled={refresh.pending} onClick={() => void refresh.run()}>
-              Comprobar estado en PayPal
+              Check status in PayPal
             </button>
           )}
         </div>
         <p className="muted">
-          Los compradores te pagan directamente en tu cuenta PayPal. Deal Terminal verifica con
-          PayPal que puedes cobrar antes de dirigirte pagos.
+          Buyers pay you directly into your PayPal account. Deal Terminal checks with PayPal that
+          you can receive payments before directing payments to you.
         </p>
       </section>
 
       <section className="card">
-        <h2>Como comprador: las dos autorizaciones</h2>
+        <h2>Buyer: two authorizations</h2>
         <div className="grid">
           <div>
-            <h3>1. Autorización comercial</h3>
-            <p>Qué puede comprar cada agente, a quién, cuánto y hasta cuándo.</p>
-            <Link to="/console/authorizations">Gestionar autorizaciones →</Link>
+            <h3>1. Purchase authorization</h3>
+            <p>What each agent can buy, from whom, how much and until when.</p>
+            <Link to="/console/authorizations">Manage purchase authorizations →</Link>
           </div>
           <div>
-            <h3>2. Autorización financiera</h3>
+            <h3>2. PayPal consent</h3>
             <p>
               <Badge value={automaticPayment.available ? 'active' : 'owner_action_required'} />
             </p>
@@ -104,9 +104,9 @@ export default function PaymentsSettingsPage() {
         </div>
         {!automaticPayment.available && (
           <div className="alert info">
-            Tus agentes con autonomía total buscan, negocian, aceptan y reservan dentro de su
-            autorización. Cuando cierran un pedido recibes una notificación y lo pagas desde{' '}
-            <Link to="/console/orders">Pedidos</Link> con un checkout de PayPal.
+            Full autonomy: Within your authorized limits. Your agents search, negotiate, accept and
+            reserve under their purchase authorization. When they place an order, you’re notified
+            and pay from <Link to="/console/orders">Orders</Link> through PayPal checkout.
           </div>
         )}
       </section>

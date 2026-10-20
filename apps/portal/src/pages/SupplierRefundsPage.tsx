@@ -26,21 +26,18 @@ function Refunds({ base }: { base: string }) {
   const [result, setResult] = useState<Refund | null>(null);
   return (
     <>
-      <PageHeader
-        title="Devoluciones de ventas"
-        subtitle="Solicitudes pendientes de tu decisión como proveedor."
-      />
+      <PageHeader title="Sales refunds" subtitle="Requests awaiting your decision as supplier." />
       <ErrorBox error={refunds.error} />
       {refunds.loading && <Loading />}
       {result && (
         <div className="alert info" role="status">
-          Última decisión registrada: <Money value={result.amount} currency={result.currency} /> ·{' '}
+          Latest recorded decision: <Money value={result.amount} currency={result.currency} /> ·{' '}
           <Badge value={result.status} />
           {result.failureMessage && <p>{result.failureMessage}</p>}
-          <p>Aprobar autoriza el reembolso; el estado indica si PayPal ya lo confirmó.</p>
+          <p>Approval authorizes the refund. The status shows whether PayPal has confirmed it.</p>
         </div>
       )}
-      {refunds.data?.length === 0 && <Empty>No tienes solicitudes de devolución pendientes.</Empty>}
+      {refunds.data?.length === 0 && <Empty>No refund requests awaiting your decision.</Empty>}
       {refunds.data?.map((r) => (
         <RefundCard
           key={r.id}
@@ -71,7 +68,7 @@ function RefundCard({
   async function approve() {
     if (
       !window.confirm(
-        '¿Autorizar esta devolución por el importe indicado? La plataforma enviará la solicitud de reembolso a PayPal.',
+        'Authorize this refund for the amount shown? The platform will send the refund request to PayPal.',
       )
     )
       return;
@@ -82,9 +79,7 @@ function RefundCard({
     e.preventDefault();
     const reason = textFrom(new FormData(e.currentTarget), 'reason');
     if (
-      !window.confirm(
-        '¿Rechazar la devolución con este motivo? El comprador recibirá tu respuesta.',
-      )
+      !window.confirm('Reject the refund with this reason? The buyer will receive your response.')
     )
       return;
     const result = await action.run('reject', { reason });
@@ -93,18 +88,18 @@ function RefundCard({
   return (
     <section className="card stack">
       <h2>
-        Pedido <Link to={`/console/orders/${r.orderId}`}>{r.orderId}</Link>
+        Order <Link to={`/console/orders/${r.orderId}`}>{r.orderId}</Link>
       </h2>
       <dl className="kv">
-        <dt>Importe</dt>
+        <dt>Amount</dt>
         <dd>
           <Money value={r.amount} currency={r.currency} />
         </dd>
-        <dt>Motivo</dt>
-        <dd>{r.reason ?? 'Sin motivo indicado'}</dd>
-        <dt>Solicitada</dt>
+        <dt>Reason</dt>
+        <dd>{r.reason ?? 'No reason provided'}</dd>
+        <dt>Requested</dt>
         <dd>{formatDate(r.createdAt, true)}</dd>
-        <dt>Estado</dt>
+        <dt>Status</dt>
         <dd>
           <Badge value={r.status} />
         </dd>
@@ -112,24 +107,24 @@ function RefundCard({
       <ErrorBox error={action.error} />
       <div className="actions">
         <button className="primary" disabled={action.pending} onClick={() => void approve()}>
-          Aprobar devolución
+          Approve refund
         </button>
         <button
           className="danger"
           disabled={action.pending}
           onClick={() => setRejecting(!rejecting)}
         >
-          {rejecting ? 'Cancelar rechazo' : 'Rechazar con motivo'}
+          {rejecting ? 'Cancel' : 'Reject with reason'}
         </button>
       </div>
       {rejecting && (
         <form className="stack" onSubmit={reject}>
           <label>
-            Motivo del rechazo
+            Reason for rejection
             <textarea name="reason" required maxLength={500} rows={3} disabled={action.pending} />
           </label>
           <button className="danger" disabled={action.pending}>
-            Confirmar rechazo
+            Confirm rejection
           </button>
         </form>
       )}

@@ -31,7 +31,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   if (!res.ok) {
     const error = (json as { error?: ApiErrorBody } | null)?.error ?? {
       code: `HTTP_${res.status}`,
-      message: res.statusText || 'Error de red',
+      message: res.statusText || 'Network error',
     };
     throw new ApiError(res.status, error);
   }

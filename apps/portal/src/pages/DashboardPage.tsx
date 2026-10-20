@@ -3,6 +3,7 @@ import { Badge, ErrorBox, formatDate, Money, PageHeader } from '../components/ui
 import { useResource } from '../hooks';
 import { useSession } from '../session';
 import type { ActivityItem, NegotiationView, OrderView } from '../types';
+import { actions as activityActions } from './ActivityPage';
 
 interface MonthlyBudget {
   period: string;
@@ -26,15 +27,15 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={org?.orgName ?? 'Resumen'}
-        subtitle="Lo que tus agentes hicieron y lo que espera tu decisión."
+        title={org?.orgName ?? 'Overview'}
+        subtitle="What your agents have done and what needs your decision."
       />
       <ErrorBox error={proposals.error ?? orders.error} />
 
       {incidents.length > 0 && (
         <div className="alert warn">
-          {incidents.length} pedido(s) con incidencia.{' '}
-          <Link to={`/console/orders/${incidents[0]!.id}`}>Revisar</Link>
+          {incidents.length} order(s) with an issue.{' '}
+          <Link to={`/console/orders/${incidents[0]!.id}`}>Review</Link>
         </div>
       )}
 
@@ -44,7 +45,7 @@ export default function DashboardPage() {
           className="card stat"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
-          <span className="muted">Propuestas por revisar</span>
+          <span className="muted">Offers to review</span>
           <div className="value">{proposals.data?.length ?? '…'}</div>
         </Link>
         <Link
@@ -52,17 +53,18 @@ export default function DashboardPage() {
           className="card stat"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
-          <span className="muted">Pedidos pendientes de pago</span>
+          <span className="muted">Orders awaiting payment</span>
           <div className="value">{orders.data ? toPay.length : '…'}</div>
           {toPay.length > 0 && (
             <span className="muted">
-              <Money value={toPay.reduce((sum, o) => addCents(sum, o.total), '0.00')} /> en total
+              <Money value={toPay.reduce((sum, o) => addCents(sum, o.total), '0.00')} /> total
             </span>
           )}
         </Link>
         <div className="card stat">
           <span className="muted">
-            Presupuesto mensual de agentes {budget.data ? `(${budget.data.period})` : ''}
+            Monthly agent budget · Available to authorize{' '}
+            {budget.data ? `(${budget.data.period} UTC)` : ''}
           </span>
           {budget.data ? (
             <>
@@ -70,13 +72,13 @@ export default function DashboardPage() {
                 <Money value={budget.data.available} />
               </div>
               <span className="muted">
-                de <Money value={budget.data.limit} /> · consumido{' '}
-                <Money value={budget.data.consumed} /> · reservado{' '}
+                of <Money value={budget.data.limit} /> · Spent{' '}
+                <Money value={budget.data.consumed} /> · Committed{' '}
                 <Money value={budget.data.reserved} />
               </span>
             </>
           ) : (
-            <div className="value muted">Sin límite</div>
+            <div className="value muted">No limit</div>
           )}
         </div>
         <Link
@@ -84,14 +86,14 @@ export default function DashboardPage() {
           className="card stat"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
-          <span className="muted">Ventas</span>
+          <span className="muted">Sales</span>
           <div className="value">{sales.data?.length ?? '…'}</div>
         </Link>
       </div>
 
       {toPay.length > 0 && (
         <section className="card">
-          <h2>Para pagar</h2>
+          <h2>To pay</h2>
           <table>
             <tbody>
               {toPay.map((o) => (
@@ -101,9 +103,9 @@ export default function DashboardPage() {
                   <td className="num">
                     <Money value={o.total} />
                   </td>
-                  <td>{o.acceptedBy.agentId ? 'Aceptado por tu agente' : 'Aceptado por ti'}</td>
+                  <td>{o.acceptedBy.agentId ? 'Accepted by your agent' : 'Accepted by you'}</td>
                   <td>
-                    <Link to={`/console/orders/${o.id}`}>Pagar →</Link>
+                    <Link to={`/console/orders/${o.id}`}>Pay →</Link>
                   </td>
                 </tr>
               ))}
@@ -113,14 +115,14 @@ export default function DashboardPage() {
       )}
 
       <section className="card">
-        <h2>Actividad reciente</h2>
+        <h2>Recent activity</h2>
         <table>
           <tbody>
             {(activity.data ?? []).map((a) => (
               <tr key={a.id}>
                 <td className="muted">{formatDate(a.at, true)}</td>
                 <td>{a.actor.name ?? a.actor.type}</td>
-                <td>{a.action}</td>
+                <td>{activityActions[a.action] ?? a.action}</td>
                 <td>
                   <Badge
                     value={
@@ -132,7 +134,7 @@ export default function DashboardPage() {
             ))}
           </tbody>
         </table>
-        <Link to="/console/activity">Ver toda la actividad →</Link>
+        <Link to="/console/activity">View all activity →</Link>
       </section>
     </>
   );

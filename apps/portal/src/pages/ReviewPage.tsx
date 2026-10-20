@@ -20,8 +20,8 @@ export default function ReviewPage() {
   return (
     <>
       <PageHeader
-        title="Propuestas"
-        subtitle="Acuerdos negociados por tus agentes que esperan tu decisión. Revisa todos los costes antes de aceptar."
+        title="Offers to review"
+        subtitle="Agreements negotiated by your agents awaiting your decision. Review all costs before accepting."
         actions={
           <label className="inline">
             <input
@@ -29,7 +29,7 @@ export default function ReviewPage() {
               checked={showAll}
               onChange={(e) => setShowAll(e.target.checked)}
             />
-            Ver todas las negociaciones
+            View all negotiations
           </label>
         }
       />
@@ -37,8 +37,8 @@ export default function ReviewPage() {
       {list.loading && !list.data && <Loading />}
       {list.data?.length === 0 && (
         <Empty>
-          No hay propuestas pendientes. Cuando un agente con nivel "solo negociación" cierre una
-          propuesta, aparecerá aquí.
+          No offers awaiting review. When an agent with Negotiate only permissions submits an offer,
+          it will appear here.
         </Empty>
       )}
       {list.data?.map((n) => (
@@ -81,11 +81,11 @@ function Proposal({
       <div className="page-header">
         <div>
           <h2>
-            {String(supplierQuote?.product.name ?? last?.product.name ?? 'Producto')} ·{' '}
+            {String(supplierQuote?.product.name ?? last?.product.name ?? 'Product')} ·{' '}
             {negotiation.supplier.name}
           </h2>
           <p className="muted">
-            {negotiation.quotes.length} versiones · <Badge value={negotiation.status} />
+            {negotiation.quotes.length} versions · <Badge value={negotiation.status} />
           </p>
         </div>
       </div>
@@ -95,7 +95,7 @@ function Proposal({
           <div>
             <QuoteBreakdown quote={supplierQuote} />
             <p className="muted">
-              Válida hasta {formatDate(supplierQuote.expiresAt, true)}
+              Valid until {formatDate(supplierQuote.expiresAt, true)}
               {supplierQuote.message && <> · «{supplierQuote.message}»</>}
             </p>
           </div>
@@ -103,17 +103,17 @@ function Proposal({
             {negotiation.authorizationCheck &&
               (violations.length === 0 ? (
                 <div className="alert ok">
-                  Cabe dentro de la autorización que diste a tu agente.
+                  Within the purchase authorization you granted your agent.
                 </div>
               ) : (
                 <div className="alert warn">
-                  <strong>Fuera de la autorización del agente:</strong>
+                  <strong>Outside the agent’s purchase authorization:</strong>
                   <ul>
                     {violations.map((v) => (
                       <li key={v.code + v.message}>{v.message}</li>
                     ))}
                   </ul>
-                  Como dueña o dueño puedes aceptarla igualmente.
+                  As the owner, you can still accept it.
                 </div>
               ))}
             <ErrorBox error={accept.error} />
@@ -124,7 +124,7 @@ function Proposal({
                 onClick={() => {
                   if (
                     window.confirm(
-                      `¿Aceptar el acuerdo con ${negotiation.supplier.name} y pagar con PayPal?`,
+                      `Accept the agreement with ${negotiation.supplier.name} and pay with PayPal?`,
                     )
                   ) {
                     void accept.run();
@@ -132,33 +132,33 @@ function Proposal({
                 }}
               >
                 {expired
-                  ? 'Cotización vencida'
+                  ? 'Quote expired'
                   : accept.pending
-                    ? 'Preparando pago…'
-                    : 'Aceptar y pagar con PayPal'}
+                    ? 'Preparing payment…'
+                    : 'Approve and pay'}
               </button>
             )}
             <p className="muted">
-              Al aceptar se reservan el stock y tu presupuesto; el cobro ocurre solo cuando apruebas
-              el pago en PayPal.
+              Accepting reserves stock and your budget. You are charged only after you approve the
+              payment in PayPal.
             </p>
           </div>
         </div>
       ) : (
-        <p className="muted">Esperando la cotización del proveedor.</p>
+        <p className="muted">Waiting for the supplier’s quote.</p>
       )}
 
       <details>
-        <summary>Historial de la negociación</summary>
+        <summary>Negotiation history</summary>
         <table>
           <thead>
             <tr>
-              <th>Versión</th>
-              <th>Autor</th>
-              <th className="num">Precio unitario</th>
+              <th>Version</th>
+              <th>Author</th>
+              <th className="num">Unit price</th>
               <th className="num">Total</th>
-              <th>Entrega</th>
-              <th>Estado</th>
+              <th>Delivery</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -166,8 +166,8 @@ function Proposal({
               <tr key={q.id}>
                 <td>v{q.version}</td>
                 <td>
-                  {q.author === 'buyer' ? 'Tu agente' : negotiation.supplier.name}
-                  {q.autoGenerated && <span className="muted"> (reglas)</span>}
+                  {q.author === 'buyer' ? 'Your agent' : negotiation.supplier.name}
+                  {q.autoGenerated && <span className="muted"> (rules)</span>}
                 </td>
                 <td className="num">{q.unitPrice}</td>
                 <td className="num">{q.total}</td>

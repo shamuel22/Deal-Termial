@@ -14,79 +14,79 @@ interface ActivityEvent {
   outcome: string;
   details: Record<string, unknown> | null;
 }
-const actions: Record<string, string> = {
-  'organization.created': 'Empresa registrada',
-  'organization.monthly_limit_set': 'Límite mensual actualizado',
-  'agent.created': 'Agente conectado',
-  'agent.access_changed': 'Facultades del agente modificadas',
-  'agent.credential_issued': 'Credencial emitida',
-  'agent.credential_revoked': 'Credencial revocada',
-  'agent.disabled': 'Agente deshabilitado',
-  'authorization.created': 'Autorización de compra activada',
-  'authorization.amended': 'Condiciones de autorización modificadas',
-  'authorization.revoked': 'Autorización revocada',
-  'change_request.submitted': 'Solicitud de cambio enviada',
-  'change_request.approved': 'Solicitud de cambio aprobada',
-  'change_request.rejected': 'Solicitud de cambio rechazada',
-  'product.created': 'Producto creado',
-  'product.updated': 'Producto actualizado',
-  'offer.created': 'Oferta creada',
-  'offer.updated': 'Condiciones de oferta actualizadas',
-  'offer.status_changed': 'Estado de oferta modificado',
-  'request.created': 'Necesidad de compra registrada',
-  'request.cancelled': 'Solicitud de compra cancelada',
-  'negotiation.quote_requested': 'Cotización solicitada',
-  'negotiation.countered': 'Contrapropuesta del comprador enviada',
-  'negotiation.quote_submitted': 'Cotización del proveedor enviada',
-  'negotiation.submitted_for_review': 'Propuesta enviada al dueño para revisión',
-  'negotiation.counter_accepted': 'Contrapropuesta aceptada por el proveedor',
-  'negotiation.counter_rejected': 'Contrapropuesta rechazada por el proveedor',
-  'negotiation.counter_countered': 'Contraoferta del proveedor enviada',
-  'order.accepted': 'Acuerdo aceptado y pedido creado',
-  'order.accept_denied': 'Aceptación del acuerdo bloqueada',
-  'order.cancelled': 'Pedido cancelado',
-  'order.expired': 'Reserva del pedido vencida',
-  'payment.checkout_started': 'Checkout PayPal iniciado',
-  'payment.owner_action_required': 'Pago pendiente del dueño',
-  'payment.dispatched': 'Pago enviado a PayPal',
-  'payment.completed': 'Pago confirmado',
-  'payment.failed': 'Pago fallido',
-  'payment.requires_action': 'Pago requiere intervención',
-  'payment_connection.revoked': 'Autorización financiera revocada',
-  'refund.requested': 'Devolución solicitada',
-  'refund.authorized': 'Devolución autorizada',
-  'refund.rejected': 'Devolución rechazada',
-  'refund.completed': 'Reembolso confirmado',
-  'refund.failed': 'Reembolso fallido',
-  'seller_account.onboarding_started': 'Conexión PayPal del proveedor iniciada',
-  'seller_account.status_changed': 'Estado de cobro del proveedor actualizado',
+export const actions: Record<string, string> = {
+  'organization.created': 'Organization registered',
+  'organization.monthly_limit_set': 'Monthly limit updated',
+  'agent.created': 'Agent connected',
+  'agent.access_changed': 'Agent permissions changed',
+  'agent.credential_issued': 'Credential issued',
+  'agent.credential_revoked': 'Credential revoked',
+  'agent.disabled': 'Agent disabled',
+  'authorization.created': 'Purchase authorization activated',
+  'authorization.amended': 'Authorization terms changed',
+  'authorization.revoked': 'Purchase authorization revoked',
+  'change_request.submitted': 'Change request submitted',
+  'change_request.approved': 'Change request approved',
+  'change_request.rejected': 'Change request rejected',
+  'product.created': 'Product created',
+  'product.updated': 'Product updated',
+  'offer.created': 'Offer created',
+  'offer.updated': 'Offer terms updated',
+  'offer.status_changed': 'Offer status changed',
+  'request.created': 'Purchase need recorded',
+  'request.cancelled': 'Purchase request cancelled',
+  'negotiation.quote_requested': 'Quote requested',
+  'negotiation.countered': 'Buyer counteroffer submitted',
+  'negotiation.quote_submitted': 'Supplier quote submitted',
+  'negotiation.submitted_for_review': 'Offer submitted for owner review',
+  'negotiation.counter_accepted': 'Counteroffer accepted by supplier',
+  'negotiation.counter_rejected': 'Counteroffer rejected by supplier',
+  'negotiation.counter_countered': 'Supplier counteroffer submitted',
+  'order.accepted': 'Agreement accepted and order created',
+  'order.accept_denied': 'Agreement acceptance blocked',
+  'order.cancelled': 'Order cancelled',
+  'order.expired': 'Order reservation expired',
+  'payment.checkout_started': 'PayPal checkout started',
+  'payment.owner_action_required': 'Payment awaiting owner action',
+  'payment.dispatched': 'Payment sent to PayPal',
+  'payment.completed': 'Payment confirmed',
+  'payment.failed': 'Payment failed',
+  'payment.requires_action': 'Payment requires action',
+  'payment_connection.revoked': 'PayPal consent revoked',
+  'refund.requested': 'Refund requested',
+  'refund.authorized': 'Refund authorized',
+  'refund.rejected': 'Refund rejected',
+  'refund.completed': 'Refund confirmed',
+  'refund.failed': 'Refund failed',
+  'seller_account.onboarding_started': 'Supplier PayPal connection started',
+  'seller_account.status_changed': 'Supplier payment status updated',
 };
 const resources: Record<string, string> = {
-  organization: 'Empresa',
-  agent: 'Agente',
-  purchase_authorization: 'Autorización de compra',
-  authorization_change_request: 'Solicitud de cambio',
-  product: 'Producto',
-  offer: 'Oferta',
-  purchase_request: 'Solicitud de compra',
-  negotiation: 'Negociación',
-  order: 'Pedido',
-  refund: 'Devolución',
-  seller_account: 'Cuenta PayPal del proveedor',
-  payment_connection: 'Autorización financiera',
+  organization: 'Organization',
+  agent: 'Agent',
+  purchase_authorization: 'Purchase authorization',
+  authorization_change_request: 'Change request',
+  product: 'Product',
+  offer: 'Offer',
+  purchase_request: 'Purchase request',
+  negotiation: 'Negotiation',
+  order: 'Order',
+  refund: 'Refund',
+  seller_account: 'Supplier PayPal account',
+  payment_connection: 'PayPal consent',
 };
 const actors: Record<string, string> = {
-  user: 'Persona',
-  agent: 'Agente',
-  system: 'Sistema',
+  user: 'Person',
+  agent: 'Agent',
+  system: 'System',
   paypal: 'PayPal',
-  operator: 'Operador',
+  operator: 'Operator',
 };
 const outcomes: Record<string, string> = {
-  allowed: 'Permitida',
-  denied: 'Denegada',
-  succeeded: 'Completada',
-  failed: 'Fallida',
+  allowed: 'Allowed',
+  denied: 'Denied',
+  succeeded: 'Completed',
+  failed: 'Failed',
 };
 export default function ActivityPage() {
   const { orgPath } = useSession();
@@ -98,14 +98,14 @@ function Activity({ base }: { base: string }) {
   return (
     <>
       <PageHeader
-        title="Consola de actividad"
-        subtitle="Quién actuó, qué se autorizó y qué ocurrió. Se muestran hasta 200 eventos recientes."
+        title="Activity console"
+        subtitle="Who acted, what was authorized and what happened. Shows up to 200 recent events."
       />
       <section className="card">
         <label>
-          Tipo de recurso
+          Resource type
           <select value={resourceType} onChange={(e) => setResourceType(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">All</option>
             {Object.entries(resources).map(([value, title]) => (
               <option key={value} value={value}>
                 {title}
@@ -130,15 +130,15 @@ function ActivityResults({ path }: { path: string }) {
       {events.data &&
         (events.data.length ? (
           <section className="card">
-            <Table title="Trazabilidad de tu empresa">
+            <Table title="Organization activity log">
               <thead>
                 <tr>
-                  <th>Fecha y hora</th>
+                  <th>Date and time</th>
                   <th>Actor</th>
-                  <th>Acción</th>
-                  <th>Recurso</th>
-                  <th>Resultado</th>
-                  <th>Detalles</th>
+                  <th>Action</th>
+                  <th>Resource</th>
+                  <th>Outcome</th>
+                  <th>Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -147,26 +147,26 @@ function ActivityResults({ path }: { path: string }) {
                     <td>{formatDate(event.at, true)}</td>
                     <td>
                       {actors[event.actor.type] ?? 'Actor'}
-                      <div>{event.actor.name ?? event.actor.id ?? 'Sin nombre disponible'}</div>
+                      <div>{event.actor.name ?? event.actor.id ?? 'Name unavailable'}</div>
                     </td>
                     <td>
-                      {actions[event.action] ?? 'Otra acción registrada'}
+                      {actions[event.action] ?? 'Other recorded action'}
                       <div className="muted">
                         <code>{event.action}</code>
                       </div>
                     </td>
                     <td>
-                      {resources[event.resourceType] ?? 'Otro recurso'}
-                      <div className="portal-id">{event.resourceId ?? 'Sin identificador'}</div>
+                      {resources[event.resourceType] ?? 'Other resource'}
+                      <div className="portal-id">{event.resourceId ?? 'No ID'}</div>
                     </td>
                     <td>
                       <span className={`portal-outcome ${event.outcome}`}>
-                        <Badge value={outcomes[event.outcome] ?? 'Sin resultado conocido'} />
+                        <Badge value={outcomes[event.outcome] ?? 'Outcome unknown'} />
                       </span>
                     </td>
                     <td>
                       <details>
-                        <summary>Ver detalles</summary>
+                        <summary>View details</summary>
                         <pre className="portal-json">
                           {JSON.stringify(event.details ?? {}, null, 2)}
                         </pre>
@@ -178,7 +178,7 @@ function ActivityResults({ path }: { path: string }) {
             </Table>
           </section>
         ) : (
-          <Empty>No hay actividad para este filtro.</Empty>
+          <Empty>No activity matches this filter.</Empty>
         ))}
     </>
   );

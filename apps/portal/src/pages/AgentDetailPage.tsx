@@ -68,14 +68,14 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
     if (
       reducing &&
       !window.confirm(
-        '¿Reducir las facultades de este agente? Bloqueará las nuevas operaciones que ya no estén permitidas. Los pagos enviados no se revierten.',
+        'Reduce this agent’s permissions? New operations outside its permissions will be blocked. Payments already processing will still be checked.',
       )
     )
       return;
     setMessage('');
     if (await change.run(form)) {
       reload();
-      setMessage('Facultades actualizadas. Se aplicarán en la próxima operación del agente.');
+      setMessage('Permissions updated. They apply to the agent’s next operation.');
     }
   }
   async function emit() {
@@ -87,34 +87,38 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
     }
   }
   async function revokeKey(id: string) {
-    if (!window.confirm('¿Revocar esta credencial? El cliente que la use perderá el acceso.'))
+    if (
+      !window.confirm(
+        'Revoke this credential? The client using it will lose access. New purchases will be blocked. Payments already processing will still be checked.',
+      )
+    )
       return;
     if (await revoke.run(id)) {
       if (secret?.credentialId === id) setSecret(null);
       reload();
-      setMessage('Credencial revocada.');
+      setMessage('Credential revoked.');
     }
   }
   async function disableAgent() {
     if (
       !window.confirm(
-        '¿Deshabilitar este agente y revocar todas sus credenciales? No podrá realizar nuevas operaciones. Esto no revierte pagos ya enviados.',
+        'Disable this agent and revoke all its credentials? New purchases will be blocked. Payments already processing will still be checked.',
       )
     )
       return;
     if (await disable.run()) {
       setSecret(null);
       reload();
-      setMessage('Agente deshabilitado y credenciales revocadas.');
+      setMessage('Agent disabled and credentials revoked.');
     }
   }
   const mcpUrl = `${location.origin}/mcp`;
   return (
     <>
       <PageHeader
-        title={agent.data?.name ?? 'Agente'}
+        title={agent.data?.name ?? 'Agent'}
         subtitle={agent.data?.description ?? undefined}
-        actions={<Link to="/console/agents">Todos los agentes</Link>}
+        actions={<Link to="/console/agents">All agents</Link>}
       />
       <ErrorBox error={agent.error} />
       {agent.loading && <Loading />}
@@ -127,48 +131,46 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
         <>
           {agent.data.disabledAt && (
             <p className="alert warn">
-              Agente deshabilitado el {formatDate(agent.data.disabledAt, true)}.
+              Agent disabled on {formatDate(agent.data.disabledAt, true)}.
             </p>
           )}
           <section className="card">
-            <h2>Acceso concedido por el dueño</h2>
+            <h2>Access granted by the owner</h2>
             <p>
-              Versión vigente: {agent.data.access.version}. Concedida por{' '}
+              Current version: {agent.data.access.version}. Granted by{' '}
               {agent.data.access.grantedByUserId === me?.user.id
                 ? me.user.name
-                : `usuario ${agent.data.access.grantedByUserId}`}{' '}
-              el {formatDate(agent.data.access.grantedAt, true)}.
+                : `user ${agent.data.access.grantedByUserId}`}{' '}
+              on {formatDate(agent.data.access.grantedAt, true)}.
             </p>
             <form key={agent.data.access.version} className="stack" onSubmit={save}>
               <fieldset className="stack" disabled={pending || !!agent.data.disabledAt}>
                 <AccessFields initial={agent.data.access} />
                 <button className="primary">
-                  {change.pending ? 'Guardando…' : 'Guardar facultades'}
+                  {change.pending ? 'Saving…' : 'Save permissions'}
                 </button>
               </fieldset>
               <ErrorBox error={change.error} />
             </form>
             <p className="muted">
-              Reducir o revocar permisos bloquea nuevas aceptaciones y pagos aún no enviados. Los
-              pagos en curso se concilian; los ya cobrados requieren devolución.
+              New purchases will be blocked. Payments already processing will still be checked.
+              Payments already collected require a refund.
             </p>
           </section>
           <section className="card">
-            <h2>Credenciales</h2>
+            <h2>Credentials</h2>
             <button
               onClick={() => void emit()}
               disabled={pending || !!agent.data.disabledAt || !!secret}
             >
-              Emitir credencial
+              Issue credential
             </button>
             <ErrorBox error={issue.error} />
             <ErrorBox error={revoke.error} />
             {secret && (
               <div className="alert warn">
-                <strong>Guárdala ahora: no se volverá a mostrar.</strong>
-                <p>
-                  Configúrala en tu cliente MCP. No la pegues en una conversación con el modelo.
-                </p>
+                <strong>Save it now. It won’t be shown again.</strong>
+                <p>Set it in your MCP client. Don’t paste it into a conversation with the model.</p>
                 <div className="secret">{secret.apiKey}</div>
                 <div className="actions">
                   <button
@@ -177,22 +179,22 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
                       if (await copy.run()) setCopied(true);
                     }}
                   >
-                    {copied ? 'Copiada' : 'Copiar credencial'}
+                    {copied ? 'Copied' : 'Copy credential'}
                   </button>
-                  <button onClick={() => setSecret(null)}>Ocultar credencial</button>
+                  <button onClick={() => setSecret(null)}>Hide credential</button>
                 </div>
                 <ErrorBox error={copy.error} />
               </div>
             )}
             {agent.data.credentials.length ? (
-              <Table title="Credenciales del agente">
+              <Table title="Agent credentials">
                 <thead>
                   <tr>
-                    <th>Prefijo</th>
-                    <th>Creada</th>
-                    <th>Último uso</th>
-                    <th>Revocada</th>
-                    <th>Acción</th>
+                    <th>Prefix</th>
+                    <th>Created</th>
+                    <th>Last used</th>
+                    <th>Revoked</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -211,7 +213,7 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
                             disabled={pending}
                             onClick={() => void revokeKey(c.id)}
                           >
-                            Revocar credencial
+                            Revoke access
                           </button>
                         )}
                       </td>
@@ -220,29 +222,29 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
                 </tbody>
               </Table>
             ) : (
-              <Empty>Emite una credencial para conectar el cliente del agente.</Empty>
+              <Empty>Issue a credential to connect the agent’s client.</Empty>
             )}
           </section>
           <section className="card">
-            <h2>Conexión MCP</h2>
+            <h2>MCP connection</h2>
             <dl className="kv">
               <dt>URL</dt>
               <dd>
                 <code>{mcpUrl}</code>
               </dd>
-              <dt>Cabecera</dt>
+              <dt>Header</dt>
               <dd>
-                <code>Authorization: Bearer &lt;credencial&gt;</code>
+                <code>Authorization: Bearer &lt;credential&gt;</code>
               </dd>
             </dl>
             <p>
-              En Claude Code, configura la variable de entorno <code>DEAL_TERMINAL_KEY</code> con tu
-              credencial y ejecuta:
+              In Claude Code, set the environment variable <code>DEAL_TERMINAL_KEY</code> to your
+              credential and run:
             </p>
             <pre className="secret portal-message">{`claude mcp add --transport http deal-terminal ${mcpUrl} \\\n  --header "Authorization: Bearer \${DEAL_TERMINAL_KEY}"`}</pre>
           </section>
           <section className="card">
-            <h2>Autorizaciones del agente</h2>
+            <h2>Agent purchase authorizations</h2>
             <ErrorBox error={authorizations.error} />
             {authorizations.loading && <Loading />}
             {authorizations.data &&
@@ -250,25 +252,25 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
                 <ul>
                   {authorizations.data.map((a) => (
                     <li key={a.id}>
-                      {a.terms.mandate} <Badge value={a.status} /> · versión {a.version}
+                      {a.terms.mandate} <Badge value={a.status} /> · version {a.version}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <Empty>Sin autorizaciones de compra.</Empty>
+                <Empty>No purchase authorizations.</Empty>
               ))}
-            <Link to="/console/authorizations">Administrar autorizaciones</Link>
+            <Link to="/console/authorizations">Manage purchase authorizations</Link>
           </section>
           <section className="card">
-            <h2>Deshabilitar agente</h2>
-            <p>Revoca todas sus credenciales e impide nuevas operaciones.</p>
+            <h2>Disable agent</h2>
+            <p>Revokes all its credentials and blocks new operations.</p>
             <ErrorBox error={disable.error} />
             <button
               className="danger"
               disabled={pending || !!agent.data.disabledAt}
               onClick={() => void disableAgent()}
             >
-              Deshabilitar agente
+              Disable agent
             </button>
           </section>
         </>

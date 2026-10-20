@@ -83,8 +83,8 @@ function Catalog({ base }: { base: string }) {
       (status === 'archived' || status === 'paused') &&
       !window.confirm(
         status === 'archived'
-          ? '¿Archivar esta oferta? No podrás volver a modificarla ni activarla.'
-          : '¿Pausar esta oferta? Dejará de estar disponible para nuevas operaciones.',
+          ? 'Archive this offer? You won’t be able to edit or activate it again.'
+          : 'Pause this offer? It will no longer be available for new operations.',
       )
     )
       return;
@@ -92,18 +92,18 @@ function Catalog({ base }: { base: string }) {
     if (await statusAction.run(offer.id, status)) {
       offers.reload();
       if (editing?.id === offer.id) setEditing(null);
-      setMessage('Estado de la oferta actualizado.');
+      setMessage('Offer status updated.');
     }
   }
   return (
     <>
       <PageHeader
-        title="Catálogo del proveedor"
-        subtitle="Publica envases y fija los límites dentro de los que se podrá negociar."
+        title="Supplier catalog"
+        subtitle="Publish containers and set negotiation limits."
       />
       <p className="alert info">
-        Para poder cobrar tus ventas,{' '}
-        <Link to="/console/settings/payments">conecta tu cuenta PayPal</Link>.
+        To receive payments for your sales,{' '}
+        <Link to="/console/settings/payments">connect your PayPal account</Link>.
       </p>
       {message && (
         <p className="alert ok" role="status">
@@ -116,16 +116,16 @@ function Catalog({ base }: { base: string }) {
       {offers.data &&
         (offers.data.length ? (
           <section className="card">
-            <Table title="Ofertas de tu empresa">
+            <Table title="Organization offers">
               <thead>
                 <tr>
-                  <th>SKU / producto</th>
-                  <th>Atributos</th>
-                  <th>Estado</th>
-                  <th>Stock informado</th>
-                  <th>Tramos de precio</th>
-                  <th>Versión</th>
-                  <th>Acciones</th>
+                  <th>SKU / product</th>
+                  <th>Attributes</th>
+                  <th>Status</th>
+                  <th>Reported stock</th>
+                  <th>Price tiers</th>
+                  <th>Version</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,7 +145,7 @@ function Catalog({ base }: { base: string }) {
                     <td>
                       {o.priceTiers.map((t) => (
                         <div key={t.minQty}>
-                          Desde {t.minQty}: <Money value={t.unitPrice} /> / unidad
+                          From {t.minQty}: <Money value={t.unitPrice} /> / unit
                         </div>
                       ))}
                     </td>
@@ -160,14 +160,14 @@ function Catalog({ base }: { base: string }) {
                               setMessage('');
                             }}
                           >
-                            Editar condiciones
+                            Edit terms
                           </button>
                           {o.status !== 'active' && (
                             <button
                               disabled={statusAction.pending || saving}
                               onClick={() => void setStatus(o, 'active')}
                             >
-                              Activar
+                              Activate
                             </button>
                           )}
                           {o.status === 'active' && (
@@ -175,7 +175,7 @@ function Catalog({ base }: { base: string }) {
                               disabled={statusAction.pending || saving}
                               onClick={() => void setStatus(o, 'paused')}
                             >
-                              Pausar
+                              Pause
                             </button>
                           )}
                           <button
@@ -183,7 +183,7 @@ function Catalog({ base }: { base: string }) {
                             disabled={statusAction.pending || saving}
                             onClick={() => void setStatus(o, 'archived')}
                           >
-                            Archivar
+                            Archive
                           </button>
                         </div>
                       )}
@@ -194,7 +194,7 @@ function Catalog({ base }: { base: string }) {
             </Table>
           </section>
         ) : (
-          <Empty>Aún no tienes ofertas.</Empty>
+          <Empty>You don’t have any offers yet.</Empty>
         ))}
       <OfferForm
         key={editing ? `${editing.id}:${editing.version}` : `new:${formVersion}`}
@@ -207,7 +207,7 @@ function Catalog({ base }: { base: string }) {
           offers.reload();
           setEditing(null);
           setFormVersion((v) => v + 1);
-          setMessage('Oferta guardada.');
+          setMessage('Offer saved.');
         }}
       />
     </>
@@ -301,35 +301,35 @@ function OfferForm({
   }
   return (
     <section className="card">
-      <h2>{initial ? `Editar condiciones: ${initial.product.name}` : 'Nueva oferta'}</h2>
+      <h2>{initial ? `Edit terms: ${initial.product.name}` : 'New offer'}</h2>
       <form className="stack" onSubmit={submit}>
         <fieldset className="stack" disabled={save.pending || disabled}>
           {product ? (
             <div>
               <p>
-                Producto: {product.name} · SKU {product.sku}
+                Product: {product.name} · SKU {product.sku}
               </p>
               <Attributes values={product.attributes} />
               {createdProduct && (
                 <p className="alert info">
-                  El producto ya se creó. Corrige las condiciones y vuelve a guardar para completar
-                  su oferta sin duplicar el producto.
+                  The product has been created. Correct the terms and save again to complete its
+                  offer without creating a duplicate product.
                 </p>
               )}
             </div>
           ) : (
             <fieldset className="stack">
-              <legend>Producto: envases para alimentos</legend>
+              <legend>Product: food containers</legend>
               <div className="row">
                 <Field title="SKU" name="sku" required maxLength={64} />
-                <Field title="Nombre del producto" name="name" required maxLength={200} />
+                <Field title="Product name" name="name" required maxLength={200} />
               </div>
               <div className="row">
                 <label>
                   Material
                   <select name="material" required defaultValue="">
                     <option value="" disabled>
-                      Selecciona un material
+                      Select a material
                     </option>
                     {Object.entries(materials).map(([value, title]) => (
                       <option key={value} value={value}>
@@ -339,7 +339,7 @@ function OfferForm({
                   </select>
                 </label>
                 <Field
-                  title="Capacidad (oz)"
+                  title="Capacity (oz)"
                   name="capacity_oz"
                   type="number"
                   min="0.01"
@@ -348,7 +348,7 @@ function OfferForm({
                   required
                 />
                 <Field
-                  title="Unidades por paquete"
+                  title="Units per pack"
                   name="pack_size"
                   type="number"
                   min="1"
@@ -356,32 +356,32 @@ function OfferForm({
                   required
                 />
               </div>
-              <Check title="Apto para comida caliente" name="hot_food_safe" />
-              <Check title="Apto para microondas" name="microwave_safe" />
-              <Check title="Con tapa" name="has_lid" />
+              <Check title="Safe for hot food" name="hot_food_safe" />
+              <Check title="Microwave safe" name="microwave_safe" />
+              <Check title="With lid" name="has_lid" />
             </fieldset>
           )}
           <fieldset className="stack">
-            <legend>Condiciones de la oferta</legend>
+            <legend>Offer terms</legend>
             <label>
-              Estado al guardar
+              Status when saved
               <select
                 name="status"
                 defaultValue={initial?.status === 'active' ? 'active' : 'draft'}
               >
-                <option value="draft">Borrador</option>
-                <option value="active">Activa</option>
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
               </select>
             </label>
             {initial?.status === 'paused' && (
               <p className="alert warn">
-                Al guardar, la oferta pausada pasará al estado que elijas arriba. Puedes conservarla
-                sin publicar como borrador.
+                Saving changes the paused offer to the status selected above. You can keep it
+                unpublished as a draft.
               </p>
             )}
             <div className="row">
               <Field
-                title="Stock informado (unidades)"
+                title="Reported stock (units)"
                 name="stockAvailable"
                 type="number"
                 min="0"
@@ -390,7 +390,7 @@ function OfferForm({
                 defaultValue={initial?.stockAvailable}
               />
               <Field
-                title="Pedido mínimo (unidades)"
+                title="Minimum order (units)"
                 name="minOrderQty"
                 type="number"
                 min="1"
@@ -399,7 +399,7 @@ function OfferForm({
                 defaultValue={initial?.minOrderQty ?? 1}
               />
               <Field
-                title="Pedido máximo (opcional)"
+                title="Maximum order (optional)"
                 name="maxOrderQty"
                 type="number"
                 min="1"
@@ -408,7 +408,7 @@ function OfferForm({
               />
             </div>
             <label>
-              Estados de entrega (selección múltiple)
+              Delivery states (select multiple)
               <select
                 name="shipRegions"
                 multiple
@@ -419,10 +419,10 @@ function OfferForm({
                 <StateOptions />
               </select>
             </label>
-            <p className="muted">En computadora, usa Ctrl o Cmd para seleccionar varios estados.</p>
+            <p className="muted">On a computer, use Ctrl or Cmd to select multiple states.</p>
             <div className="row">
               <Field
-                title="Plazo de entrega (días naturales)"
+                title="Delivery lead time (calendar days)"
                 name="leadTimeDays"
                 type="number"
                 min="0"
@@ -432,12 +432,12 @@ function OfferForm({
                 defaultValue={initial?.leadTimeDays ?? 3}
               />
               <MoneyField
-                title="Envío fijo (USD)"
+                title="Flat shipping (USD)"
                 name="shippingFlat"
                 defaultValue={initial?.shippingFlat ?? '0.00'}
               />
               <Field
-                title="Impuesto (fracción: 0.0825 = 8.25 %)"
+                title="Tax rate (fraction: 0.0825 = 8.25%)"
                 name="taxRate"
                 type="text"
                 inputMode="decimal"
@@ -446,23 +446,23 @@ function OfferForm({
                 defaultValue={initial?.taxRate ?? '0'}
               />
               <Field
-                title="Vigencia de la oferta (opcional, tu zona horaria)"
+                title="Offer expiration (optional, your time zone)"
                 name="validUntil"
                 type="datetime-local"
                 defaultValue={localDatetime(initial?.validUntil ?? null)}
               />
             </div>
             <p className="muted">
-              El impuesto se aplica sobre mercancía neta y transporte. La fracción máxima admitida
-              es 0.25 (25 %).
+              Tax applies to net merchandise and shipping. The maximum allowed fraction is 0.25
+              (25%).
             </p>
           </fieldset>
           <fieldset className="stack">
-            <legend>Tramos de precio por unidad (hasta 10)</legend>
+            <legend>Unit price tiers (up to 10)</legend>
             {tiers.map((t, index) => (
               <div className="row" key={t.key}>
                 <Field
-                  title={`Tramo ${index + 1}: cantidad mínima`}
+                  title={`Tier ${index + 1}: minimum quantity`}
                   name={`minQty-${t.key}`}
                   type="number"
                   min="1"
@@ -471,7 +471,7 @@ function OfferForm({
                   defaultValue={t.minQty}
                 />
                 <MoneyField
-                  title={`Tramo ${index + 1}: precio unitario (USD)`}
+                  title={`Tier ${index + 1}: unit price (USD)`}
                   precision={4}
                   name={`unitPrice-${t.key}`}
                   defaultValue={t.unitPrice}
@@ -483,7 +483,7 @@ function OfferForm({
                     setTiers((current) => current.filter((tier) => tier.key !== t.key))
                   }
                 >
-                  Quitar tramo {index + 1}
+                  Remove tier {index + 1}
                 </button>
               </div>
             ))}
@@ -495,27 +495,27 @@ function OfferForm({
                 setNextTier((n) => n + 1);
               }}
             >
-              Añadir tramo
+              Add tier
             </button>
             <p className="muted">
-              El primer tramo debe cubrir el pedido mínimo. Los precios deben mantenerse o bajar al
-              aumentar la cantidad.
+              The first tier must cover the minimum order. Prices must stay the same or decrease as
+              quantity increases.
             </p>
           </fieldset>
           <fieldset className="stack">
-            <legend>Reglas privadas de negociación</legend>
+            <legend>Private negotiation rules</legend>
             <p className="alert info">
-              Estas reglas nunca se muestran a compradores. Definen hasta dónde pueden negociar las
-              respuestas automáticas y tus agentes.
+              These rules are never shown to buyers. They set negotiation limits for automatic
+              responses and your agents.
             </p>
             <Check
-              title="Responder automáticamente dentro de estas reglas"
+              title="Respond automatically within these rules"
               name="autoRespond"
               defaultChecked={rules?.autoRespond ?? true}
             />
             <div className="row">
               <Field
-                title="Descuento máximo (fracción, hasta 0.50)"
+                title="Maximum discount (fraction, up to 0.50)"
                 name="maxDiscount"
                 type="text"
                 inputMode="decimal"
@@ -524,13 +524,13 @@ function OfferForm({
                 defaultValue={rules?.maxDiscount ?? '0'}
               />
               <MoneyField
-                title="Precio piso por unidad (USD)"
+                title="Minimum unit price (USD)"
                 precision={4}
                 name="floorUnitPrice"
                 defaultValue={rules?.floorUnitPrice ?? ''}
               />
               <Field
-                title="Cantidad mínima para descuento"
+                title="Minimum quantity for a discount"
                 name="minQtyForDiscount"
                 type="number"
                 min="1"
@@ -539,7 +539,7 @@ function OfferForm({
                 defaultValue={rules?.minQtyForDiscount ?? 1}
               />
               <Field
-                title="Plazo mínimo negociable (días)"
+                title="Minimum negotiable lead time (days)"
                 name="minLeadTimeDays"
                 type="number"
                 min="0"
@@ -549,7 +549,7 @@ function OfferForm({
                 defaultValue={rules?.minLeadTimeDays ?? 0}
               />
               <Field
-                title="Validez de cotizaciones (horas)"
+                title="Quote validity (hours)"
                 name="quoteValidityHours"
                 type="number"
                 min="1"
@@ -560,7 +560,7 @@ function OfferForm({
               />
             </div>
             <Check
-              title="Puede bonificar el envío"
+              title="Can waive shipping"
               name="canWaiveShipping"
               defaultChecked={rules?.canWaiveShipping ?? false}
             />
@@ -569,14 +569,14 @@ function OfferForm({
           <div className="actions">
             <button className="primary">
               {save.pending
-                ? 'Guardando…'
+                ? 'Saving…'
                 : initial
-                  ? 'Guardar condiciones y estado elegido'
-                  : 'Crear oferta'}
+                  ? 'Save terms and selected status'
+                  : 'Create offer'}
             </button>
             {initial && (
               <button type="button" onClick={onCancel}>
-                Cancelar edición
+                Cancel
               </button>
             )}
           </div>

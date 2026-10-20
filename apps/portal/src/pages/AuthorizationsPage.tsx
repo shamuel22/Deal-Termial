@@ -34,9 +34,9 @@ interface ChangeRequest {
   proposal: Proposal;
 }
 const kinds = {
-  new_authorization: 'Nueva autorización',
-  amend_authorization: 'Modificar autorización',
-  change_level: 'Cambiar nivel de compra',
+  new_authorization: 'New purchase authorization',
+  amend_authorization: 'Amend purchase authorization',
+  change_level: 'Change purchase level',
 };
 export default function AuthorizationsPage() {
   const { orgPath } = useSession();
@@ -64,13 +64,13 @@ function Authorizations({ base }: { base: string }) {
     agents.reload();
     requests.reload();
   };
-  const name = (id: string) => agents.data?.find((a) => a.id === id)?.name ?? `Agente ${id}`;
+  const name = (id: string) => agents.data?.find((a) => a.id === id)?.name ?? `Agent ${id}`;
   async function decide(path: string, confirmation: string) {
     if (!window.confirm(confirmation)) return;
     setMessage('');
     if (await action.run(path)) {
       reload();
-      setMessage('Cambio registrado.');
+      setMessage('Change recorded.');
     }
   }
   async function saveLimit(e: FormEvent<HTMLFormElement>) {
@@ -80,22 +80,22 @@ function Authorizations({ base }: { base: string }) {
     if (
       limit === null &&
       !window.confirm(
-        '¿Quitar el límite mensual compartido? Cada encargo conservará su propio presupuesto.',
+        'Remove the shared monthly limit? Each assignment will keep its own authorized budget.',
       )
     )
       return;
     setMessage('');
     if (await limitAction.run(limit)) {
       reload();
-      setMessage('Límite mensual actualizado.');
+      setMessage('Monthly limit updated.');
     }
   }
   return (
     <>
       <PageHeader
-        title="Autorizaciones"
-        subtitle="Define los encargos y límites que tus agentes deben respetar."
-        actions={<Link to="/console/authorizations/new">Nueva autorización</Link>}
+        title="Purchase authorizations"
+        subtitle="Set the assignments and limits your agents must follow."
+        actions={<Link to="/console/authorizations/new">New purchase authorization</Link>}
       />
       {message && (
         <p className="alert ok" role="status">
@@ -103,20 +103,20 @@ function Authorizations({ base }: { base: string }) {
         </p>
       )}
       <section className="card">
-        <h2>Límite mensual compartido</h2>
+        <h2>Shared monthly limit</h2>
         <ErrorBox error={monthly.error} />
         {monthly.loading && <Loading />}
         {!monthly.loading && !monthly.error && (
           <>
             {monthly.data ? (
               <>
-                <p>Mes {monthly.data.period} (UTC)</p>
+                <p>Month {monthly.data.period} (UTC)</p>
                 <BudgetView budget={monthly.data} />
               </>
             ) : (
               <p>
-                Sin límite mensual. La API no ofrece reservado, consumido ni disponible del mes
-                cuando no hay límite.
+                No monthly limit. Monthly committed, spent and available amounts are not provided
+                when no limit is set.
               </p>
             )}
             <MonthlyForm
@@ -129,18 +129,18 @@ function Authorizations({ base }: { base: string }) {
         )}
         <ErrorBox error={limitAction.error} />
         <p className="muted">
-          Es un límite de gasto delegado, no el saldo de tu cuenta bancaria. Los reembolsos no
-          restauran automáticamente el presupuesto.
+          This is a delegated spending limit, not your bank balance. Refunds do not automatically
+          restore the budget.
         </p>
       </section>
       <section className="card">
-        <h2>Encargos autorizados</h2>
+        <h2>Authorized assignments</h2>
         <ErrorBox error={authorizations.error} />
         <ErrorBox error={agents.error} />
         <ErrorBox error={action.error} />
         {authorizations.loading && <Loading />}
         {authorizations.data?.length === 0 && (
-          <Empty>No hay autorizaciones. Crea una para definir el encargo de un agente.</Empty>
+          <Empty>No purchase authorizations. Create one to define an agent’s assignment.</Empty>
         )}
         {authorizations.data?.map((a) => (
           <article className="card" key={a.id}>
@@ -148,7 +148,7 @@ function Authorizations({ base }: { base: string }) {
               {name(a.agentId)} · <Badge value={a.status} />
             </h3>
             <p className="muted">
-              Versión {a.version} · Identificador {a.id}
+              Version {a.version} · ID {a.id}
             </p>
             <div className="grid">
               <TermsSummary terms={a.terms} />
@@ -161,38 +161,38 @@ function Authorizations({ base }: { base: string }) {
                 onClick={() =>
                   void decide(
                     `${base}/authorizations/${a.id}/revoke`,
-                    '¿Revocar este encargo? Bloqueará nuevas aceptaciones y pagos aún no enviados; no revierte pagos ya enviados.',
+                    'Revoke access for this assignment? New purchases will be blocked. Payments already processing will still be checked.',
                   )
                 }
               >
-                Revocar autorización
+                Revoke access
               </button>
             )}
           </article>
         ))}
       </section>
       <section className="card">
-        <h2>Solicitudes de los agentes</h2>
+        <h2>Agent requests</h2>
         <p>
-          Revisa la propuesta completa antes de aprobar: tu aprobación concede los nuevos permisos o
-          condiciones.
+          Review the full proposal before approving. Your approval grants the new permissions or
+          terms.
         </p>
         <ErrorBox error={requests.error} />
         {requests.loading && <Loading />}
-        {requests.data?.length === 0 && <Empty>No hay solicitudes de cambio.</Empty>}
+        {requests.data?.length === 0 && <Empty>No change requests.</Empty>}
         {requests.data?.map((r) => (
           <article className="card" key={r.id}>
             <h3>
               {kinds[r.proposal.kind]} · {name(r.agentId)}
             </h3>
             <RequestStatus status={r.status} />
-            <p>Motivo: {r.reason || 'Sin motivo indicado'}</p>
+            <p>Reason: {r.reason || 'No reason provided'}</p>
             {r.proposal.kind === 'change_level' ? (
               <p>{levelHelp[r.proposal.buyerLevel]}</p>
             ) : (
               <>
                 {r.proposal.authorizationId && (
-                  <p>Autorización a modificar: {r.proposal.authorizationId}</p>
+                  <p>Purchase authorization to amend: {r.proposal.authorizationId}</p>
                 )}
                 <TermsSummary terms={r.proposal.terms} />
               </>
@@ -205,11 +205,11 @@ function Authorizations({ base }: { base: string }) {
                   onClick={() =>
                     void decide(
                       `${base}/change-requests/${r.id}/approve`,
-                      '¿Aprobar esta propuesta con todas las condiciones mostradas y concederlas al agente?',
+                      'Approve this proposal with all the terms shown and grant them to the agent?',
                     )
                   }
                 >
-                  Aprobar
+                  Approve
                 </button>
                 <button
                   className="danger"
@@ -217,11 +217,11 @@ function Authorizations({ base }: { base: string }) {
                   onClick={() =>
                     void decide(
                       `${base}/change-requests/${r.id}/reject`,
-                      '¿Rechazar esta solicitud del agente?',
+                      'Reject this agent’s request?',
                     )
                   }
                 >
-                  Rechazar
+                  Reject
                 </button>
               </div>
             )}
@@ -245,19 +245,19 @@ function MonthlyForm({
     <form className="stack" onSubmit={onSubmit}>
       <fieldset className="stack" disabled={pending}>
         <Check
-          title="Sin límite mensual"
+          title="No monthly limit"
           name="unlimited"
           checked={unlimited}
           onChange={(e) => setUnlimited(e.target.checked)}
         />
         <MoneyField
-          title="Límite mensual (USD)"
+          title="Monthly limit (USD, UTC)"
           name="limit"
           disabled={unlimited}
           required={!unlimited}
           defaultValue={initial ?? ''}
         />
-        <button className="primary">{pending ? 'Guardando…' : 'Guardar límite mensual'}</button>
+        <button className="primary">{pending ? 'Saving…' : 'Save monthly limit'}</button>
       </fieldset>
     </form>
   );

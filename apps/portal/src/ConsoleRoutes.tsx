@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { Layout } from './components/Layout';
+import './site/fonts';
+import './site/tokens.css';
 import './styles.css';
 import ActivityPage from './pages/ActivityPage';
 import AgentDetailPage from './pages/AgentDetailPage';
@@ -35,7 +37,7 @@ export default function ConsoleRoutes() {
         <Route path="settings/payments" element={<PaymentsSettingsPage />} />
         <Route path="activity" element={<ActivityPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="*" element={<p className="muted">Página no encontrada.</p>} />
+        <Route path="*" element={<p className="muted">Page not found.</p>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

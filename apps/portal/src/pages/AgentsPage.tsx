@@ -37,28 +37,28 @@ function Agents({ base }: { base: string }) {
     if (result) {
       agents.reload();
       setFormVersion((v) => v + 1);
-      setMessage(`Agente ${result.name} conectado. Abre su ficha para emitir una credencial.`);
+      setMessage(`Agent ${result.name} connected. Open its details to issue a credential.`);
     }
   }
   return (
     <>
       <PageHeader
-        title="Agentes"
-        subtitle="Tú decides qué puede hacer cada agente en nombre de tu empresa."
+        title="Agents"
+        subtitle="You decide what each agent can do for your organization."
       />
       <ErrorBox error={agents.error} />
       {agents.loading && <Loading />}
       {agents.data &&
         (agents.data.length ? (
           <div className="card">
-            <Table title="Agentes de la empresa">
+            <Table title="Organization agents">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Nivel de compra</th>
-                  <th>Facultades de venta</th>
-                  <th>Credenciales activas</th>
-                  <th>Estado</th>
+                  <th>Name</th>
+                  <th>Purchase level</th>
+                  <th>Sales permissions</th>
+                  <th>Active credentials</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -69,16 +69,16 @@ function Agents({ base }: { base: string }) {
                       <div className="muted">{a.description}</div>
                     </td>
                     <td>
-                      <Badge value={a.access.buyerLevel ?? 'Sin compras'} />
+                      <Badge value={a.access.buyerLevel ?? 'No purchasing'} />
                     </td>
                     <td>
                       {a.access.sellerScopes.map((scope) => scopes[scope]).join(', ') ||
-                        'Sin facultades de venta'}
+                        'No sales permissions'}
                     </td>
                     <td className="num">{a.credentials.filter((c) => !c.revokedAt).length}</td>
                     <td>
                       {a.disabledAt ? (
-                        <span className="badge bad">Deshabilitado</span>
+                        <span className="badge bad">Disabled</span>
                       ) : (
                         <Badge value="active" />
                       )}
@@ -89,22 +89,20 @@ function Agents({ base }: { base: string }) {
             </Table>
           </div>
         ) : (
-          <Empty>Aún no has conectado agentes.</Empty>
+          <Empty>You haven’t connected any agents yet.</Empty>
         ))}
       <section className="card">
-        <h2>Conectar agente</h2>
+        <h2>Connect agent</h2>
         <form key={formVersion} className="stack" onSubmit={submit}>
           <fieldset className="stack" disabled={create.pending}>
-            <Field title="Nombre" name="name" required maxLength={120} />
+            <Field title="Name" name="name" required maxLength={120} />
             <label>
-              Descripción
+              Description
               <textarea name="description" maxLength={500} rows={3} />
             </label>
             <AccessFields />
             <ErrorBox error={create.error} />
-            <button className="primary">
-              {create.pending ? 'Conectando…' : 'Conectar agente'}
-            </button>
+            <button className="primary">{create.pending ? 'Connecting…' : 'Connect agent'}</button>
           </fieldset>
         </form>
         {message && (

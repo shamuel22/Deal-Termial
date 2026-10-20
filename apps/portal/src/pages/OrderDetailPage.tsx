@@ -5,6 +5,7 @@ import { QuoteBreakdown } from '../components/QuoteBreakdown';
 import { Badge, ErrorBox, formatDate, label, Loading, Money, PageHeader } from '../components/ui';
 import { useAction, useResource } from '../hooks';
 import { useSession } from '../session';
+import { actions as activityActions } from './ActivityPage';
 import type { ActivityItem, OrderView, PaymentSummary } from '../types';
 
 interface RefundView {
@@ -19,11 +20,11 @@ interface RefundView {
 }
 
 const RETURN_MESSAGE: Record<string, [string, string]> = {
-  completed: ['ok', 'Pago confirmado por PayPal.'],
-  processing: ['info', 'PayPal está procesando el pago; el estado se actualizará solo.'],
-  failed: ['error', 'El pago no se completó. Puedes intentarlo de nuevo.'],
-  cancelled: ['warn', 'Cancelaste el pago en PayPal. El pedido sigue pendiente.'],
-  requires_action: ['warn', 'PayPal necesita que completes la aprobación.'],
+  completed: ['ok', 'We’re confirming the payment. Don’t submit it again.'],
+  processing: ['info', 'We’re confirming the payment. Don’t submit it again.'],
+  failed: ['error', 'We’re checking the payment status. Don’t submit it again.'],
+  cancelled: ['warn', 'You returned from PayPal. We’re checking the payment status.'],
+  requires_action: ['warn', 'Check the payment status below for any required action.'],
 };
 
 export default function OrderDetailPage() {
@@ -42,7 +43,7 @@ export default function OrderDetailPage() {
   });
   const cancel = useAction(async () => {
     await post(orgPath(`/orders/${orderId}/cancel`), {
-      reason: 'Cancelado por el dueño desde el portal',
+      reason: 'Cancelled by the owner from the portal',
     });
     order.reload();
     activity.reload();
@@ -58,31 +59,31 @@ export default function OrderDetailPage() {
   return (
     <>
       <PageHeader
-        title={`Pedido ${o.id.slice(0, 8)}`}
-        subtitle={`${isBuyer ? 'Compra a' : 'Venta a'} ${isBuyer ? o.supplier.name : o.buyer.name} · aceptado el ${formatDate(o.acceptedAt, true)}`}
-        actions={<Link to="/console/orders">← Pedidos</Link>}
+        title={`Order ${o.id.slice(0, 8)}`}
+        subtitle={`${isBuyer ? 'Purchase from' : 'Sale to'} ${isBuyer ? o.supplier.name : o.buyer.name} · accepted on ${formatDate(o.acceptedAt, true)}`}
+        actions={<Link to="/console/orders">← Orders</Link>}
       />
       {banner && <div className={`alert ${banner[0]}`}>{banner[1]}</div>}
       {o.incident && (
         <div className="alert warn">
-          <strong>Incidencia que requiere resolución:</strong> {o.incident}
+          <strong>Issue requiring resolution:</strong> {o.incident}
         </div>
       )}
 
       <div className="grid">
         <section className="card stat">
-          <span className="muted">Pedido</span>
+          <span className="muted">Order</span>
           <div>
             <Badge value={o.status} />
           </div>
           {o.stockReservation?.status === 'active' && (
             <p className="muted">
-              Stock reservado hasta {formatDate(o.stockReservation.expiresAt, true)}
+              Stock reserved until {formatDate(o.stockReservation.expiresAt, true)}
             </p>
           )}
         </section>
         <section className="card stat">
-          <span className="muted">Pago</span>
+          <span className="muted">Payment</span>
           <div>
             <Badge
               value={
@@ -92,21 +93,21 @@ export default function OrderDetailPage() {
             />
           </div>
           <p className="muted">
-            {o.paymentMode === 'delegated' ? 'Aceptado por un agente' : 'Aceptado por el dueño'}
+            {o.paymentMode === 'delegated' ? 'Accepted by an agent' : 'Accepted by the owner'}
           </p>
         </section>
         <section className="card stat">
-          <span className="muted">Entrega (demostración)</span>
+          <span className="muted">Delivery (demo)</span>
           <div>
             <Badge value={o.deliveryStatus} />
           </div>
-          <p className="muted">Antes del {formatDate(o.terms.deliverBy)}</p>
+          <p className="muted">By {formatDate(o.terms.deliverBy)}</p>
         </section>
       </div>
 
       <div className="grid">
         <section className="card">
-          <h2>{String(o.terms.product.name ?? 'Producto')}</h2>
+          <h2>{String(o.terms.product.name ?? 'Product')}</h2>
           <QuoteBreakdown quote={{ ...o.terms, currency: o.currency }} />
           {isBuyer && o.status === 'pending_payment' && (
             <div className="stack">
@@ -116,40 +117,40 @@ export default function OrderDetailPage() {
                 disabled={checkout.pending}
                 onClick={() => void checkout.run()}
               >
-                {checkout.pending ? 'Abriendo PayPal…' : `Pagar ${o.total} USD con PayPal`}
+                {checkout.pending ? 'Opening PayPal…' : `Continue in PayPal · ${o.total} USD`}
               </button>
               <button
                 className="danger"
                 disabled={cancel.pending}
                 onClick={() =>
-                  window.confirm('¿Cancelar el pedido y liberar el stock y el presupuesto?') &&
+                  window.confirm('Cancel the order and release its stock and budget?') &&
                   void cancel.run()
                 }
               >
-                Cancelar pedido
+                Cancel order
               </button>
             </div>
           )}
         </section>
 
         <section className="card">
-          <h2>Por qué se permitió</h2>
+          <h2>Why it was allowed</h2>
           <dl className="kv">
-            <dt>Aceptado por</dt>
+            <dt>Accepted by</dt>
             <dd>
-              {o.acceptedBy.agentId ? 'Agente' : 'Dueño'} ({label(o.acceptedBy.level)})
+              {o.acceptedBy.agentId ? 'Agent' : 'Owner'} ({label(o.acceptedBy.level)})
             </dd>
-            <dt>Autorización</dt>
+            <dt>Purchase authorization</dt>
             <dd>
               {o.authorization
-                ? `${o.authorization.id.slice(0, 8)} · versión ${o.authorization.version}`
+                ? `${o.authorization.id.slice(0, 8)} · version ${o.authorization.version}`
                 : '—'}
             </dd>
-            <dt>Cotización</dt>
+            <dt>Quote</dt>
             <dd>
-              {o.terms.quoteId.slice(0, 8)} · versión {o.terms.quoteVersion}
+              {o.terms.quoteId.slice(0, 8)} · version {o.terms.quoteVersion}
             </dd>
-            <dt>Presupuesto</dt>
+            <dt>Authorized budget</dt>
             <dd>
               {o.budgetReservation ? (
                 <>
@@ -163,8 +164,8 @@ export default function OrderDetailPage() {
             <dd>
               {o.payment?.paypalOrderId ? (
                 <>
-                  Orden {o.payment.paypalOrderId}
-                  {o.payment.paypalCaptureId && <> · captura {o.payment.paypalCaptureId}</>}
+                  Order {o.payment.paypalOrderId}
+                  {o.payment.paypalCaptureId && <> · capture {o.payment.paypalCaptureId}</>}
                 </>
               ) : (
                 '—'
@@ -172,7 +173,7 @@ export default function OrderDetailPage() {
             </dd>
             {o.paidAt && (
               <>
-                <dt>Pagado</dt>
+                <dt>Paid</dt>
                 <dd>{formatDate(o.paidAt, true)}</dd>
               </>
             )}
@@ -183,7 +184,7 @@ export default function OrderDetailPage() {
       <Refunds order={o} isBuyer={isBuyer} refunds={refunds.data ?? []} onChange={refunds.reload} />
 
       <section className="card">
-        <h2>Trazabilidad</h2>
+        <h2>Activity log</h2>
         <ErrorBox error={activity.error} />
         <table>
           <tbody>
@@ -191,7 +192,7 @@ export default function OrderDetailPage() {
               <tr key={a.id}>
                 <td className="muted">{formatDate(a.at, true)}</td>
                 <td>{a.actor.name ?? a.actor.type}</td>
-                <td>{a.action}</td>
+                <td>{activityActions[a.action] ?? a.action}</td>
                 <td>
                   <Badge
                     value={
@@ -238,16 +239,16 @@ function Refunds({
 
   return (
     <section className="card">
-      <h2>Devoluciones</h2>
-      <p className="muted">Una devolución no amplía el presupuesto delegado a tus agentes.</p>
+      <h2>Refunds</h2>
+      <p className="muted">A refund does not increase your agents’ authorized budget.</p>
       {refunds.length > 0 && (
         <table>
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th className="num">Importe</th>
-              <th>Motivo</th>
-              <th>Estado</th>
+              <th>Date</th>
+              <th className="num">Amount</th>
+              <th>Reason</th>
+              <th>Status</th>
               <th>PayPal</th>
             </tr>
           </thead>
@@ -274,7 +275,7 @@ function Refunds({
       {isBuyer && order.status === 'paid' && (
         <form className="row" onSubmit={submit}>
           <label>
-            Importe (vacío = todo lo pendiente)
+            Amount (leave blank for the full refundable amount)
             <input
               inputMode="decimal"
               placeholder="20.00"
@@ -283,12 +284,12 @@ function Refunds({
             />
           </label>
           <label>
-            Motivo
+            Reason
             <input required value={reason} onChange={(e) => setReason(e.target.value)} />
           </label>
           <div className="stack">
             <ErrorBox error={request.error} />
-            <button disabled={request.pending}>Solicitar devolución</button>
+            <button disabled={request.pending}>Request refund</button>
           </div>
         </form>
       )}

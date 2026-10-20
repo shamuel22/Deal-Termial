@@ -13,38 +13,38 @@ export default function OrdersPage() {
   return (
     <>
       <PageHeader
-        title="Pedidos"
-        subtitle="Estado comercial, de pago y de entrega de cada acuerdo."
+        title="Orders"
+        subtitle="Agreement, payment and delivery status for each order."
         actions={
           <div className="actions" role="tablist">
             <button className={side === 'buyer' ? 'primary' : ''} onClick={() => setSide('buyer')}>
-              Compras
+              Purchases
             </button>
             <button
               className={side === 'supplier' ? 'primary' : ''}
               onClick={() => setSide('supplier')}
             >
-              Ventas
+              Sales
             </button>
           </div>
         }
       />
       <ErrorBox error={orders.error} />
       {orders.loading && !orders.data && <Loading />}
-      {orders.data?.length === 0 && <Empty>Todavía no hay pedidos.</Empty>}
+      {orders.data?.length === 0 && <Empty>No orders yet.</Empty>}
       {orders.data && orders.data.length > 0 && (
         <div className="card">
           <table>
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>{side === 'buyer' ? 'Proveedor' : 'Comprador'}</th>
-                <th>Producto</th>
-                <th className="num">Cantidad</th>
+                <th>Date</th>
+                <th>{side === 'buyer' ? 'Supplier' : 'Buyer'}</th>
+                <th>Product</th>
+                <th className="num">Quantity</th>
                 <th className="num">Total</th>
-                <th>Pedido</th>
-                <th>Pago</th>
-                <th>Aceptado por</th>
+                <th>Order</th>
+                <th>Payment</th>
+                <th>Accepted by</th>
               </tr>
             </thead>
             <tbody>
@@ -70,7 +70,7 @@ export default function OrdersPage() {
                       <span className="muted">—</span>
                     )}
                   </td>
-                  <td>{o.acceptedBy.agentId ? 'Agente' : 'Dueño'}</td>
+                  <td>{o.acceptedBy.agentId ? 'Agent' : 'Owner'}</td>
                 </tr>
               ))}
             </tbody>

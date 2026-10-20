@@ -3,10 +3,10 @@ import { Badge, Money, formatDate } from './ui';
 
 export type BuyerLevel = 'search_only' | 'negotiate' | 'full_autonomy';
 export const scopes = {
-  publish_offers: 'Publicar y modificar ofertas',
-  submit_quotes: 'Enviar cotizaciones y negociar ventas',
-  accept_terms: 'Aceptar condiciones de venta',
-  approve_refunds: 'Aprobar devoluciones de dinero',
+  publish_offers: 'Publish and edit offers',
+  submit_quotes: 'Submit quotes and negotiate sales',
+  accept_terms: 'Accept sales terms',
+  approve_refunds: 'Approve refunds',
 };
 export type SellerScope = keyof typeof scopes;
 export interface Access {
@@ -85,14 +85,14 @@ export interface Authorization {
 }
 
 export const materials: Record<string, string> = {
-  paper: 'Papel',
-  kraft_paper: 'Papel kraft',
-  bagasse: 'Bagazo',
+  paper: 'Paper',
+  kraft_paper: 'Kraft paper',
+  bagasse: 'Bagasse',
   pla: 'PLA',
-  pp: 'Polipropileno (PP)',
+  pp: 'Polypropylene (PP)',
   pet: 'PET',
-  aluminum: 'Aluminio',
-  foam_eps: 'Foam / poliestireno expandido (EPS)',
+  aluminum: 'Aluminum',
+  foam_eps: 'Foam / expanded polystyrene (EPS)',
 };
 export const states: Record<string, string> = {
   AL: 'Alabama',
@@ -103,58 +103,58 @@ export const states: Record<string, string> = {
   CO: 'Colorado',
   CT: 'Connecticut',
   DE: 'Delaware',
-  DC: 'Distrito de Columbia',
+  DC: 'District of Columbia',
   FL: 'Florida',
   GA: 'Georgia',
-  HI: 'Hawái',
+  HI: 'Hawaii',
   ID: 'Idaho',
   IL: 'Illinois',
   IN: 'Indiana',
   IA: 'Iowa',
   KS: 'Kansas',
   KY: 'Kentucky',
-  LA: 'Luisiana',
+  LA: 'Louisiana',
   ME: 'Maine',
   MD: 'Maryland',
   MA: 'Massachusetts',
   MI: 'Michigan',
   MN: 'Minnesota',
-  MS: 'Misisipi',
-  MO: 'Misuri',
+  MS: 'Mississippi',
+  MO: 'Missouri',
   MT: 'Montana',
   NE: 'Nebraska',
   NV: 'Nevada',
-  NH: 'Nuevo Hampshire',
-  NJ: 'Nueva Jersey',
-  NM: 'Nuevo México',
-  NY: 'Nueva York',
-  NC: 'Carolina del Norte',
-  ND: 'Dakota del Norte',
+  NH: 'New Hampshire',
+  NJ: 'New Jersey',
+  NM: 'New Mexico',
+  NY: 'New York',
+  NC: 'North Carolina',
+  ND: 'North Dakota',
   OH: 'Ohio',
   OK: 'Oklahoma',
-  OR: 'Oregón',
-  PA: 'Pensilvania',
+  OR: 'Oregon',
+  PA: 'Pennsylvania',
   RI: 'Rhode Island',
-  SC: 'Carolina del Sur',
-  SD: 'Dakota del Sur',
+  SC: 'South Carolina',
+  SD: 'South Dakota',
   TN: 'Tennessee',
   TX: 'Texas',
   UT: 'Utah',
   VT: 'Vermont',
   VA: 'Virginia',
   WA: 'Washington',
-  WV: 'Virginia Occidental',
+  WV: 'West Virginia',
   WI: 'Wisconsin',
   WY: 'Wyoming',
 };
 export const levelHelp: Record<BuyerLevel | 'none', string> = {
-  none: 'Sin compras: no concede facultades de comprador. Las facultades de venta se eligen por separado.',
+  none: 'No purchasing: grants no buyer permissions. Choose sales permissions separately.',
   search_only:
-    'Solo búsqueda: puede buscar, comparar y guardar necesidades privadas. No puede contactar proveedores, negociar, reservar, aceptar ni pagar.',
+    'Search only: can search, compare and save private purchase needs. Cannot contact suppliers, negotiate, reserve, accept or pay.',
   negotiate:
-    'Solo negociación: puede buscar y negociar dentro del encargo. Tú revisas la propuesta, aceptas el acuerdo y pagas en PayPal.',
+    'Negotiate only: can search and negotiate within the assignment. You review the offer, accept the agreement and pay in PayPal.',
   full_autonomy:
-    'Autonomía total: puede negociar y aceptar acuerdos dentro de una autorización vigente. Pagar sin tu intervención exige además autorización financiera compatible; actualmente el pago se completa con tu checkout PayPal.',
+    'Full autonomy: Within your authorized limits. Can negotiate and accept agreements under an active purchase authorization. Payment without your involvement also requires compatible PayPal consent; currently, you complete payment through PayPal checkout.',
 };
 
 export function Field({
@@ -205,21 +205,21 @@ export function AccessFields({ initial }: { initial?: Access }) {
   return (
     <>
       <label>
-        Nivel de compra
+        Purchase level
         <select
           name="buyerLevel"
           value={level}
           onChange={(e) => setLevel(e.target.value as BuyerLevel | 'none')}
         >
-          <option value="none">Sin compras</option>
-          <option value="search_only">Solo búsqueda</option>
-          <option value="negotiate">Solo negociación</option>
-          <option value="full_autonomy">Autonomía total</option>
+          <option value="none">No purchasing</option>
+          <option value="search_only">Search only</option>
+          <option value="negotiate">Negotiate only</option>
+          <option value="full_autonomy">Full autonomy — Within your authorized limits.</option>
         </select>
       </label>
       <p className="muted">{levelHelp[level]}</p>
       <details>
-        <summary>Qué permite cada nivel</summary>
+        <summary>What each level allows</summary>
         <ul>
           {Object.entries(levelHelp).map(([key, help]) => (
             <li key={key}>{help}</li>
@@ -227,7 +227,7 @@ export function AccessFields({ initial }: { initial?: Access }) {
         </ul>
       </details>
       <fieldset>
-        <legend>Facultades de venta que concedes al agente</legend>
+        <legend>Sales permissions you grant the agent</legend>
         {Object.entries(scopes).map(([value, title]) => (
           <Check
             key={value}
@@ -275,19 +275,19 @@ export function BudgetView({ budget }: { budget: Budget }) {
   return (
     <div className="stack">
       <dl className="kv">
-        <dt>Límite</dt>
+        <dt>Authorized budget</dt>
         <dd>
           <Money value={budget.limit} />
         </dd>
-        <dt>Reservado</dt>
+        <dt>Committed</dt>
         <dd>
           <Money value={budget.reserved} />
         </dd>
-        <dt>Consumido</dt>
+        <dt>Spent</dt>
         <dd>
           <Money value={budget.consumed} />
         </dd>
-        <dt>Disponible</dt>
+        <dt>Available to authorize</dt>
         <dd>
           <Money value={budget.available} />
         </dd>
@@ -295,22 +295,22 @@ export function BudgetView({ budget }: { budget: Budget }) {
       <progress
         max={100}
         value={Math.max(0, Math.min(100, ratio))}
-        aria-label="Porcentaje de presupuesto reservado o consumido"
+        aria-label="Percentage of budget committed or spent"
       />
     </div>
   );
 }
 const attributeNames: Record<string, string> = {
   material: 'Material',
-  hot_food_safe: 'Apto para comida caliente',
-  has_lid: 'Con tapa',
-  microwave_safe: 'Apto para microondas',
-  capacity_oz: 'Capacidad (oz)',
-  pack_size: 'Unidades por paquete',
-  compartments: 'Compartimentos',
+  hot_food_safe: 'Safe for hot food',
+  has_lid: 'With lid',
+  microwave_safe: 'Microwave safe',
+  capacity_oz: 'Capacity (oz)',
+  pack_size: 'Units per pack',
+  compartments: 'Compartments',
 };
 function scalar(value: unknown): string {
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return materials[String(value)] ?? String(value);
 }
 export function Attributes({ values }: { values: Record<string, unknown> }) {
@@ -330,15 +330,15 @@ export function ConstraintSummary({ values }: { values: Constraints }) {
       {Object.entries(values).map(([key, rule]) => (
         <li key={key}>
           {attributeNames[key] ?? key}: {rule.eq !== undefined && scalar(rule.eq)}
-          {rule.in && `permitidos: ${rule.in.map(scalar).join(', ')}`}
-          {rule.not_in && `excluidos: ${rule.not_in.map(scalar).join(', ')}`}
-          {rule.min !== undefined && `mínimo ${rule.min} `}
-          {rule.max !== undefined && `máximo ${rule.max}`}
+          {rule.in && `allowed: ${rule.in.map(scalar).join(', ')}`}
+          {rule.not_in && `excluded: ${rule.not_in.map(scalar).join(', ')}`}
+          {rule.min !== undefined && `minimum ${rule.min} `}
+          {rule.max !== undefined && `maximum ${rule.max}`}
         </li>
       ))}
     </ul>
   ) : (
-    <p>Sin restricciones de atributos.</p>
+    <p>No attribute restrictions.</p>
   );
 }
 export function TermsSummary({ terms }: { terms: TermsInput }) {
@@ -347,30 +347,30 @@ export function TermsSummary({ terms }: { terms: TermsInput }) {
     <div className="stack">
       <p>{terms.mandate}</p>
       <dl className="kv">
-        <dt>Categoría</dt>
-        <dd>{terms.category === 'food_containers' ? 'Envases para alimentos' : terms.category}</dd>
-        <dt>Cantidad</dt>
+        <dt>Category</dt>
+        <dd>{terms.category === 'food_containers' ? 'Food containers' : terms.category}</dd>
+        <dt>Quantity</dt>
         <dd>
           {terms.quantityMin}–{terms.quantityMax}{' '}
-          {!terms.unit || terms.unit === 'unit' ? 'unidades' : terms.unit}
+          {!terms.unit || terms.unit === 'unit' ? 'units' : terms.unit}
         </dd>
-        <dt>Presupuesto acumulado</dt>
+        <dt>Authorized budget</dt>
         <dd>
-          <Money value={terms.budgetTotal} currency={terms.currency} /> (transporte e impuestos
-          incluidos)
+          <Money value={terms.budgetTotal} currency={terms.currency} /> (shipping and taxes
+          included)
         </dd>
-        <dt>Proveedores permitidos</dt>
-        <dd>{terms.allowedSupplierOrgIds?.join(', ') ?? 'Cualquier proveedor compatible'}</dd>
-        <dt>Dirección</dt>
+        <dt>Allowed suppliers</dt>
+        <dd>{terms.allowedSupplierOrgIds?.join(', ') ?? 'Any eligible supplier'}</dd>
+        <dt>Address</dt>
         <dd>
           {a.line1}
           {a.line2 && `, ${a.line2}`}, {a.city}, {states[a.state] ?? a.state}, {a.postalCode},
-          Estados Unidos
+          United States
         </dd>
-        <dt>Entregar a más tardar</dt>
+        <dt>Deliver by</dt>
         <dd>{formatDate(terms.deliverBy)}</dd>
-        <dt>Vencimiento</dt>
-        <dd>{formatDate(terms.expiresAt, true)} (tu zona horaria)</dd>
+        <dt>Expiration</dt>
+        <dd>{formatDate(terms.expiresAt, true)} (your time zone)</dd>
       </dl>
       <ConstraintSummary values={terms.requiredAttributes} />
     </div>
@@ -378,7 +378,7 @@ export function TermsSummary({ terms }: { terms: TermsInput }) {
 }
 export function RequestStatus({ status }: { status: string }) {
   return status === 'approved' ? (
-    <span className="badge ok">Aprobada</span>
+    <span className="badge ok">Approved</span>
   ) : (
     <Badge value={status} />
   );

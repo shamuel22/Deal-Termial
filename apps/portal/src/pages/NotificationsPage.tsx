@@ -48,20 +48,20 @@ function NotificationsList({ base }: { base: string }) {
     setMessage('');
     if (await read.run()) {
       notifications.reload();
-      setMessage('Todas las notificaciones se marcaron como leídas.');
+      setMessage('All notifications marked as read.');
     }
   }
   return (
     <>
       <PageHeader
-        title="Notificaciones"
-        subtitle="Avisos de operaciones y decisiones que necesitan tu atención."
+        title="Notifications"
+        subtitle="Updates on operations and decisions that need your attention."
         actions={
           <button
             disabled={read.pending || !notifications.data?.unread}
             onClick={() => void markRead()}
           >
-            {read.pending ? 'Marcando…' : 'Marcar todas como leídas'}
+            {read.pending ? 'Marking…' : 'Mark all as read'}
           </button>
         }
       />
@@ -75,21 +75,21 @@ function NotificationsList({ base }: { base: string }) {
       )}
       {notifications.data && (
         <p className="muted">
-          {notifications.data.unread} sin leer. Se muestran hasta 50 avisos recientes.
+          {notifications.data.unread} unread. Shows up to 50 recent notifications.
         </p>
       )}
-      {notifications.data?.items.length === 0 && <Empty>No tienes notificaciones.</Empty>}
+      {notifications.data?.items.length === 0 && <Empty>You have no notifications.</Empty>}
       {notifications.data?.items.map((n) => (
         <article className="card stack" key={n.id}>
           <div>
             <h2>{n.title}</h2>
             <span className={`badge ${n.readAt ? 'neutral' : 'info'}`}>
-              {n.readAt ? 'Leída' : 'No leída'}
+              {n.readAt ? 'Read' : 'Unread'}
             </span>
           </div>
           <p className="portal-message">{n.body}</p>
           <time dateTime={n.createdAt}>{formatDate(n.createdAt, true)}</time>
-          {resourceLink(n) && <Link to={resourceLink(n)!}>Ver recurso relacionado</Link>}
+          {resourceLink(n) && <Link to={resourceLink(n)!}>View related item</Link>}
         </article>
       ))}
     </>

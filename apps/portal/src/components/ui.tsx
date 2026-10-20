@@ -1,3 +1,11 @@
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CircleDashed,
+  Info,
+  XCircle,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { ApiError } from '../api';
 
@@ -14,7 +22,7 @@ export function Money({
   const grouped = int!.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return (
     <span className="money">
-      {currency === 'USD' ? 'US$' : `${currency} `}
+      {currency === 'USD' ? '$' : `${currency} `}
       {grouped}.{dec.padEnd(2, '0')}
     </span>
   );
@@ -53,44 +61,54 @@ const TONE: Record<string, string> = {
 };
 
 const LABEL: Record<string, string> = {
-  search_only: 'Solo búsqueda',
-  negotiate: 'Solo negociación',
-  full_autonomy: 'Autonomía total',
-  pending_payment: 'Pendiente de pago',
-  pending_review: 'Pendiente de revisión',
-  pending_owner_review: 'Para tu revisión',
-  awaiting_buyer: 'Espera al comprador',
-  awaiting_supplier: 'Espera al proveedor',
-  requires_action: 'Requiere acción',
-  owner_action_required: 'Pago del dueño',
-  needs_confirmation: 'Por confirmar',
-  needs_attention: 'Requiere atención',
-  not_connected: 'No conectada',
-  not_shipped: 'Sin enviar',
-  active: 'Activa',
-  paid: 'Pagado',
-  completed: 'Completado',
-  agreed: 'Acordada',
-  accepted: 'Aceptada',
-  proposed: 'Propuesta',
-  superseded: 'Reemplazada',
-  processing: 'Procesando',
-  requested: 'Solicitado',
-  authorized: 'Autorizado',
-  revoked: 'Revocada',
-  failed: 'Fallido',
-  cancelled: 'Cancelado',
-  expired: 'Vencido',
-  exhausted: 'Agotada',
-  rejected: 'Rechazada',
-  closed: 'Cerrada',
-  open: 'Abierta',
-  draft: 'Borrador',
-  paused: 'Pausada',
-  archived: 'Archivada',
+  search_only: 'Search only',
+  negotiate: 'Negotiate only',
+  full_autonomy: 'Full autonomy',
+  pending: 'Pending',
+  pending_payment: 'Pending payment',
+  pending_review: 'Pending review',
+  pending_owner_review: 'For your review',
+  awaiting_buyer: 'Awaiting buyer',
+  awaiting_supplier: 'Awaiting supplier',
+  requires_action: 'Requires action',
+  owner_action_required: 'Owner payment',
+  needs_confirmation: 'Unconfirmed',
+  needs_attention: 'Needs attention',
+  not_connected: 'Not connected',
+  not_shipped: 'Not shipped',
+  active: 'Active',
+  paid: 'Paid',
+  completed: 'Completed',
+  agreed: 'Agreed',
+  accepted: 'Accepted',
+  proposed: 'Proposed',
+  superseded: 'Superseded',
+  processing: 'Processing',
+  requested: 'Requested',
+  authorized: 'Authorized',
+  revoked: 'Revoked',
+  failed: 'Failed',
+  cancelled: 'Cancelled',
+  expired: 'Expired',
+  exhausted: 'Exhausted',
+  rejected: 'Rejected',
+  closed: 'Closed',
+  open: 'Open',
+  draft: 'Draft',
+  paused: 'Paused',
+  archived: 'Archived',
   compatible: 'Compatible',
   incompatible: 'Incompatible',
-  unknown: 'Por reconciliar',
+  unknown: 'To reconcile',
+};
+
+// DESIGN §14: un estado combina etiqueta, símbolo y color.
+const TONE_ICON: Record<string, LucideIcon> = {
+  ok: CheckCircle2,
+  warn: AlertTriangle,
+  bad: XCircle,
+  info: Info,
+  neutral: CircleDashed,
 };
 
 export function label(value: string | null | undefined): string {
@@ -99,7 +117,14 @@ export function label(value: string | null | undefined): string {
 }
 
 export function Badge({ value }: { value: string | null | undefined }) {
-  return <span className={`badge ${TONE[value ?? ''] ?? 'neutral'}`}>{label(value)}</span>;
+  const tone = TONE[value ?? ''] ?? 'neutral';
+  const Icon = TONE_ICON[tone]!;
+  return (
+    <span className={`badge ${tone}`}>
+      <Icon size={14} strokeWidth={2} aria-hidden />
+      {label(value)}
+    </span>
+  );
 }
 
 export function ErrorBox({ error }: { error: ApiError | null }) {
@@ -114,7 +139,12 @@ export function ErrorBox({ error }: { error: ApiError | null }) {
 }
 
 export function Loading() {
-  return <p className="muted">Cargando…</p>;
+  return (
+    <p className="muted loading" role="status">
+      <span className="spinner" aria-hidden />
+      Loading…
+    </p>
+  );
 }
 
 export function PageHeader({
@@ -145,8 +175,15 @@ export function formatDate(value: string | Date | null | undefined, withTime = f
   if (!value) return '—';
   const d = typeof value === 'string' ? new Date(value) : value;
   return withTime
-    ? d.toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' })
-    : d.toLocaleDateString('es', { dateStyle: 'medium', timeZone: 'UTC' });
+    ? d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZoneName: 'short',
+      })
+    : d.toLocaleDateString('en-US', { dateStyle: 'medium', timeZone: 'UTC' });
 }
 
 /** Placeholder de páginas aún no implementadas. */
@@ -154,7 +191,7 @@ export function Pending({ title }: { title: string }) {
   return (
     <>
       <PageHeader title={title} />
-      <Empty>En construcción.</Empty>
+      <Empty>Coming soon.</Empty>
     </>
   );
 }
