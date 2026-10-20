@@ -4,7 +4,7 @@
 > Fuente de requisitos: [`BRIEF_API_COMERCIO_ENTRE_AGENTES.md`](./BRIEF_API_COMERCIO_ENTRE_AGENTES.md) (v2.0).
 > Responsable técnico: Claude (senior). Apoyo: Codex CLI (GPT-6.1) en tareas delegadas y supervisadas.
 
-**Estado actual:** Etapas 0–9 ✅ (pago delegado multi-vendedor no disponible en PayPal; ver P9) · **Última actualización:** 2026-10-19
+**Estado actual:** Etapas 0–10 ✅ · Etapas 11–12 🔄 (verificación, despliegue y entrega) · **Última actualización:** 2026-10-19
 
 ---
 
@@ -206,13 +206,13 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #    | Tarea                                                                      | Quién | Estado |
 | ---- | -------------------------------------------------------------------------- | ----- | ------ |
-| 10.1 | Shell React, auth, navegación, cliente API generado de OpenAPI             | X     | ⬜     |
-| 10.2 | Agentes: alta, credencial, nivel, revocación                               | X     | ⬜     |
-| 10.3 | Formulario de autorización estructurada + vista previa antes de activar    | X     | ⬜     |
-| 10.4 | Estado de las dos autorizaciones y conexión PayPal guiada                  | C     | ⬜     |
-| 10.5 | Revisión de propuesta final, aceptación y checkout manual                  | C     | ⬜     |
-| 10.6 | Portal de proveedor: ofertas, reglas, negociaciones pendientes, reembolsos | X     | ⬜     |
-| 10.7 | Consola de actividad/auditoría y notificaciones en producto                | X     | ⬜     |
+| 10.1 | Shell React, auth, navegación, cliente API generado de OpenAPI             | X     | ✅     |
+| 10.2 | Agentes: alta, credencial, nivel, revocación                               | X     | ✅     |
+| 10.3 | Formulario de autorización estructurada + vista previa antes de activar    | X     | ✅     |
+| 10.4 | Estado de las dos autorizaciones y conexión PayPal guiada                  | C     | ✅     |
+| 10.5 | Revisión de propuesta final, aceptación y checkout manual                  | C     | ✅     |
+| 10.6 | Portal de proveedor: ofertas, reglas, negociaciones pendientes, reembolsos | X     | ✅     |
+| 10.7 | Consola de actividad/auditoría y notificaciones en producto                | X     | ✅     |
 
 ### Etapa 11 — Verificación y demo
 
@@ -229,7 +229,7 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 | #    | Tarea                                                                     | Quién | Estado |
 | ---- | ------------------------------------------------------------------------- | ----- | ------ |
-| 12.1 | README final, variables de entorno, guía de despliegue VPS                | C     | ⬜     |
+| 12.1 | README final, variables de entorno, guía de despliegue VPS                | C     | ✅     |
 | 12.2 | Catálogo de herramientas MCP y guía de conexión del cliente               | X     | ✅     |
 | 12.3 | Especificación comercial y de autorizaciones v0.2                         | C     | ⬜     |
 | 12.4 | Instrucciones para jueces y cuentas sandbox                               | C     | ⬜     |
@@ -333,3 +333,4 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 - **2026-10-19** — Etapa 7 completa: accept_quote con verificación completa y reservas atómicas, aceptación manual del dueño, idempotencia, cancelación, vencimiento de reservas, get_order/listado con aislamiento. Corregido un posible interbloqueo detectado en revisión propia.
 - **2026-10-19** — PayPal confirma que no habilita vault multi-vendedor. Etapa 8 completa: cliente PayPal, checkout manual, execute_purchase (pendiente del dueño sin autorización financiera), reconciliación, webhooks verificados, reembolsos, conexión de proveedores, planificador. Validado en sandbox real: pago de 76.86 a EcoPack y reembolso parcial en su nombre. 185 tests.
 - **2026-10-19** — Etapa 9 completa: servidor MCP con 24 herramientas, guía de conexión y catálogo generado. Criterio 1 validado con un modelo real: Codex (GPT-6.1) ejecutó el encargo por MCP sin acceso al código (`docs/evidence/mcp-real-agent.md`). 191 tests.
+- **2026-10-19** — Etapa 10 completa: portal (sesión, resumen, propuestas con pago PayPal, pedidos, pagos; agentes, autorizaciones con revisión obligatoria, catálogo, negociaciones y devoluciones del proveedor, consola de actividad y notificaciones — Codex, revisado). Limitador de login, matriz de aceptación y guía de despliegue.
