@@ -28,7 +28,17 @@ async function bootstrap(): Promise<void> {
     bufferLogs: false,
     rawBody: true,
   });
-  app.setGlobalPrefix('api', { exclude: ['webhooks/{*path}', 'mcp'] });
+  app.setGlobalPrefix('api', {
+    exclude: [
+      'webhooks/{*path}',
+      'mcp',
+      '/',
+      'llms.txt',
+      'llms-full.txt',
+      'knowledge',
+      'knowledge/:slug',
+    ],
+  });
   app.enableShutdownHooks();
   // Detrás de nginx en la misma máquina: la IP real del cliente llega en X-Forwarded-For.
   // Solo se confía en un proxy local, así nadie puede falsearla desde fuera.

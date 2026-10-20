@@ -196,13 +196,15 @@ Columna **Quién**: C = Claude · X = Codex (bajo revisión de Claude)
 
 **Resultado verificable:** un cliente MCP externo con modelo real ejecuta el recorrido completo (criterio 1).
 
-| #   | Tarea                                                                        | Quién | Estado |
-| --- | ---------------------------------------------------------------------------- | ----- | ------ |
-| 9.1 | Montaje MCP Streamable HTTP en Nest + autenticación por credencial de agente | C     | ✅     |
-| 9.2 | Herramientas del comprador (§9) sobre servicios `core`                       | C     | ✅     |
-| 9.3 | Herramientas del proveedor                                                   | C     | ✅     |
-| 9.4 | Descripciones de herramientas orientadas a modelos + errores accionables     | C     | ✅     |
-| 9.5 | Test automatizado: ninguna respuesta MCP contiene tokens/secretos            | C     | ✅     |
+| #   | Tarea                                                                           | Quién | Estado |
+| --- | ------------------------------------------------------------------------------- | ----- | ------ |
+| 9.1 | Montaje MCP Streamable HTTP en Nest + autenticación por credencial de agente    | C     | ✅     |
+| 9.2 | Herramientas del comprador (§9) sobre servicios `core`                          | C     | ✅     |
+| 9.3 | Herramientas del proveedor                                                      | C     | ✅     |
+| 9.4 | Descripciones de herramientas orientadas a modelos + errores accionables        | C     | ✅     |
+| 9.5 | Test automatizado: ninguna respuesta MCP contiene tokens/secretos               | C     | ✅     |
+| 9.6 | OAuth 2.1 para apps de chat (claude.ai, ChatGPT) con consentimiento por agente  | C     | ✅     |
+| 9.7 | Documentación legible por modelos: llms.txt, Markdown por artículo, HTML sin JS | X     | ✅     |
 
 ### Etapa 10 — Portal y consola
 

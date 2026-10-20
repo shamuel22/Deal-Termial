@@ -13,6 +13,7 @@ export function SiteFooter() {
           <Link to="/#how-it-works">{t.nav.howItWorks}</Link>
           <Link to="/#for-suppliers">{t.nav.forSuppliers}</Link>
           <Link to="/knowledge">{t.nav.knowledge}</Link>
+          <a href="/llms.txt">llms.txt</a>
           <Link to="/login">{t.nav.signIn}</Link>
         </nav>
         <p className="dt-footer__descriptor">{t.brand.descriptor}</p>

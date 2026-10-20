@@ -5,6 +5,7 @@ import { Module, type DynamicModule } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import type { AppConfig } from '@deal/shared';
 import { ConfigModule } from './config.module.js';
+import { DocsModule } from './docs/docs.module.js';
 import { DatabaseModule } from './database.module.js';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AgentSelfController, AgentsController } from './agents/agents.controller.js';
@@ -49,6 +50,7 @@ export class AppModule {
   static forRoot(config: AppConfig): DynamicModule {
     const imports: DynamicModule['imports'] = [
       ConfigModule.forRoot(config),
+      DocsModule.forRoot(portalDist),
       DatabaseModule,
       PaymentsModule,
     ];
@@ -56,7 +58,16 @@ export class AppModule {
       imports.push(
         ServeStaticModule.forRoot({
           rootPath: portalDist,
-          exclude: ['/api/{*path}', '/mcp/{*path}', '/webhooks/{*path}'],
+          exclude: [
+            '/api/{*path}',
+            '/mcp/{*path}',
+            '/webhooks/{*path}',
+            '/',
+            '/llms.txt',
+            '/llms-full.txt',
+            '/knowledge',
+            '/knowledge/:slug',
+          ],
         }),
       );
     }

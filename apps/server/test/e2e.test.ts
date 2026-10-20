@@ -1,9 +1,11 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase } from '@deal/db/testing';
+import { catalog } from '../../portal/src/site/knowledge/catalog.js';
 
 /**
  * Pruebas de extremo a extremo contra el servidor compilado (`pnpm build` antes de `pnpm test`).
@@ -12,6 +14,8 @@ import { createTestDatabase } from '@deal/db/testing';
 const mainJs = fileURLToPath(new URL('../dist/main.js', import.meta.url));
 const port = 3900 + Math.floor(Math.random() * 90);
 const base = `http://127.0.0.1:${port}/api`;
+const publicBase = 'https://docs.deal-terminal.test';
+const origin = `http://127.0.0.1:${port}`;
 let server: ChildProcess;
 let logs = '';
 
@@ -26,6 +30,7 @@ beforeAll(async () => {
       NODE_ENV: 'test',
       PORT: String(port),
       HOST: '127.0.0.1',
+      PUBLIC_BASE_URL: `${publicBase}/`,
       DATABASE_URL: process.env.TEST_DATABASE_URL,
       PAYPAL_PARTNER_MERCHANT_ID: process.env.PAYPAL_PARTNER_MERCHANT_ID ?? 'ci',
       SCHEDULER_INTERVAL_MS: '0',
@@ -631,6 +636,119 @@ describe('OAuth for MCP apps (e2e)', () => {
   it('the account pages keep their routes next to the OAuth endpoints', async () => {
     for (const path of ['/register', '/login', '/oauth/consent']) {
       expect((await fetch(`${origin}${path}`)).status, path).toBe(200);
+    }
+  });
+});
+
+describe('public documentation (e2e)', () => {
+  it('builds every catalog article in reading order and publishes absolute Markdown URLs', async () => {
+    const builtCatalog = JSON.parse(
+      await readFile(new URL('../../portal/dist/llms/catalog.json', import.meta.url), 'utf8'),
+    );
+    expect(builtCatalog).toEqual(catalog);
+    const res = await fetch(`${origin}/llms.txt`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+    const text = await res.text();
+    expect(text).toContain(`${publicBase}/mcp`);
+    expect(text).toContain('Streamable HTTP');
+    expect(text).toContain('Authorization: Bearer dtk_');
+    expect(text).toContain(`${publicBase}/console/agents`);
+    expect(text).toContain(`${publicBase}/register`);
+    expect(text).toContain(`${publicBase}/api/docs`);
+    expect(text).toContain(`${publicBase}/llms-full.txt`);
+    expect(text).not.toContain('https://your-domain.example');
+    let position = -1;
+    for (const article of catalog) {
+      const line = `- [${article.title}](${publicBase}/knowledge/${article.slug}.md): ${article.summary}`;
+      const next = text.indexOf(line);
+      expect(next).toBeGreaterThan(position);
+      position = next;
+      expect(text).toContain(`## ${article.section}`);
+    }
+  });
+
+  it('serves Markdown with the instance URL and keeps the credential placeholder', async () => {
+    const res = await fetch(`${origin}/knowledge/mcp.md`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/markdown; charset=utf-8');
+    const text = await res.text();
+    expect(text).toMatch(/^# MCP server\n\n> /);
+    expect(text).toContain(`${publicBase}/mcp`);
+    expect(text).not.toContain('https://your-domain.example');
+    expect(text).toContain('dtk_your_agent_credential');
+    for (const slug of ['unknown-article', 'mcp.md', '..%2Findex', '%2e%2e%2f%2e%2e%2findex']) {
+      expect((await fetch(`${origin}/knowledge/${slug}.md`)).status).toBe(404);
+    }
+  });
+
+  it('combines all Markdown articles in reading order', async () => {
+    const res = await fetch(`${origin}/llms-full.txt`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+    const text = await res.text();
+    expect(text).toMatch(/^# Deal Terminal/);
+    expect(text).toContain(`${publicBase}/mcp`);
+    expect(text).not.toContain('https://your-domain.example');
+    const articles = await Promise.all(
+      catalog.map(async (article) =>
+        (await fetch(`${origin}/knowledge/${article.slug}.md`)).text(),
+      ),
+    );
+    expect(text.endsWith(articles.join('\n\n---\n\n'))).toBe(true);
+  });
+
+  it('injects hidden article content, metadata and alternate links into the portal shell', async () => {
+    const res = await fetch(`${origin}/knowledge/mcp`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/html; charset=utf-8');
+    const html = await res.text();
+    expect(html).toContain('<div id="root"></div><article id="dt-static">');
+    expect(html).toContain('<style>#dt-static{display:none}</style>');
+    expect(html).toContain('<h1>MCP server</h1>');
+    expect(html).toContain('<title>MCP server — Deal Terminal</title>');
+    expect(html).toContain(`content="${catalog.find((a) => a.slug === 'mcp')!.summary}"`);
+    expect(html).toContain('<link rel="alternate" type="text/markdown" href="/knowledge/mcp.md">');
+    expect(html).toContain(
+      '<link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt">',
+    );
+    expect(html).toContain(`${publicBase}/mcp`);
+    expect(html).not.toContain('https://your-domain.example');
+  });
+
+  it('serves the home and Knowledge index while preserving assets and unknown SPA routes', async () => {
+    const home = await fetch(`${origin}/`);
+    expect(home.status).toBe(200);
+    const html = await home.text();
+    expect(html).toContain('<div id="root"></div>');
+    expect(html).toContain('<article id="dt-static">');
+    expect(html).toContain('How to connect an agent');
+    expect(html).toContain(`${publicBase}/mcp`);
+    const index = await fetch(`${origin}/knowledge/`);
+    expect(index.status).toBe(200);
+    const indexHtml = await index.text();
+    expect(indexHtml).toContain('<article id="dt-static">');
+    for (const article of catalog) {
+      expect(indexHtml).toContain(`href="/knowledge/${article.slug}"`);
+    }
+    const assetPath = html.match(/src="(\/assets\/[^"]+\.js)"/)?.[1];
+    expect(assetPath).toBeDefined();
+    const asset = await fetch(`${origin}${assetPath}`);
+    expect(asset.status).toBe(200);
+    expect(asset.headers.get('content-type')).toMatch(/javascript/);
+    expect((await fetch(`${origin}/brand/favicon-32.png`)).headers.get('content-type')).toBe(
+      'image/png',
+    );
+    for (const path of [
+      '/unknown-route',
+      '/knowledge/unknown-article',
+      '/knowledge/unknown/nested',
+    ]) {
+      const fallback = await fetch(`${origin}${path}`);
+      expect(fallback.status).toBe(200);
+      const shell = await fallback.text();
+      expect(shell).toContain('<div id="root"></div>');
+      expect(shell).not.toContain('dt-static');
     }
   });
 });

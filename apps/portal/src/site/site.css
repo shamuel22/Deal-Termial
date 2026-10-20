@@ -1564,6 +1564,16 @@ html:has(.dt-site) {
   color: var(--text-secondary);
 }
 
+.dt-article__markdown {
+  margin-top: var(--space-3);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.dt-article__markdown a {
+  color: inherit;
+}
+
 .dt-prose {
   margin-top: var(--space-8);
   font-size: 17px;

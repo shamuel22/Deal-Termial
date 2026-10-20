@@ -186,7 +186,13 @@ function render(tokens: Token[]): ReactNode[] {
 /** Renderiza un artículo; los enlaces internos navegan sin recargar la página. */
 export function Markdown({ source }: { source: string }) {
   const navigate = useNavigate();
-  const nodes = useMemo(() => render(marked.lexer(source)), [source]);
+  const nodes = useMemo(
+    () =>
+      render(
+        marked.lexer(source.replaceAll('https://your-domain.example', window.location.origin)),
+      ),
+    [source],
+  );
   function onClick(e: MouseEvent<HTMLDivElement>) {
     const anchor = (e.target as HTMLElement).closest('a');
     const href = anchor?.getAttribute('href');

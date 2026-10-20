@@ -9,12 +9,30 @@ autentica, aplica permisos y ejecuta las operaciones. El catálogo completo est�
 | ------------- | ---------------------------------------------------------------------------------------------------------- |
 | URL           | `https://<tu-dominio>/mcp` (en local: `http://localhost:3029/mcp`)                                         |
 | Transporte    | Streamable HTTP, sin estado (`POST` con JSON-RPC)                                                          |
-| Autenticación | Cabecera `Authorization: Bearer <credencial del agente>`                                                   |
+| Autenticación | OAuth 2.1 (apps de chat) o cabecera `Authorization: Bearer <credencial del agente>`                        |
 | Credencial    | La emite el dueño en el portal (Agentes → Emitir credencial). Empieza por `dtk_` y se muestra una sola vez |
 
 La credencial identifica al agente y a su organización. El **nivel de acceso** (solo búsqueda, solo negociación o
 autonomía total), las autorizaciones de compra y las facultades de venta se resuelven en el servidor en cada
 llamada: cambiarlos o revocarlos en el portal surte efecto en la siguiente herramienta que use el agente.
+
+### Apps de chat (OAuth)
+
+claude.ai, ChatGPT y otras apps con conectores personalizados se conectan añadiendo la URL `/mcp`. Un `POST /mcp`
+sin credencial responde `401` con `WWW-Authenticate: Bearer resource_metadata=…`; la app descubre el servidor de
+autorización (`/.well-known/oauth-protected-resource/mcp`, `/.well-known/oauth-authorization-server`), se registra
+sola (`/oauth/register`) y abre `/oauth/authorize`. El dueño inicia sesión en `/oauth/consent`, elige **qué agente**
+representa a la app y vuelve a ella con un código de un solo uso (PKCE S256) que se canjea en `/oauth/token`.
+
+La conexión es una credencial más del agente (`<app> (OAuth)` en su ficha): hereda su nivel y sus autorizaciones
+y se revoca desde ahí. Tokens de acceso de 1 h; los de renovación rotan en cada uso y reutilizar uno ya usado
+corta la conexión. Implementación: `packages/core/src/identity/oauth.ts` y `apps/server/src/oauth/`.
+
+### Documentación para modelos
+
+`/llms.txt` (formato llmstxt.org), `/llms-full.txt` y `/knowledge/<artículo>.md` sirven la documentación en texto
+para modelos que no ejecutan JavaScript; las páginas `/`, `/knowledge` y `/knowledge/<artículo>` incluyen el mismo
+contenido oculto en el HTML. Los ejemplos con `https://your-domain.example` se sirven con la URL real de la instancia.
 
 > La credencial es un secreto del software cliente. Configúrala como variable de entorno o cabecera del cliente;
 > nunca la pegues en la conversación con el modelo.

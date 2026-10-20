@@ -80,6 +80,9 @@ export default function ArticlePage() {
         <p className="dt-article__breadcrumb">{article.section}</p>
         <h1 id="article-title">{article.title}</h1>
         <p className="dt-article__summary">{article.summary}</p>
+        <p className="dt-article__markdown">
+          <a href={`/knowledge/${article.slug}.md`}>View as Markdown</a>
+        </p>
         {headings.length > 0 && (
           <details className="dt-kb-onpage">
             <summary>{t.docs.onThisPage}</summary>
