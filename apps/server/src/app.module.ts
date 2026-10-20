@@ -15,6 +15,7 @@ import {
 } from './authorizations/authorizations.controller.js';
 import { CatalogController, AgentCatalogController } from './catalog/catalog.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
+import { AgentNotificationsController, ConsoleController } from './console/console.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { McpController } from './mcp/mcp.controller.js';
 import {
@@ -79,6 +80,8 @@ export class AppModule {
         PayPalReturnController,
         PayPalWebhookController,
         McpController,
+        ConsoleController,
+        AgentNotificationsController,
         CatalogController,
         AgentCatalogController,
       ],

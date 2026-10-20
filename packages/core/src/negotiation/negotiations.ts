@@ -909,3 +909,24 @@ export async function expireQuotes(db: Executor, now: Date): Promise<number> {
     .returning({ id: schema.quotes.id });
   return rows.length;
 }
+
+/** Negociaciones del comprador (portal): por defecto, las propuestas pendientes de revisión del dueño. */
+export async function listBuyerNegotiations(
+  db: Executor,
+  actor: Actor,
+  filter: { status?: NegotiationRow['status'] } = { status: 'pending_owner_review' },
+  now = new Date(),
+): Promise<NegotiationView[]> {
+  requireAdmin(actor);
+  const rows = await db
+    .select({ id: schema.negotiations.id })
+    .from(schema.negotiations)
+    .where(
+      and(
+        eq(schema.negotiations.buyerOrgId, actor.orgId),
+        ...(filter.status ? [eq(schema.negotiations.status, filter.status)] : []),
+      ),
+    )
+    .orderBy(desc(schema.negotiations.updatedAt));
+  return Promise.all(rows.map((r) => getNegotiation(db, actor, r.id, now)));
+}
