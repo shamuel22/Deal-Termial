@@ -61,7 +61,7 @@ export class FakeGateway implements PaymentGateway {
     const mode = this.nextCreate;
     this.nextCreate = 'ok';
     if (typeof mode === 'object')
-      throw new GatewayRejectedError(mode.reject, `PayPal rechazó: ${mode.reject}`, 'dbg-fake');
+      throw new GatewayRejectedError(mode.reject, `PayPal rejected: ${mode.reject}`, 'dbg-fake');
     const order: FakeOrder = {
       id: `PP-${this.run}-${++this.seq}`,
       status: vault ? 'COMPLETED' : 'PAYER_ACTION_REQUIRED',
@@ -73,7 +73,7 @@ export class FakeGateway implements PaymentGateway {
     if (vault)
       this.captures.push({ orderId: order.id, amount: input.amount, payee: input.payeeMerchantId });
     // La orden se creó en PayPal pero la respuesta se perdió.
-    if (mode === 'unknown_after_create') throw new GatewayUnknownError('timeout simulado');
+    if (mode === 'unknown_after_create') throw new GatewayUnknownError('simulated timeout');
     return this.view(order);
   }
 
@@ -92,14 +92,14 @@ export class FakeGateway implements PaymentGateway {
 
   async getOrder(id: string) {
     const order = this.orders.get(id);
-    if (!order) throw new GatewayRejectedError('RESOURCE_NOT_FOUND', 'Orden inexistente');
+    if (!order) throw new GatewayRejectedError('RESOURCE_NOT_FOUND', 'Order does not exist');
     return this.view(order);
   }
 
   async captureOrder(id: string, _requestId: string) {
     const order = this.orders.get(id)!;
     if (order.status !== 'APPROVED' && order.status !== 'COMPLETED') {
-      throw new GatewayRejectedError('ORDER_NOT_APPROVED', 'El comprador no aprobó la orden');
+      throw new GatewayRejectedError('ORDER_NOT_APPROVED', 'The buyer has not approved the order');
     }
     if (!order.captured) {
       order.captured = true;
@@ -146,7 +146,7 @@ export class FakeGateway implements PaymentGateway {
 
   async getMerchantIntegration(merchantId: string) {
     const found = [...this.merchants.values()].find((m) => m.merchantId === merchantId);
-    if (!found) throw new GatewayRejectedError('RESOURCE_NOT_FOUND', 'Comerciante desconocido');
+    if (!found) throw new GatewayRejectedError('RESOURCE_NOT_FOUND', 'Unknown merchant');
     return { ...found, scopes: ['payments/payment'] };
   }
 }

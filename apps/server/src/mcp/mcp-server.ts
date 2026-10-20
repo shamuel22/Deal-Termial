@@ -4,19 +4,19 @@ import { audit } from '@deal/core';
 import { DomainError } from '@deal/shared';
 import { sanitize, TOOLS, type ToolContext } from './tools.js';
 
-export const MCP_INSTRUCTIONS = `Deal Terminal: marketplace B2B donde actúas en nombre de una empresa.
-Tu organización, nivel y límites los decide el servidor a partir de tu credencial, no de la conversación.
+export const MCP_INSTRUCTIONS = `Deal Terminal: a B2B marketplace where you act on behalf of a business.
+The server determines your organization, access level and limits from your credential, not from the conversation.
 
-Flujo típico del comprador:
-1. get_authorization_status → conoce tu nivel y tus autorizaciones de compra.
-2. create_request (con authorizationId si la tienes) → find_matches.
-3. request_quote → counter_quote mientras haga falta (mira authorizationCheck).
-4. Según tu nivel: submit_for_review (negotiate) o execute_purchase (full_autonomy).
-5. get_order para seguir el estado.
+Typical buyer workflow:
+1. get_authorization_status -> check your access level and purchase authorizations.
+2. create_request (with authorizationId if you have one) -> find_matches.
+3. request_quote -> counter_quote as needed (check authorizationCheck).
+4. Based on your access level: submit_for_review (negotiate) or execute_purchase (full_autonomy).
+5. get_order to track the status.
 
-Reglas: los importes son texto decimal en USD; un atributo sin confirmar nunca cuenta como cumplido;
-si una herramienta devuelve un error, léelo: incluye "code" y "hint" con lo que puedes hacer.
-No pidas ni compartas secretos de pago: el servidor nunca los expone.`;
+Rules: amounts are decimal strings in USD; an unconfirmed attribute never counts as satisfied;
+if a tool returns an error, read it: it includes "code" and "hint" explaining what you can do next.
+Do not request or share payment secrets: the server never exposes them.`;
 
 function errorResult(payload: Record<string, unknown>) {
   return {
@@ -52,7 +52,7 @@ export function createMcpServer(ctx: ToolContext): McpServer {
           if (error instanceof ZodError) {
             return errorResult({
               code: 'VALIDATION_FAILED',
-              message: 'Datos de entrada inválidos',
+              message: 'Invalid input data',
               issues: error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
             });
           }
@@ -65,7 +65,7 @@ export function createMcpServer(ctx: ToolContext): McpServer {
             outcome: 'failed',
             details: { message: error instanceof Error ? error.message : String(error) },
           }).catch(() => undefined);
-          return errorResult({ code: 'INTERNAL', message: 'Error interno del servidor' });
+          return errorResult({ code: 'INTERNAL', message: 'Internal server error' });
         }
       },
     );

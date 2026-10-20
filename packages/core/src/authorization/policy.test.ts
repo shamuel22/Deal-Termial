@@ -72,7 +72,7 @@ function terms(overrides: Partial<PurchaseTerms> = {}): PurchaseTerms {
 const codes = (a: AuthorizationSnapshot, t: PurchaseTerms) =>
   evaluatePurchase(a, t, NOW).map((v) => v.code);
 
-describe('niveles de acceso (brief §3)', () => {
+describe('access levels (brief §3)', () => {
   const matrix: Record<BuyerLevel, BuyerAction[]> = {
     search_only: ['search', 'save_request'],
     negotiate: ['search', 'save_request', 'request_quote', 'counter_quote', 'submit_for_review'],
@@ -80,20 +80,20 @@ describe('niveles de acceso (brief §3)', () => {
   };
 
   for (const [level, allowed] of Object.entries(matrix) as [BuyerLevel, BuyerAction[]][]) {
-    it(`${level} permite exactamente ${allowed.length} acciones`, () => {
+    it(`${level} allows exactly ${allowed.length} actions`, () => {
       for (const action of Object.keys(BUYER_ACTION_LEVEL) as BuyerAction[]) {
         expect(levelAllows(level, action), `${level} → ${action}`).toBe(allowed.includes(action));
       }
     });
   }
 
-  it('sin nivel de compra no se permite ninguna acción', () => {
+  it('no actions are allowed without a buyer access level', () => {
     for (const action of Object.keys(BUYER_ACTION_LEVEL) as BuyerAction[]) {
       expect(levelAllows(null, action)).toBe(false);
     }
   });
 
-  it('el error indica nivel requerido y actual', () => {
+  it('the error states the required and current access levels', () => {
     const actor = {
       kind: 'agent',
       agentId: 'x',
@@ -116,26 +116,26 @@ describe('niveles de acceso (brief §3)', () => {
 });
 
 describe('evaluatePurchase', () => {
-  it('acepta una compra dentro de todas las condiciones', () => {
+  it('accepts a purchase within all terms', () => {
     expect(evaluatePurchase(auth(), terms(), NOW)).toEqual([]);
   });
 
-  it('tolera diferencias de mayúsculas y espacios en la dirección', () => {
+  it('tolerates differences in address case and spaces', () => {
     const t = terms({ deliveryAddress: { ...ADDRESS, line1: ' 120  main st ', city: 'AUSTIN' } });
     expect(codes(auth(), t)).toEqual([]);
   });
 
   it.each([
-    ['revocada', { status: 'revoked' as const }, 'AUTHORIZATION_REVOKED'],
-    ['agotada', { status: 'exhausted' as const }, 'AUTHORIZATION_EXHAUSTED'],
-    ['vencida por estado', { status: 'expired' as const }, 'AUTHORIZATION_EXPIRED'],
-    ['vencida por fecha', { expiresAt: new Date('2026-10-20T11:59:59Z') }, 'AUTHORIZATION_EXPIRED'],
-    ['pendiente', { status: 'pending' as const }, 'AUTHORIZATION_NOT_FOUND'],
-  ])('rechaza autorización %s', (_label, override, code) => {
+    ['revoked', { status: 'revoked' as const }, 'AUTHORIZATION_REVOKED'],
+    ['exhausted', { status: 'exhausted' as const }, 'AUTHORIZATION_EXHAUSTED'],
+    ['expired by status', { status: 'expired' as const }, 'AUTHORIZATION_EXPIRED'],
+    ['expired by date', { expiresAt: new Date('2026-10-20T11:59:59Z') }, 'AUTHORIZATION_EXPIRED'],
+    ['pending', { status: 'pending' as const }, 'AUTHORIZATION_NOT_FOUND'],
+  ])('rejects authorization %s', (_label, override, code) => {
     expect(codes(auth(override), terms())).toEqual([code]);
   });
 
-  it('un atributo obligatorio ausente queda sin confirmar, nunca cumplido', () => {
+  it('a missing required attribute is unconfirmed, never satisfied', () => {
     const t = terms({
       productAttributes: { material: 'kraft_paper', capacity_oz: 16, has_lid: true, pack_size: 50 },
     });
@@ -147,7 +147,7 @@ describe('evaluatePurchase', () => {
     });
   });
 
-  it('rechaza foam aunque cumpla lo demás', () => {
+  it('rejects foam even if all other terms are met', () => {
     const t = terms({
       productAttributes: { ...terms().productAttributes, material: 'foam_eps' },
     });
@@ -155,32 +155,32 @@ describe('evaluatePurchase', () => {
   });
 
   it.each([
-    ['cantidad menor', { quantity: 299 }],
-    ['cantidad mayor', { quantity: 301 }],
-    ['otra categoría', { category: 'cups' }],
-    ['otra unidad', { unit: 'box' }],
-    ['otra moneda', { currency: 'EUR' }],
-    ['entrega tardía', { deliverBy: '2026-10-24' }],
-    ['otro destino', { deliveryAddress: { ...ADDRESS, postalCode: '78702' } }],
-  ])('rechaza %s', (_label, override) => {
+    ['quantity too low', { quantity: 299 }],
+    ['quantity too high', { quantity: 301 }],
+    ['another category', { category: 'cups' }],
+    ['another unit', { unit: 'box' }],
+    ['another currency', { currency: 'EUR' }],
+    ['late delivery', { deliverBy: '2026-10-24' }],
+    ['another destination', { deliveryAddress: { ...ADDRESS, postalCode: '78702' } }],
+  ])('rejects %s', (_label, override) => {
     expect(codes(auth(), terms(override as Partial<PurchaseTerms>))).toEqual([
       'TERMS_OUTSIDE_AUTHORIZATION',
     ]);
   });
 
-  it('rechaza proveedores no permitidos', () => {
+  it('rejects suppliers that are not allowed', () => {
     expect(codes(auth({ allowedSupplierOrgIds: [OTHER_SUPPLIER] }), terms())).toEqual([
       'SUPPLIER_NOT_ALLOWED',
     ]);
     expect(codes(auth({ allowedSupplierOrgIds: [SUPPLIER] }), terms())).toEqual([]);
   });
 
-  it('el total incluye transporte e impuestos y no puede superar el encargo', () => {
+  it('the total includes shipping and tax and cannot exceed the authorized budget', () => {
     expect(codes(auth(), terms({ total: '80.00' }))).toEqual([]);
     expect(codes(auth(), terms({ total: '80.01' }))).toEqual(['BUDGET_EXCEEDED']);
   });
 
-  it('acumula todas las violaciones y las adjunta al error', () => {
+  it('collects all violations and attaches them to the error', () => {
     const violations = evaluatePurchase(
       auth({ status: 'revoked' }),
       terms({ quantity: 10, total: '99.00' }),

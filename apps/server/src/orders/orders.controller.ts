@@ -39,7 +39,7 @@ import { Auth, CurrentActor, CurrentAgent, CurrentUser } from '../auth/auth.guar
 const IDEMPOTENCY_HEADER = {
   name: 'Idempotency-Key',
   required: false,
-  description: 'Reintentos con la misma clave devuelven el mismo resultado',
+  description: 'Retries with the same key return the same result',
 };
 
 /** La clave puede llegar en la cabecera estándar o en el cuerpo. */
@@ -51,7 +51,7 @@ function sideOf(side?: string): { side?: 'buyer' | 'supplier' } {
   return side === 'buyer' || side === 'supplier' ? { side } : {};
 }
 
-@ApiTags('agente')
+@ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent/orders')
 @Auth('agent')
@@ -60,7 +60,8 @@ export class AgentOrdersController {
 
   @Post()
   @ApiOperation({
-    summary: 'accept_quote: acepta la cotización y crea el pedido (autonomía total, idempotente)',
+    summary:
+      'accept_quote: accept the quote and create the order (full_autonomy, within your authorized limits; idempotent)',
   })
   @ApiHeader(IDEMPOTENCY_HEADER)
   @ApiZodBody(acceptQuoteInput)
@@ -79,14 +80,14 @@ export class AgentOrdersController {
   }
 
   @Get(':orderId')
-  @ApiOperation({ summary: 'get_order: estado comercial, financiero y de entrega' })
+  @ApiOperation({ summary: 'get_order: commercial, payment and delivery status' })
   get(@CurrentActor() actor: Actor, @Param('orderId') id: string) {
     return getOrder(this.handle.db, actor, id);
   }
 
   @Post(':orderId/cancel')
   @HttpCode(200)
-  @ApiOperation({ summary: 'cancel_order: cancela antes del pago y libera reservas' })
+  @ApiOperation({ summary: 'cancel_order: cancel before payment and release reservations' })
   @ApiHeader(IDEMPOTENCY_HEADER)
   @ApiZodBody(cancelOrderInput)
   cancel(
@@ -99,7 +100,7 @@ export class AgentOrdersController {
   }
 }
 
-@ApiTags('portal: pedidos')
+@ApiTags('portal: orders')
 @ApiCookieAuth()
 @Controller('orgs/:orgId/orders')
 @Auth('org-user')
@@ -107,7 +108,7 @@ export class PortalOrdersController {
   constructor(@Inject(DB) private readonly handle: DbHandle) {}
 
   @Post()
-  @ApiOperation({ summary: 'El dueño acepta una propuesta; el pedido queda para checkout manual' })
+  @ApiOperation({ summary: 'The owner accepts a proposal; the order awaits manual checkout' })
   @ApiHeader(IDEMPOTENCY_HEADER)
   @ApiZodBody(acceptQuoteInput)
   accept(

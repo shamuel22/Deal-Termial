@@ -33,7 +33,7 @@ class NegotiationRoutes {
 
   @Post('negotiations')
   @ApiOperation({
-    summary: 'request_quote: pide cotización a una oferta para una solicitud propia',
+    summary: 'request_quote: request a quote for an offer using your own purchase request',
   })
   @ApiZodBody(requestQuoteInput)
   requestQuote(@CurrentActor() actor: Actor, @Body() body: RequestQuoteInput) {
@@ -41,13 +41,13 @@ class NegotiationRoutes {
   }
 
   @Get('negotiations/:negotiationId')
-  @ApiOperation({ summary: 'get_quotes: historial de versiones de una negociación' })
+  @ApiOperation({ summary: 'get_quotes: version history of a negotiation' })
   get(@CurrentActor() actor: Actor, @Param('negotiationId') id: string) {
     return getNegotiation(this.handle.db, actor, id);
   }
 
   @Get('requests/:requestId/quotes')
-  @ApiOperation({ summary: 'get_quotes: negociaciones y cotizaciones de una solicitud' })
+  @ApiOperation({ summary: 'get_quotes: negotiations and quotes for a purchase request' })
   quotesForRequest(@CurrentActor() actor: Actor, @Param('requestId') id: string) {
     return getQuotesForRequest(this.handle.db, actor, id);
   }
@@ -55,7 +55,7 @@ class NegotiationRoutes {
   @Post('negotiations/:negotiationId/counter')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'counter_quote: propone cambios de precio, cantidad, transporte o fecha',
+    summary: 'counter_quote: propose changes to price, quantity, shipping or date',
   })
   @ApiZodBody(counterInput)
   counter(
@@ -68,7 +68,7 @@ class NegotiationRoutes {
 
   @Post('negotiations/:negotiationId/submit-for-review')
   @HttpCode(200)
-  @ApiOperation({ summary: 'submit_for_review: deja la propuesta final para revisión del dueño' })
+  @ApiOperation({ summary: 'submit_for_review: submit the final proposal for owner review' })
   submitForReview(
     @CurrentActor() actor: Actor,
     @Param('negotiationId') id: string,
@@ -78,11 +78,11 @@ class NegotiationRoutes {
   }
 
   @Get('supplier/negotiations')
-  @ApiOperation({ summary: 'list_pending_negotiations: negociaciones del proveedor' })
+  @ApiOperation({ summary: 'list_pending_negotiations: supplier negotiations' })
   @ApiQuery({
     name: 'status',
     required: false,
-    description: 'Por defecto awaiting_supplier; "all" para todas',
+    description: 'Defaults to awaiting_supplier; use "all" for all negotiations',
   })
   supplierList(@CurrentActor() actor: Actor, @Query('status') status?: string) {
     const filter =
@@ -92,7 +92,7 @@ class NegotiationRoutes {
 
   @Post('supplier/negotiations/:negotiationId/quote')
   @HttpCode(200)
-  @ApiOperation({ summary: 'submit_quote: el proveedor cotiza una negociación pendiente' })
+  @ApiOperation({ summary: 'submit_quote: the supplier quotes a pending negotiation' })
   @ApiZodBody(supplierQuoteInput)
   supplierQuote(
     @CurrentActor() actor: Actor,
@@ -104,7 +104,7 @@ class NegotiationRoutes {
 
   @Post('supplier/negotiations/:negotiationId/respond')
   @HttpCode(200)
-  @ApiOperation({ summary: 'respond_to_counterquote: aceptar, rechazar o contraofertar' })
+  @ApiOperation({ summary: 'respond_to_counterquote: accept, reject or counter' })
   @ApiZodBody(counterResponseInput)
   respond(
     @CurrentActor() actor: Actor,
@@ -115,7 +115,7 @@ class NegotiationRoutes {
   }
 }
 
-@ApiTags('agente')
+@ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent')
 @Auth('agent')
@@ -125,7 +125,7 @@ export class AgentNegotiationController extends NegotiationRoutes {
   }
 }
 
-@ApiTags('portal: negociación')
+@ApiTags('portal: negotiation')
 @ApiCookieAuth()
 @Controller('orgs/:orgId')
 @Auth('org-user')

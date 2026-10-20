@@ -88,7 +88,7 @@ export async function refreshSellerAccount(
     .select()
     .from(schema.sellerAccounts)
     .where(eq(schema.sellerAccounts.orgId, orgId));
-  if (!row) throw new DomainError('NOT_FOUND', 'El proveedor no inició la conexión con PayPal');
+  if (!row) throw new DomainError('NOT_FOUND', 'The supplier has not started connecting to PayPal');
   const merchantId = row.merchantId ?? (await gateway.findMerchantByTrackingId(row.trackingId));
   if (!merchantId) {
     const [updated] = await db
@@ -139,10 +139,10 @@ export async function refreshSellerAccount(
       await notify(tx, {
         orgId,
         kind: 'seller_account.status_changed',
-        title: ready ? 'Cuenta PayPal conectada' : 'Tu cuenta PayPal requiere atención',
+        title: ready ? 'PayPal account connected' : 'Your PayPal account needs attention',
         body: ready
-          ? 'Ya puedes recibir pagos de compradores en Deal Terminal.'
-          : 'PayPal indica que la cuenta aún no puede recibir pagos o el email no está confirmado.',
+          ? 'You can now receive payments from buyers on Deal Terminal.'
+          : 'PayPal reports that the account cannot receive payments yet or its email is not confirmed.',
         resourceType: 'seller_account',
         resourceId: row.id,
       });

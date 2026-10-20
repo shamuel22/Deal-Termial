@@ -31,7 +31,7 @@ async function newCompany(name: string): Promise<UserActor> {
   seq += 1;
   const { userId, orgId } = await registerOwner(h.db, {
     email: `owner${seq}@${name.toLowerCase()}.test`,
-    name: `Dueño ${name}`,
+    name: `Owner ${name}`,
     password: 'contraseña-segura-123',
     organizationName: name,
   });
@@ -43,17 +43,17 @@ async function expectCode(promise: Promise<unknown>, code: ErrorCode) {
     () => null,
     (e: unknown) => e,
   );
-  expect(error, `se esperaba ${code}`).toBeInstanceOf(DomainError);
+  expect(error, `expected ${code}`).toBeInstanceOf(DomainError);
   expect((error as DomainError).code).toBe(code);
 }
 
-describe('cuentas y sesiones', () => {
-  it('registra, inicia sesión y cierra sesión', async () => {
+describe('accounts and sessions', () => {
+  it('registers, signs in and signs out', async () => {
     await registerOwner(h.db, {
       email: 'Ana@Envases.test',
       name: 'Ana',
       password: 'contraseña-segura-123',
-      organizationName: 'Envases Ana',
+      organizationName: 'Ana Containers',
     });
     const session = await login(h.db, {
       email: 'ana@envases.test',
@@ -71,7 +71,7 @@ describe('cuentas y sesiones', () => {
     expect(await resolveSession(h.db, session.token)).toBeNull();
   });
 
-  it('rechaza contraseña incorrecta, email inexistente y email duplicado', async () => {
+  it('rejects an incorrect password, unknown email and duplicate email', async () => {
     await expectCode(
       login(h.db, { email: 'ana@envases.test', password: 'otra-contraseña-123' }),
       'UNAUTHENTICATED',
@@ -91,7 +91,7 @@ describe('cuentas y sesiones', () => {
     );
   });
 
-  it('exige contraseñas de al menos 12 caracteres', async () => {
+  it('requires passwords of at least 12 characters', async () => {
     await expect(
       registerOwner(h.db, {
         email: 'corta@x.test',
@@ -103,11 +103,11 @@ describe('cuentas y sesiones', () => {
   });
 });
 
-describe('agentes y niveles', () => {
-  it('crea un agente, emite credencial y la resuelve con su nivel vigente', async () => {
+describe('agents and access levels', () => {
+  it('creates an agent, issues a credential and resolves it with its current access level', async () => {
     const owner = await newCompany('Compradora');
     const agent = await createAgent(h.db, owner, {
-      name: 'Agente de compras',
+      name: 'Purchasing agent',
       access: { buyerLevel: 'search_only' },
     });
     expect(agent.access).toMatchObject({ version: 1, buyerLevel: 'search_only', sellerScopes: [] });
@@ -128,7 +128,7 @@ describe('agentes y niveles', () => {
     expect(JSON.stringify(view)).not.toContain(credential.apiKey);
   });
 
-  it('un cambio de nivel crea una versión nueva y se aplica de inmediato', async () => {
+  it('an access level change creates a new version and takes effect immediately', async () => {
     const owner = await newCompany('Versionada');
     const agent = await createAgent(h.db, owner, {
       name: 'A',
@@ -168,7 +168,7 @@ describe('agentes y niveles', () => {
     expect(events[0]!.actorId).toBe(owner.userId);
   });
 
-  it('una credencial revocada o un agente deshabilitado no autentican', async () => {
+  it('a revoked credential or disabled agent cannot authenticate', async () => {
     const owner = await newCompany('Revocadora');
     const agent = await createAgent(h.db, owner, {
       name: 'A',
@@ -188,14 +188,14 @@ describe('agentes y niveles', () => {
     await expectCode(issueCredential(h.db, owner, agent.id), 'INVALID_STATE');
   });
 
-  it('rechaza claves mal formadas o inventadas', async () => {
+  it('rejects malformed or fabricated keys', async () => {
     await expectCode(resolveAgentKey(h.db, 'sk_otra_cosa'), 'UNAUTHENTICATED');
     await expectCode(resolveAgentKey(h.db, 'dtk_inventada_123'), 'UNAUTHENTICATED');
   });
 });
 
-describe('autoridad sobre permisos (criterio 8)', () => {
-  it('un agente no puede cambiar su propio nivel ni emitir credenciales', async () => {
+describe('authority over permissions (criterion 8)', () => {
+  it('an agent cannot change its own access level or issue credentials', async () => {
     const owner = await newCompany('Autoridad');
     const agent = await createAgent(h.db, owner, {
       name: 'A',
@@ -212,7 +212,7 @@ describe('autoridad sobre permisos (criterio 8)', () => {
     await expectCode(listAgents(h.db, agentActor), 'FORBIDDEN');
   });
 
-  it('un miembro sin rol de administrador no puede administrar agentes', async () => {
+  it('a member without the administrator role cannot manage agents', async () => {
     const owner = await newCompany('Roles');
     const [member] = await h.db
       .insert(schema.users)
@@ -230,12 +230,12 @@ describe('autoridad sobre permisos (criterio 8)', () => {
   });
 });
 
-describe('aislamiento entre organizaciones (criterio 16)', () => {
-  it('una organización no ve ni modifica agentes de otra', async () => {
+describe('isolation between organizations (criterion 16)', () => {
+  it("an organization cannot view or modify another organization's agents", async () => {
     const a = await newCompany('OrgA');
     const b = await newCompany('OrgB');
     const agentA = await createAgent(h.db, a, {
-      name: 'De A',
+      name: 'From A',
       access: { buyerLevel: 'negotiate' },
     });
     const { credentialId } = await issueCredential(h.db, a, agentA.id);
@@ -252,13 +252,13 @@ describe('aislamiento entre organizaciones (criterio 16)', () => {
 
     // Tampoco puede usar el id de su propio agente con una credencial ajena.
     const agentB = await createAgent(h.db, b, {
-      name: 'De B',
+      name: 'From B',
       access: { buyerLevel: 'negotiate' },
     });
     await expectCode(revokeCredential(h.db, b, agentB.id, credentialId), 'NOT_FOUND');
   });
 
-  it('un usuario no puede actuar en una organización de la que no es miembro', async () => {
+  it('a user cannot act in an organization they do not belong to', async () => {
     const a = await newCompany('Ajena');
     const b = await newCompany('Propia');
     await expectCode(resolveUserActor(h.db, b.userId, a.orgId), 'NOT_FOUND');

@@ -59,37 +59,35 @@ export interface ToolDefinition {
   run: (ctx: ToolContext, args: Record<string, unknown>) => Promise<unknown>;
 }
 
-const id = (what: string) => z.string().describe(`ID (UUID) de ${what}`);
+const id = (what: string) => z.string().describe(`${what} ID (UUID)`);
 const money = (what: string) =>
-  z.string().describe(`${what} en USD como texto decimal, p. ej. "80.00"`);
+  z.string().describe(`${what} in USD as a decimal string, e.g. "80.00"`);
 const unitPrice = z
   .string()
-  .describe('Precio unitario en USD con hasta 4 decimales, p. ej. "0.2200"');
-const isoDate = (what: string) => z.string().describe(`${what} (AAAA-MM-DD)`);
+  .describe('Unit price in USD with up to 4 decimal places, e.g. "0.2200"');
+const isoDate = (what: string) => z.string().describe(`${what} (YYYY-MM-DD)`);
 const idempotencyKey = z
   .string()
   .optional()
-  .describe('Clave opcional: repetir la llamada con la misma clave devuelve el mismo resultado');
+  .describe('Optional key: repeating the call with the same key returns the same result');
 
 const constraint = z
   .record(z.string(), z.unknown())
-  .describe(
-    'Una restricción: {"eq": v} | {"in": [..]} | {"not_in": [..]} | {"min": n} | {"max": n}',
-  );
+  .describe('A constraint: {"eq": v} | {"in": [..]} | {"not_in": [..]} | {"min": n} | {"max": n}');
 const requiredAttributes = z
   .record(z.string(), constraint)
   .describe(
-    'Atributos obligatorios de envases (food_containers): material (paper, kraft_paper, bagasse, pla, pp, pet, aluminum, foam_eps), capacity_oz, hot_food_safe, microwave_safe, has_lid, compartments, pack_size. Ej.: {"hot_food_safe":{"eq":true},"material":{"not_in":["foam_eps"]}}',
+    'Required food container attributes (food_containers): material (paper, kraft_paper, bagasse, pla, pp, pet, aluminum, foam_eps), capacity_oz, hot_food_safe, microwave_safe, has_lid, compartments, pack_size. Example: {"hot_food_safe":{"eq":true},"material":{"not_in":["foam_eps"]}}',
   );
 const address = z
   .object({
     line1: z.string(),
     line2: z.string().optional(),
     city: z.string(),
-    state: z.string().describe('Código de estado de EE. UU., p. ej. "TX"'),
+    state: z.string().describe('US state code, e.g. "TX"'),
     postalCode: z.string(),
   })
-  .describe('Dirección de entrega en EE. UU.');
+  .describe('Delivery address in the US');
 
 const t = <S extends z.ZodRawShape>(shape: S) => z.object(shape);
 
@@ -97,9 +95,9 @@ export const TOOLS: ToolDefinition[] = [
   // ---- Comunes ----
   {
     name: 'get_authorization_status',
-    title: 'Estado de mis permisos',
+    title: 'Check my permissions',
     description:
-      'Devuelve tu nivel de acceso (search_only, negotiate, full_autonomy), facultades de venta, autorizaciones de compra con su presupuesto disponible y si existe autorización financiera. Úsala primero para saber qué puedes hacer. No incluye secretos.',
+      'Get your access level (search_only, negotiate, full_autonomy), seller permissions, purchase authorizations with their available budgets, and whether PayPal consent exists. Call this first to learn what you can do. No secrets are included.',
     side: 'common',
     readOnly: true,
     input: t({}),
@@ -107,20 +105,20 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'request_authorization_change',
-    title: 'Solicitar cambio de permisos',
+    title: 'Request a permission change',
     description:
-      'Propone al dueño una autorización nueva, una ampliación o un cambio de nivel. No concede nada: queda pendiente de que el dueño la apruebe en el portal.',
+      'Propose a new authorization, an increase or an access level change to the owner. This grants nothing: the proposal awaits owner approval in the portal.',
     side: 'common',
     readOnly: false,
     input: t({
       kind: z.enum(['new_authorization', 'amend_authorization', 'change_level']),
-      authorizationId: id('la autorización a ampliar').optional(),
+      authorizationId: id('Authorization to extend').optional(),
       buyerLevel: z.enum(['search_only', 'negotiate', 'full_autonomy']).optional(),
       terms: z
         .record(z.string(), z.unknown())
         .optional()
         .describe(
-          'Condiciones completas propuestas: mandate, category, requiredAttributes, quantityMin, quantityMax, budgetTotal, deliveryAddress, deliverBy, expiresAt (ISO con zona).',
+          'Complete proposed terms: mandate, category, requiredAttributes, quantityMin, quantityMax, budgetTotal, deliveryAddress, deliverBy, expiresAt (ISO with timezone).',
         ),
       reason: z.string().optional(),
     }),
@@ -130,24 +128,24 @@ export const TOOLS: ToolDefinition[] = [
   // ---- Comprador ----
   {
     name: 'create_request',
-    title: 'Guardar necesidad de compra',
+    title: 'Save a purchase request',
     description:
-      'Guarda una necesidad privada sin contactar proveedores (permitido en todos los niveles). Si tienes una autorización de compra, pasa solo authorizationId: los criterios se toman de ella y el máximo es tu presupuesto disponible.',
+      'Save a private purchase request without contacting suppliers (allowed at all access levels). If you have a purchase authorization, pass only authorizationId: its terms provide the criteria and your available budget sets the maximum.',
     side: 'buyer',
     readOnly: false,
     input: t({
-      authorizationId: id('tu autorización de compra').optional(),
+      authorizationId: id('Your purchase authorization').optional(),
       criteria: z
         .object({
           category: z.literal('food_containers'),
           requiredAttributes: requiredAttributes.optional(),
           quantity: z.number().int(),
           deliveryAddress: address,
-          deliverBy: isoDate('Fecha límite de entrega'),
-          maxTotal: money('Total máximo').optional(),
+          deliverBy: isoDate('Delivery deadline'),
+          maxTotal: money('Maximum total').optional(),
         })
         .optional()
-        .describe('Criterios, solo si no usas authorizationId'),
+        .describe('Criteria, only if you are not using authorizationId'),
       preferences: z
         .object({
           preferredMaterials: z.array(z.string()).optional(),
@@ -159,27 +157,27 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'find_matches',
-    title: 'Buscar y comparar ofertas',
+    title: 'Search and compare offers',
     description:
-      'Busca ofertas publicadas compatibles y las compara con total (incluye transporte e impuestos), entrega, stock y atributos sin confirmar. Pasa requestId para usar una necesidad guardada, o criteria. Una oferta por encima del presupuesto aparece con budget.withinBudget=false: se puede negociar.',
+      'Search compatible published offers and compare totals (including shipping and tax), delivery, stock and unconfirmed attributes. Pass requestId to use a saved purchase request, or pass criteria. An offer over budget appears with budget.withinBudget=false: you can negotiate it.',
     side: 'buyer',
     readOnly: true,
     input: t({
-      requestId: id('una necesidad guardada').optional(),
+      requestId: id('Saved purchase request').optional(),
       criteria: z
         .object({
           category: z.literal('food_containers'),
           requiredAttributes: requiredAttributes.optional(),
           quantity: z.number().int(),
           deliveryState: z.string().optional(),
-          deliverBy: isoDate('Fecha límite').optional(),
-          maxTotal: money('Total máximo').optional(),
+          deliverBy: isoDate('Deadline').optional(),
+          maxTotal: money('Maximum total').optional(),
         })
         .optional(),
       includeIncompatible: z
         .boolean()
         .optional()
-        .describe('Incluir también las incompatibles con su motivo'),
+        .describe('Also include incompatible offers with their reasons'),
     }),
     run: ({ db, agent }, a) => {
       const options = { includeIncompatible: a.includeIncompatible as boolean | undefined };
@@ -190,50 +188,51 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_request',
-    title: 'Consultar una necesidad',
-    description: 'Consulta una de tus necesidades guardadas. Sin requestId, lista todas las tuyas.',
+    title: 'Get a purchase request',
+    description:
+      'Get one of your saved purchase requests. Without requestId, list all your requests.',
     side: 'buyer',
     readOnly: true,
-    input: t({ requestId: id('la necesidad').optional() }),
+    input: t({ requestId: id('Purchase request').optional() }),
     run: ({ db, agent }, a) =>
       a.requestId ? getRequest(db, agent, a.requestId as string) : listRequests(db, agent),
   },
   {
     name: 'cancel_request',
-    title: 'Cancelar una necesidad',
-    description: 'Cancela una necesidad abierta.',
+    title: 'Cancel a purchase request',
+    description: 'Cancel an open purchase request.',
     side: 'buyer',
     readOnly: false,
-    input: t({ requestId: id('la necesidad') }),
+    input: t({ requestId: id('Purchase request') }),
     run: ({ db, agent }, a) => cancelRequest(db, agent, a.requestId as string),
   },
   {
     name: 'request_quote',
-    title: 'Pedir cotización',
+    title: 'Request a quote',
     description:
-      'Pide cotización de una oferta para una necesidad tuya (nivel negotiate o full_autonomy). El proveedor responde con sus reglas aunque su agente no esté conectado; si no puede, queda pendiente de su respuesta. Repetir la llamada devuelve la misma negociación.',
+      "Request a quote for an offer using your own purchase request (negotiate or full_autonomy access level). The supplier responds using its rules even if its agent is disconnected; if it cannot, the negotiation awaits the supplier's response. Repeating the call returns the same negotiation.",
     side: 'buyer',
     readOnly: false,
     input: t({
-      requestId: id('tu necesidad'),
-      offerId: id('la oferta'),
+      requestId: id('Your purchase request'),
+      offerId: id('Offer'),
       message: z.string().optional(),
     }),
     run: ({ db, agent }, a) => requestQuote(db, agent, a as never),
   },
   {
     name: 'counter_quote',
-    title: 'Contraofertar',
+    title: 'Make a counterproposal',
     description:
-      'Propone cambios sobre la última cotización del proveedor: precio unitario, cantidad, bonificar transporte o fecha. El proveedor acepta, contraoferta con lo máximo que permiten sus reglas o deja la negociación pendiente. Revisa authorizationCheck en la respuesta para saber si ya cabe en tu autorización.',
+      "Propose changes to the supplier's latest quote: unit price, quantity, waived shipping or date. The supplier accepts, counters with the best terms its rules permit, or leaves the negotiation pending. Check authorizationCheck in the response to see whether the terms now fit your purchase authorization.",
     side: 'buyer',
     readOnly: false,
     input: t({
-      negotiationId: id('la negociación'),
+      negotiationId: id('Negotiation'),
       unitPrice: unitPrice.optional(),
       quantity: z.number().int().optional(),
       waiveShipping: z.boolean().optional(),
-      deliverBy: isoDate('Nueva fecha de entrega').optional(),
+      deliverBy: isoDate('New delivery date').optional(),
       message: z.string().optional(),
     }),
     run: ({ db, agent }, a) => {
@@ -243,14 +242,14 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_quotes',
-    title: 'Ver cotizaciones',
+    title: 'View quotes',
     description:
-      'Historial de versiones de una negociación (negotiationId) o de todas las negociaciones de una necesidad (requestId), con importes, vigencia y comprobación contra tu autorización.',
+      'Get the version history for a negotiation (negotiationId) or all negotiations for a purchase request (requestId), including amounts, validity and checks against your purchase authorization.',
     side: 'common',
     readOnly: true,
     input: t({
-      negotiationId: id('la negociación').optional(),
-      requestId: id('la necesidad').optional(),
+      negotiationId: id('Negotiation').optional(),
+      requestId: id('Purchase request').optional(),
     }),
     run: ({ db, agent }, a) =>
       a.negotiationId
@@ -259,12 +258,12 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'submit_for_review',
-    title: 'Enviar propuesta final al dueño',
+    title: 'Submit the final proposal to the owner',
     description:
-      'Nivel negotiate: deja la última cotización como propuesta final para que el dueño la revise, acepte y pague en el portal. No crea compromisos.',
+      'negotiate access level: submit the latest quote as the final proposal for the owner to review, accept and pay in the portal. This creates no commitments.',
     side: 'buyer',
     readOnly: false,
-    input: t({ negotiationId: id('la negociación'), message: z.string().optional() }),
+    input: t({ negotiationId: id('Negotiation'), message: z.string().optional() }),
     run: ({ db, agent }, a) =>
       submitForReview(db, agent, a.negotiationId as string, {
         message: a.message as string | undefined,
@@ -272,42 +271,42 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'accept_quote',
-    title: 'Aceptar cotización',
+    title: 'Accept a quote',
     description:
-      'Nivel full_autonomy: acepta la cotización indicada y crea el pedido, reservando stock y presupuesto. El servidor verifica tu nivel, tu autorización y todas las condiciones. Repetirla devuelve el mismo pedido.',
+      'full_autonomy access level: accept the specified quote and create the order, reserving stock and budget. The server checks your access level, purchase authorization and all terms. Repeating the call returns the same order.',
     side: 'buyer',
     readOnly: false,
     input: t({
-      negotiationId: id('la negociación'),
-      quoteId: id('la versión a aceptar'),
+      negotiationId: id('Negotiation'),
+      quoteId: id('Quote version to accept'),
       idempotencyKey,
     }),
     run: ({ db, agent }, a) => acceptQuote(db, agent, a as never),
   },
   {
     name: 'execute_purchase',
-    title: 'Ejecutar compra',
+    title: 'Execute a purchase',
     description:
-      'Nivel full_autonomy: acepta (o recupera) el pedido y ejecuta el pago autorizado. Si no hay autorización financiera para ese proveedor, el pedido queda aceptado y pendiente de pago del dueño, que es notificado (payment.status = owner_action_required). Nunca cobra dos veces.',
+      'full_autonomy access level: accept (or retrieve) the order and execute the authorized payment. If no PayPal consent covers that supplier, the order remains accepted and awaits payment by the owner, who is notified (payment.status = owner_action_required). Never charges twice.',
     side: 'buyer',
     readOnly: false,
     input: t({
-      orderId: id('un pedido ya aceptado').optional(),
-      negotiationId: id('la negociación').optional(),
-      quoteId: id('la versión a aceptar').optional(),
+      orderId: id('Previously accepted order').optional(),
+      negotiationId: id('Negotiation').optional(),
+      quoteId: id('Quote version to accept').optional(),
       idempotencyKey,
     }),
     run: ({ db, gateway, agent }, a) => executePurchase(db, gateway, agent, a as never),
   },
   {
     name: 'get_order',
-    title: 'Consultar pedido',
+    title: 'Get an order',
     description:
-      'Estado comercial, financiero y de entrega de un pedido. Sin orderId, lista tus pedidos.',
+      "Get an order's commercial, payment and delivery status. Without orderId, list your orders.",
     side: 'common',
     readOnly: true,
     input: t({
-      orderId: id('el pedido').optional(),
+      orderId: id('Order').optional(),
       side: z.enum(['buyer', 'supplier']).optional(),
     }),
     run: ({ db, agent }, a) =>
@@ -317,23 +316,23 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'cancel_order',
-    title: 'Cancelar pedido',
-    description: 'Cancela un pedido antes del pago y libera stock y presupuesto.',
+    title: 'Cancel an order',
+    description: 'Cancel an order before payment and release stock and budget.',
     side: 'buyer',
     readOnly: false,
-    input: t({ orderId: id('el pedido'), reason: z.string().optional(), idempotencyKey }),
+    input: t({ orderId: id('Order'), reason: z.string().optional(), idempotencyKey }),
     run: ({ db, agent }, a) => cancelOrder(db, agent, a.orderId as string, a as never),
   },
   {
     name: 'request_refund',
-    title: 'Solicitar devolución',
+    title: 'Request a refund',
     description:
-      'Solicita revisión de una devolución sobre un pedido pagado. El proveedor decide; un reembolso no devuelve presupuesto delegado.',
+      'Request a refund review for a paid order. The supplier decides; a refund does not restore delegated budget.',
     side: 'buyer',
     readOnly: false,
     input: t({
-      orderId: id('el pedido'),
-      amount: money('Importe').optional(),
+      orderId: id('Order'),
+      amount: money('Amount').optional(),
       reason: z.string(),
       idempotencyKey,
     }),
@@ -343,9 +342,9 @@ export const TOOLS: ToolDefinition[] = [
   // ---- Proveedor ----
   {
     name: 'publish_offer',
-    title: 'Publicar oferta',
+    title: 'Publish an offer',
     description:
-      'Facultad publish_offers: crea un producto con atributos normalizados y su oferta (tramos de precio por cantidad, stock, regiones, plazos y reglas privadas de negociación). Las reglas nunca se muestran a compradores.',
+      'publish_offers permission: create a product with normalized attributes and its offer (quantity price tiers, stock, regions, lead times and private negotiation rules). The rules are never shown to buyers.',
     side: 'supplier',
     readOnly: false,
     input: t({
@@ -358,12 +357,12 @@ export const TOOLS: ToolDefinition[] = [
           attributes: z.record(z.string(), z.unknown()),
         })
         .describe(
-          'Producto; attributes: material, capacity_oz, hot_food_safe, microwave_safe?, has_lid, compartments?, pack_size',
+          'Product; attributes: material, capacity_oz, hot_food_safe, microwave_safe?, has_lid, compartments?, pack_size',
         ),
       offer: z
         .record(z.string(), z.unknown())
         .describe(
-          'Oferta: status ("draft"|"active"), stockAvailable, minOrderQty, maxOrderQty?, shipRegions ["TX",...], leadTimeDays, shippingFlat "5.00", taxRate "0.0825", priceTiers [{minQty, unitPrice}], negotiationRules {autoRespond, maxDiscount "0.10", floorUnitPrice, minQtyForDiscount, minLeadTimeDays, canWaiveShipping, quoteValidityHours}',
+          'Offer: status ("draft"|"active"), stockAvailable, minOrderQty, maxOrderQty?, shipRegions ["TX",...], leadTimeDays, shippingFlat "5.00", taxRate "0.0825", priceTiers [{minQty, unitPrice}], negotiationRules {autoRespond, maxDiscount "0.10", floorUnitPrice, minQtyForDiscount, minLeadTimeDays, canWaiveShipping, quoteValidityHours}',
         ),
     }),
     run: ({ db, agent }, a) =>
@@ -374,18 +373,18 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'update_offer',
-    title: 'Actualizar oferta',
+    title: 'Update an offer',
     description:
-      'Facultad publish_offers: reemplaza las condiciones de una oferta propia (nueva versión) o, con solo status, la activa, pausa o archiva.',
+      'publish_offers permission: replace the terms of your own offer (new version), or pass only status to activate, pause or archive it.',
     side: 'supplier',
     readOnly: false,
     input: t({
-      offerId: id('la oferta'),
+      offerId: id('Offer'),
       status: z.enum(['active', 'paused', 'archived']).optional(),
       conditions: z
         .record(z.string(), z.unknown())
         .optional()
-        .describe('Condiciones completas, como en publish_offer'),
+        .describe('Complete terms, as in publish_offer'),
     }),
     run: ({ db, agent }, a) =>
       a.conditions
@@ -394,8 +393,9 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'list_my_offers',
-    title: 'Mis ofertas',
-    description: 'Facultad publish_offers: ofertas propias con tramos y reglas privadas.',
+    title: 'List my offers',
+    description:
+      'publish_offers permission: list your own offers with price tiers and private rules.',
     side: 'supplier',
     readOnly: true,
     input: t({}),
@@ -403,16 +403,16 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'list_pending_negotiations',
-    title: 'Negociaciones pendientes',
+    title: 'List pending negotiations',
     description:
-      'Negociaciones de tus ofertas que esperan tu respuesta (o todas con status "all"). Incluye la traza de reglas aplicadas.',
+      'List negotiations for your offers awaiting your response (or all negotiations with status "all"). Includes the trace of applied rules.',
     side: 'supplier',
     readOnly: true,
     input: t({
       status: z
         .string()
         .optional()
-        .describe('awaiting_supplier (por defecto), awaiting_buyer, agreed, closed o all'),
+        .describe('awaiting_supplier (default), awaiting_buyer, agreed, closed or all'),
     }),
     run: ({ db, agent }, a) =>
       listSupplierNegotiations(
@@ -423,17 +423,17 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'submit_quote',
-    title: 'Enviar cotización',
+    title: 'Submit a quote',
     description:
-      'Facultad submit_quotes: cotiza una negociación pendiente. Un agente no puede conceder fuera de las reglas de su oferta (precio mínimo, plazo mínimo, transporte).',
+      "submit_quotes permission: quote a pending negotiation. An agent cannot grant terms outside its offer's rules (minimum price, minimum lead time, shipping).",
     side: 'supplier',
     readOnly: false,
     input: t({
-      negotiationId: id('la negociación'),
+      negotiationId: id('Negotiation'),
       quantity: z.number().int(),
       unitPrice,
       waiveShipping: z.boolean().optional(),
-      deliverBy: isoDate('Fecha de entrega comprometida'),
+      deliverBy: isoDate('Committed delivery date'),
       message: z.string().optional(),
     }),
     run: ({ db, agent }, a) => {
@@ -443,13 +443,13 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'respond_to_counterquote',
-    title: 'Responder contrapropuesta',
+    title: 'Respond to a counterproposal',
     description:
-      'Responde a la contrapropuesta del comprador: accept (facultad accept_terms, dentro de tus reglas), reject, o counter con nuevas condiciones (submit_quotes).',
+      "Respond to the buyer's counterproposal: accept (accept_terms permission, within your rules), reject, or counter with new terms (submit_quotes).",
     side: 'supplier',
     readOnly: false,
     input: t({
-      negotiationId: id('la negociación'),
+      negotiationId: id('Negotiation'),
       action: z.enum(['accept', 'reject', 'counter']),
       message: z.string().optional(),
       terms: z
@@ -457,10 +457,10 @@ export const TOOLS: ToolDefinition[] = [
           quantity: z.number().int(),
           unitPrice,
           waiveShipping: z.boolean().optional(),
-          deliverBy: isoDate('Entrega'),
+          deliverBy: isoDate('Delivery'),
         })
         .optional()
-        .describe('Solo para counter'),
+        .describe('Only for counter'),
     }),
     run: ({ db, agent }, a) => {
       const { negotiationId, ...rest } = a;
@@ -469,32 +469,32 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'list_refunds',
-    title: 'Devoluciones',
+    title: 'Refunds',
     description:
-      'Con orderId: devoluciones de ese pedido. Sin orderId: devoluciones pendientes de tu decisión como proveedor.',
+      'With orderId: list refunds for that order. Without orderId: list refunds awaiting your decision as supplier.',
     side: 'common',
     readOnly: true,
-    input: t({ orderId: id('el pedido').optional() }),
+    input: t({ orderId: id('Order').optional() }),
     run: ({ db, agent }, a) =>
       a.orderId ? listRefunds(db, agent, a.orderId as string) : listPendingRefunds(db, agent),
   },
   {
     name: 'approve_refund',
-    title: 'Aprobar devolución',
+    title: 'Approve a refund',
     description:
-      'Facultad approve_refunds: autoriza la devolución y la plataforma la ejecuta en PayPal en tu nombre.',
+      'approve_refunds permission: authorize the refund and the platform executes it in PayPal on your behalf.',
     side: 'supplier',
     readOnly: false,
-    input: t({ refundId: id('la devolución') }),
+    input: t({ refundId: id('Refund') }),
     run: ({ db, gateway, agent }, a) => approveRefund(db, gateway, agent, a.refundId as string),
   },
   {
     name: 'reject_refund',
-    title: 'Rechazar devolución',
-    description: 'Facultad approve_refunds: rechaza la solicitud indicando el motivo.',
+    title: 'Reject a refund',
+    description: 'approve_refunds permission: reject the request and provide a reason.',
     side: 'supplier',
     readOnly: false,
-    input: t({ refundId: id('la devolución'), reason: z.string() }),
+    input: t({ refundId: id('Refund'), reason: z.string() }),
     run: ({ db, agent }, a) => rejectRefund(db, agent, a.refundId as string, a.reason as string),
   },
 ];

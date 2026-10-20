@@ -77,11 +77,11 @@ export class AuthGuard implements CanActivate {
     const apiKey = bearer(req);
 
     if (mode === 'agent' || (mode === 'org-actor' && apiKey)) {
-      if (!apiKey) throw new DomainError('UNAUTHENTICATED', 'Falta la credencial del agente');
+      if (!apiKey) throw new DomainError('UNAUTHENTICATED', 'Agent credential is missing');
       const actor = await resolveAgentKey(db, apiKey);
       const orgId = req.params.orgId;
       if (typeof orgId === 'string' && orgId !== actor.orgId) {
-        throw new DomainError('NOT_FOUND', 'Organización no encontrada');
+        throw new DomainError('NOT_FOUND', 'Organization not found');
       }
       req.actor = actor;
       return true;
@@ -90,13 +90,13 @@ export class AuthGuard implements CanActivate {
     const token = readCookie(req, SESSION_COOKIE);
     const session = token ? await resolveSession(db, token) : null;
     if (!session || !token) {
-      throw new DomainError('UNAUTHENTICATED', 'Inicia sesión en el portal');
+      throw new DomainError('UNAUTHENTICATED', 'Sign in to the portal');
     }
     req.authSession = { ...session, token };
     if (mode === 'session') return true;
 
     const orgId = req.params.orgId;
-    if (typeof orgId !== 'string') throw new Error('La ruta requiere el parámetro :orgId');
+    if (typeof orgId !== 'string') throw new Error('The route requires the :orgId parameter');
     req.actor = await resolveUserActor(db, session.userId, orgId);
     return true;
   }
@@ -105,14 +105,14 @@ export class AuthGuard implements CanActivate {
 /** Actor resuelto por el guard (usuario de la organización o agente). */
 export const CurrentActor = createParamDecorator((_data: unknown, ctx: ExecutionContext): Actor => {
   const actor = ctx.switchToHttp().getRequest<AuthedRequest>().actor;
-  if (!actor) throw new Error('Ruta sin @Auth que resuelva un actor');
+  if (!actor) throw new Error('Route has no @Auth decorator to resolve an actor');
   return actor;
 });
 
 export const CurrentAgent = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): AgentActor => {
     const actor = ctx.switchToHttp().getRequest<AuthedRequest>().actor;
-    if (actor?.kind !== 'agent') throw new Error('Ruta sin @Auth(agent)');
+    if (actor?.kind !== 'agent') throw new Error('Route has no @Auth(agent) decorator');
     return actor;
   },
 );
@@ -120,13 +120,13 @@ export const CurrentAgent = createParamDecorator(
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): UserActor => {
     const actor = ctx.switchToHttp().getRequest<AuthedRequest>().actor;
-    if (actor?.kind !== 'user') throw new Error('Ruta sin @Auth(org-user)');
+    if (actor?.kind !== 'user') throw new Error('Route has no @Auth(org-user) decorator');
     return actor;
   },
 );
 
 export const CurrentSession = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
   const session = ctx.switchToHttp().getRequest<AuthedRequest>().authSession;
-  if (!session) throw new Error('Ruta sin @Auth(session)');
+  if (!session) throw new Error('Route has no @Auth(session) decorator');
   return session;
 });

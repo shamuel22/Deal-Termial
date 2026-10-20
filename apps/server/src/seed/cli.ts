@@ -8,7 +8,7 @@ async function main(): Promise<void> {
   if (existsSync(envFile)) process.loadEnvFile(envFile);
 
   const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL no está definida');
+  if (!url) throw new Error('DATABASE_URL is not defined');
   const password = process.env.DEMO_PASSWORD ?? 'DealTerminal-demo-2026';
   await runMigrations(url);
   const handle = createDb(url);
@@ -21,32 +21,32 @@ async function main(): Promise<void> {
         b: process.env.DEMO_SELLER_B_MERCHANT_ID ?? 'VW92JVJ8JBR7Q',
       },
     });
-    console.log('Datos de demostración creados: 3 organizaciones, 5 agentes y 6 ofertas activas.');
-    console.log('\nCuentas de dueños');
+    console.log('Demo data created: 3 organizations, 5 agents and 6 active offers.');
+    console.log('\nOwner accounts');
     console.table(
       result.owners.map((owner) => ({
-        Empresa: owner.organizationName,
+        Organization: owner.organizationName,
         Email: owner.email,
-        Contraseña: password,
+        Password: password,
       })),
     );
-    console.log('\nAgentes — guarda estas API keys; se muestran solo al emitirlas');
+    console.log('\nAgents - save these API keys; they are shown only when issued');
     console.table(
       result.agents.map((agent) => ({
-        Nombre: agent.name,
-        Nivel: agent.buyerLevel ?? 'vendedor (sin nivel comprador)',
+        Name: agent.name,
+        Level: agent.buyerLevel ?? 'seller (no buyer access level)',
         'API key': agent.apiKey,
       })),
     );
-    console.log('\nAutorizaciones demo — presupuesto US$80.00 cada una');
+    console.log('\nDemo authorizations - authorized budget US$80.00 each');
     console.table(
       result.authorizations.map((authorization) => ({
-        Agente: authorization.agentName,
-        'ID autorización': authorization.id,
-        'ID agente': authorization.agentId,
+        Agent: authorization.agentName,
+        'Authorization ID': authorization.id,
+        'Agent ID': authorization.agentId,
       })),
     );
-    console.log(`Entrega límite (UTC): ${result.deliverBy}. Vencimiento: ${result.expiresAt}.`);
+    console.log(`Delivery deadline (UTC): ${result.deliverBy}. Expires: ${result.expiresAt}.`);
   } finally {
     await handle.close();
   }
@@ -54,7 +54,7 @@ async function main(): Promise<void> {
 
 main().catch((error: unknown) => {
   console.error(
-    `No se pudo cargar la demo: ${error instanceof Error ? error.message : 'error desconocido'}`,
+    `Could not load demo data: ${error instanceof Error ? error.message : 'unknown error'}`,
   );
   process.exitCode = 1;
 });

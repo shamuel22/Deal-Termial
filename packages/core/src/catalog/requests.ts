@@ -38,7 +38,7 @@ export const createRequestInput = z
       .optional(),
   })
   .refine((v) => v.authorizationId || v.criteria, {
-    message: 'Indica criteria o una authorizationId de la que tomarlos',
+    message: 'Provide criteria or an authorizationId to derive them from',
   });
 export type CreateRequestInput = z.input<typeof createRequestInput>;
 export type RequestCriteria = z.output<typeof requestCriteria>;
@@ -86,7 +86,7 @@ export async function createRequest(
       if (actor.kind !== 'agent') {
         throw new DomainError(
           'VALIDATION_FAILED',
-          'Solo un agente vincula solicitudes a su autorización',
+          'Only an agent can link requests to its authorization',
         );
       }
       // Los criterios obligatorios salen de la autorización; el agente no puede ampliarlos.
@@ -134,7 +134,7 @@ export async function createRequest(
 /** Un agente solo accede a las solicitudes que creó; el dueño ve las de su organización. */
 async function loadOwnRequest(db: Executor, actor: Actor, requestId: string) {
   if (!z.uuid().safeParse(requestId).success)
-    throw new DomainError('NOT_FOUND', 'Solicitud no encontrada');
+    throw new DomainError('NOT_FOUND', 'Request not found');
   const conditions = [
     eq(schema.purchaseRequests.id, requestId),
     eq(schema.purchaseRequests.buyerOrgId, actor.orgId),
@@ -144,7 +144,7 @@ async function loadOwnRequest(db: Executor, actor: Actor, requestId: string) {
     .select()
     .from(schema.purchaseRequests)
     .where(and(...conditions));
-  if (!row) throw new DomainError('NOT_FOUND', 'Solicitud no encontrada');
+  if (!row) throw new DomainError('NOT_FOUND', 'Request not found');
   return row;
 }
 
@@ -178,7 +178,7 @@ export async function cancelRequest(
   return inTransaction(db, async (tx) => {
     const row = await loadOwnRequest(tx, actor, requestId);
     if (row.status !== 'open')
-      throw new DomainError('INVALID_STATE', `La solicitud está ${row.status}`);
+      throw new DomainError('INVALID_STATE', `The request status is ${row.status}`);
     const [updated] = await tx
       .update(schema.purchaseRequests)
       .set({ status: 'cancelled', updatedAt: new Date() })

@@ -29,7 +29,7 @@ afterAll(async () => {
 function product(overrides: Partial<ProductInput> = {}): ProductInput {
   return {
     sku: 'ENV-16',
-    name: 'Envase kraft 16 oz',
+    name: 'Kraft container 16 oz',
     category: 'food_containers',
     attributes: {
       material: 'kraft_paper',
@@ -61,8 +61,8 @@ function conditions(overrides: Partial<UpdateOfferInput> = {}): UpdateOfferInput
   };
 }
 
-describe('catálogo privado del proveedor', () => {
-  it('el dueño crea producto y oferta activa con importes normalizados y auditoría', async () => {
+describe("supplier's private catalog", () => {
+  it('the owner creates a product and active offer with normalized amounts and audit records', async () => {
     const owner = await newCompany(h.db);
     const p = await createProduct(h.db, owner, product());
     expect(p).toMatchObject({ supplierOrgId: owner.orgId, unit: 'unit', description: null });
@@ -105,7 +105,7 @@ describe('catálogo privado del proveedor', () => {
     });
   });
 
-  it('rechaza atributos inválidos y desconocidos al crear y reemplazar productos', async () => {
+  it('rejects invalid and unknown attributes when creating and replacing products', async () => {
     const owner = await newCompany(h.db);
     const p = await createProduct(h.db, owner, product());
     for (const attributes of [
@@ -125,16 +125,16 @@ describe('catálogo privado del proveedor', () => {
       h.db,
       owner,
       p.id,
-      product({ name: 'Nuevo nombre', description: 'Temporal', unit: 'box' }),
+      product({ name: 'New name', description: 'Temporary', unit: 'box' }),
     );
-    expect(updated).toMatchObject({ name: 'Nuevo nombre', description: 'Temporal', unit: 'box' });
+    expect(updated).toMatchObject({ name: 'New name', description: 'Temporary', unit: 'box' });
     expect(await updateProduct(h.db, owner, p.id, product())).toMatchObject({
       description: null,
       unit: 'unit',
     });
   });
 
-  it('permite al agente publicar con facultad y protege también las lecturas privadas', async () => {
+  it('allows the agent to publish with permission and also protects private reads', async () => {
     const owner = await newCompany(h.db);
     const seller = await newAgent(h.db, owner, null, ['publish_offers']);
     const buyer = await newAgent(h.db, owner, 'full_autonomy');
@@ -162,7 +162,7 @@ describe('catálogo privado del proveedor', () => {
     expect(events[0]).toMatchObject({ actorType: 'agent', actorId: seller.agentId });
   });
 
-  it('valida tramos, precios, fracciones y límites antes de persistir', async () => {
+  it('validates tiers, prices, fractions and limits before persisting', async () => {
     const owner = await newCompany(h.db);
     const p = await createProduct(h.db, owner, product());
     const offer = await createOffer(h.db, owner, { productId: p.id, ...conditions() });
@@ -211,7 +211,7 @@ describe('catálogo privado del proveedor', () => {
     expect((await listOwnOffers(h.db, owner)).map((o) => o.version)).toEqual([1]);
   });
 
-  it('reemplaza condiciones, tramos y reglas, versiona y no permite editar archivadas', async () => {
+  it('replaces terms, tiers and rules, versions offers and prevents editing archived offers', async () => {
     const owner = await newCompany(h.db);
     const p = await createProduct(h.db, owner, product());
     const offer = await createOffer(h.db, owner, {
@@ -258,7 +258,7 @@ describe('catálogo privado del proveedor', () => {
     });
   });
 
-  it('serializa reemplazos concurrentes sin mezclar tramos y reglas', async () => {
+  it('serializes concurrent replacements without mixing tiers and rules', async () => {
     const owner = await newCompany(h.db);
     const p = await createProduct(h.db, owner, product());
     const offer = await createOffer(h.db, owner, { productId: p.id, ...conditions() });
@@ -282,7 +282,7 @@ describe('catálogo privado del proveedor', () => {
     }
   });
 
-  it('aísla productos y ofertas y responde NOT_FOUND para identificadores inválidos', async () => {
+  it('isolates products and offers and returns NOT_FOUND for invalid identifiers', async () => {
     const a = await newCompany(h.db);
     const b = await newCompany(h.db);
     const p = await createProduct(h.db, a, product());
@@ -310,7 +310,7 @@ describe('catálogo privado del proveedor', () => {
     expect((await getOwnOffer(h.db, a, offer.id)).version).toBe(1);
   });
 
-  it('el SKU es único por organización, también al editar y crear concurrentemente', async () => {
+  it('the SKU is unique per organization, including edits and concurrent creation', async () => {
     const a = await newCompany(h.db);
     const b = await newCompany(h.db);
     await createProduct(h.db, a, product());

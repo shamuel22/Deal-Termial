@@ -63,7 +63,7 @@ import {
 import { PAYMENT_GATEWAY } from './payments.module.js';
 import type { PayPalGateway } from './paypal-gateway.js';
 
-@ApiTags('portal: pagos')
+@ApiTags('portal: payments')
 @ApiCookieAuth()
 @Controller('orgs/:orgId')
 @Auth('org-user')
@@ -75,7 +75,7 @@ export class PortalPaymentsController {
   ) {}
 
   @Get('payments/status')
-  @ApiOperation({ summary: 'Estado de la conexión de cobro y de la autorización financiera' })
+  @ApiOperation({ summary: 'Status of the seller payment connection and PayPal consent' })
   async status(@CurrentUser() user: UserActor) {
     return {
       sellerAccount: await getSellerAccount(this.handle.db, user),
@@ -85,7 +85,7 @@ export class PortalPaymentsController {
 
   @Post('payments/seller-account/onboarding')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Enlace de PayPal para conectar la cuenta de cobro del proveedor' })
+  @ApiOperation({ summary: "PayPal link to connect the supplier's account to receive payments" })
   onboard(@CurrentUser() user: UserActor) {
     const returnUrl = `${this.config.PUBLIC_BASE_URL}/api/paypal/seller/return?orgId=${user.orgId}`;
     return startSellerOnboarding(this.handle.db, this.gateway, user, returnUrl);
@@ -93,14 +93,16 @@ export class PortalPaymentsController {
 
   @Post('payments/seller-account/refresh')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Consulta a PayPal si la cuenta del proveedor ya puede cobrar' })
+  @ApiOperation({
+    summary: "Check with PayPal whether the supplier's account can receive payments",
+  })
   refresh(@CurrentUser() user: UserActor) {
     return refreshSellerAccount(this.handle.db, this.gateway, user.orgId);
   }
 
   @Post('orders/:orderId/checkout')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Inicia el checkout PayPal del dueño para un pedido pendiente de pago' })
+  @ApiOperation({ summary: "Start the owner's PayPal checkout for an order awaiting payment" })
   checkout(@CurrentUser() user: UserActor, @Param('orderId') orderId: string) {
     const base = `${this.config.PUBLIC_BASE_URL}/api/paypal/checkout`;
     return startCheckout(this.handle.db, this.gateway, user, orderId, {
@@ -146,7 +148,7 @@ export class PortalPaymentsController {
   }
 }
 
-@ApiTags('agente')
+@ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent')
 @Auth('agent')
@@ -160,7 +162,7 @@ export class AgentPaymentsController {
   @HttpCode(200)
   @ApiOperation({
     summary:
-      'execute_purchase: acepta o recupera el pedido y ejecuta el pago autorizado; sin autorización financiera queda pendiente del dueño',
+      'execute_purchase: accept or retrieve the order and execute the authorized payment; without PayPal consent, await payment by the owner',
   })
   @ApiZodBody(executePurchaseInput)
   execute(
@@ -178,7 +180,7 @@ export class AgentPaymentsController {
   }
 
   @Post('orders/:orderId/refunds')
-  @ApiOperation({ summary: 'request_refund: solicita revisión de una devolución' })
+  @ApiOperation({ summary: 'request_refund: request a refund review' })
   @ApiZodBody(requestRefundInput)
   requestRefund(
     @CurrentAgent() agent: AgentActor,
@@ -196,7 +198,7 @@ export class AgentPaymentsController {
   @Post('supplier/refunds/:refundId/approve')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'approve_refund: el proveedor autoriza la devolución (facultad approve_refunds)',
+    summary: 'approve_refund: the supplier authorizes the refund (approve_refunds permission)',
   })
   approveRefund(@CurrentAgent() agent: AgentActor, @Param('refundId') id: string) {
     return approveRefund(this.handle.db, this.gateway, agent, id);
@@ -228,7 +230,7 @@ export class PayPalReturnController {
   private async user(req: Request, orgId: string | undefined): Promise<UserActor> {
     const token = readCookie(req, SESSION_COOKIE);
     const session = token ? await resolveSession(this.handle.db, token) : null;
-    if (!session || !orgId) throw new DomainError('UNAUTHENTICATED', 'Inicia sesión en el portal');
+    if (!session || !orgId) throw new DomainError('UNAUTHENTICATED', 'Sign in to the portal');
     return resolveUserActor(this.handle.db, session.userId, orgId);
   }
 
@@ -277,7 +279,7 @@ export class PayPalWebhookController {
   @HttpCode(200)
   async receive(@Req() req: RawRequest) {
     const raw = req.rawBody?.toString('utf8');
-    if (!raw) throw new DomainError('VALIDATION_FAILED', 'Cuerpo vacío');
+    if (!raw) throw new DomainError('VALIDATION_FAILED', 'Empty body');
     const event = JSON.parse(raw) as WebhookEvent;
     const verified = await this.gateway.client.verifyWebhookSignature({
       webhookId: this.config.PAYPAL_WEBHOOK_ID,
@@ -285,14 +287,14 @@ export class PayPalWebhookController {
       event,
     });
     if (!verified) {
-      this.logger.warn(`Webhook con firma inválida rechazado (${event.id ?? 'sin id'})`);
-      throw new DomainError('UNAUTHENTICATED', 'Firma de webhook inválida');
+      this.logger.warn(`Rejected webhook with invalid signature (${event.id ?? 'no id'})`);
+      throw new DomainError('UNAUTHENTICATED', 'Invalid webhook signature');
     }
     const recorded = await recordWebhook(this.handle.db, event);
     if (recorded.isNew) {
       // Si falla, el planificador lo reintenta; PayPal recibe 200 porque el evento quedó guardado.
       await processWebhook(this.handle.db, this.gateway, recorded.id).catch((error: unknown) =>
-        this.logger.error(`Error procesando ${event.id}: ${(error as Error).message}`),
+        this.logger.error(`Error processing ${event.id}: ${(error as Error).message}`),
       );
     }
     return { received: true, duplicate: !recorded.isNew };

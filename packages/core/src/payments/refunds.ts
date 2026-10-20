@@ -65,8 +65,7 @@ export async function requestRefund(
   if (actor.kind === 'agent') assertBuyerAction(actor, 'execute_payment');
   else requireAdmin(actor);
   const data = requestRefundInput.parse(input);
-  if (!z.uuid().safeParse(orderId).success)
-    throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+  if (!z.uuid().safeParse(orderId).success) throw new DomainError('NOT_FOUND', 'Order not found');
   return inTransaction(db, async (tx) => {
     const [order] = await tx
       .select()
@@ -74,7 +73,7 @@ export async function requestRefund(
       .where(and(eq(schema.orders.id, orderId), eq(schema.orders.buyerOrgId, actor.orgId)))
       .for('no key update');
     if (!order || (actor.kind === 'agent' && order.acceptedByAgentId !== actor.agentId)) {
-      throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+      throw new DomainError('NOT_FOUND', 'Order not found');
     }
     if (data.idempotencyKey) {
       const [existing] = await tx
@@ -89,7 +88,7 @@ export async function requestRefund(
       if (existing) return view(existing);
     }
     if (order.status !== 'paid')
-      throw new DomainError('INVALID_STATE', 'Solo se reembolsan pedidos pagados');
+      throw new DomainError('INVALID_STATE', 'Only paid orders can be refunded');
     const [payment] = await tx
       .select()
       .from(schema.paymentAttempts)
@@ -100,7 +99,7 @@ export async function requestRefund(
         ),
       );
     if (!payment?.paypalCaptureId)
-      throw new DomainError('INVALID_STATE', 'El pedido no tiene una captura PayPal');
+      throw new DomainError('INVALID_STATE', 'The order has no PayPal capture');
 
     const [committed] = await tx
       .select({ total: sql<string>`coalesce(sum(${schema.refunds.amount}), 0)` })
@@ -109,7 +108,7 @@ export async function requestRefund(
     const refundable = subMoney(payment.amount, committed?.total ?? '0');
     const amount = data.amount ?? refundable;
     if (!gt(amount, '0') || gt(amount, refundable)) {
-      throw new DomainError('VALIDATION_FAILED', `Importe reembolsable disponible: ${refundable}`, {
+      throw new DomainError('VALIDATION_FAILED', `Available refundable amount: ${refundable}`, {
         refundable,
         requested: toMoney(amount),
       });
@@ -139,8 +138,8 @@ export async function requestRefund(
     await notify(tx, {
       orgId: order.supplierOrgId,
       kind: 'refund.requested',
-      title: 'Solicitud de devolución',
-      body: `El comprador solicita devolver ${refund!.amount} ${refund!.currency}: ${data.reason}`,
+      title: 'Refund requested',
+      body: `The buyer requests a refund of ${refund!.amount} ${refund!.currency}: ${data.reason}`,
       resourceType: 'refund',
       resourceId: refund!.id,
     });
@@ -149,8 +148,7 @@ export async function requestRefund(
 }
 
 async function loadSupplierRefund(db: Executor, actor: Actor, refundId: string, lock: boolean) {
-  if (!z.uuid().safeParse(refundId).success)
-    throw new DomainError('NOT_FOUND', 'Reembolso no encontrado');
+  if (!z.uuid().safeParse(refundId).success) throw new DomainError('NOT_FOUND', 'Refund not found');
   const query = db
     .select({ refund: schema.refunds, order: schema.orders, payment: schema.paymentAttempts })
     .from(schema.refunds)
@@ -161,7 +159,7 @@ async function loadSupplierRefund(db: Executor, actor: Actor, refundId: string, 
     )
     .where(and(eq(schema.refunds.id, refundId), eq(schema.orders.supplierOrgId, actor.orgId)));
   const [row] = lock ? await query.for('no key update', { of: schema.refunds }) : await query;
-  if (!row) throw new DomainError('NOT_FOUND', 'Reembolso no encontrado');
+  if (!row) throw new DomainError('NOT_FOUND', 'Refund not found');
   return row;
 }
 
@@ -243,7 +241,7 @@ async function dispatchRefund(
         await notify(tx, {
           orgId,
           kind: `refund.${updated!.status}`,
-          title: updated!.status === 'completed' ? 'Devolución completada' : 'La devolución falló',
+          title: updated!.status === 'completed' ? 'Refund completed' : 'Refund failed',
           body: `${updated!.amount} ${updated!.currency}${updated!.failureMessage ? ` — ${updated!.failureMessage}` : ''}`,
           resourceType: 'refund',
           resourceId: refundId,
@@ -302,12 +300,12 @@ export async function rejectRefund(
   return inTransaction(db, async (tx) => {
     const { refund, order } = await loadSupplierRefund(tx, actor, refundId, true);
     if (refund.status !== 'requested')
-      throw new DomainError('INVALID_STATE', `El reembolso está ${refund.status}`);
+      throw new DomainError('INVALID_STATE', `The refund status is ${refund.status}`);
     const [updated] = await tx
       .update(schema.refunds)
       .set({
         status: 'failed',
-        failureMessage: `Rechazado por el proveedor: ${message}`,
+        failureMessage: `Rejected by the supplier: ${message}`,
         updatedAt: new Date(),
       })
       .where(eq(schema.refunds.id, refund.id))
@@ -324,7 +322,7 @@ export async function rejectRefund(
     await notify(tx, {
       orgId: order.buyerOrgId,
       kind: 'refund.rejected',
-      title: 'Devolución rechazada por el proveedor',
+      title: 'Refund rejected by the supplier',
       body: message,
       resourceType: 'refund',
       resourceId: refund.id,
@@ -339,11 +337,10 @@ export async function listRefunds(
   actor: Actor,
   orderId: string,
 ): Promise<RefundView[]> {
-  if (!z.uuid().safeParse(orderId).success)
-    throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+  if (!z.uuid().safeParse(orderId).success) throw new DomainError('NOT_FOUND', 'Order not found');
   const [order] = await db.select().from(schema.orders).where(eq(schema.orders.id, orderId));
   if (!order || (order.buyerOrgId !== actor.orgId && order.supplierOrgId !== actor.orgId)) {
-    throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+    throw new DomainError('NOT_FOUND', 'Order not found');
   }
   const rows = await db
     .select()

@@ -8,18 +8,18 @@ import type {
 export const demoBuyer = {
   organizationName: 'Taquería El Sol',
   location: { city: 'Austin', state: 'TX' },
-  owner: { name: 'Dueña de Taquería El Sol', email: 'owner@taqueria-elsol.demo' },
+  owner: { name: 'Taquería El Sol owner', email: 'owner@taqueria-elsol.demo' },
   monthlySpendLimit: '500.00',
   agents: [
-    { name: 'Asistente de compras', access: { buyerLevel: 'full_autonomy', sellerScopes: [] } },
-    { name: 'Asistente investigador', access: { buyerLevel: 'search_only', sellerScopes: [] } },
-    { name: 'Asistente negociador', access: { buyerLevel: 'negotiate', sellerScopes: [] } },
+    { name: 'Purchasing assistant', access: { buyerLevel: 'full_autonomy', sellerScopes: [] } },
+    { name: 'Research assistant', access: { buyerLevel: 'search_only', sellerScopes: [] } },
+    { name: 'Negotiation assistant', access: { buyerLevel: 'negotiate', sellerScopes: [] } },
   ] satisfies CreateAgentInput[],
 };
 
 export const demoMandate = {
   mandate:
-    'Compra 300 envases con tapa para comida caliente, sin foam. Entrega antes del viernes en esta dirección. Puedes negociar y pagar hasta US$80, incluyendo transporte e impuestos.',
+    'Buy 300 containers with lids for hot food, no foam. Deliver before Friday to this address. You may negotiate and pay up to $80, including shipping and tax.',
   category: 'food_containers',
   requiredAttributes: {
     hot_food_safe: { eq: true },
@@ -64,8 +64,8 @@ export const demoSellers: DemoSeller[] = [
   {
     key: 'a',
     organizationName: 'EcoPack Texas',
-    owner: { name: 'Dueño de EcoPack Texas', email: 'owner@ecopack.demo' },
-    agent: { name: 'Agente de ventas EcoPack', access: { buyerLevel: null, sellerScopes } },
+    owner: { name: 'EcoPack Texas owner', email: 'owner@ecopack.demo' },
+    agent: { name: 'EcoPack sales agent', access: { buyerLevel: null, sellerScopes } },
     trackingId: 'demo-seller-a',
     shipRegions: ['TX', 'OK', 'LA'],
     taxRate: '0.0825',
@@ -73,7 +73,7 @@ export const demoSellers: DemoSeller[] = [
       {
         product: {
           sku: 'ENV-KR16-L',
-          name: 'Envase kraft 16 oz con tapa',
+          name: 'Kraft container 16 oz with lid',
           category: 'food_containers',
           attributes: {
             material: 'kraft_paper',
@@ -107,7 +107,7 @@ export const demoSellers: DemoSeller[] = [
       {
         product: {
           sku: 'ENV-PP32-L',
-          name: 'Contenedor PP 32 oz apto microondas',
+          name: 'PP container 32 oz, microwave safe',
           category: 'food_containers',
           attributes: {
             material: 'pp',
@@ -133,7 +133,7 @@ export const demoSellers: DemoSeller[] = [
       {
         product: {
           sku: 'ENV-FOAM9',
-          name: 'Clamshell de foam 9 in',
+          name: 'Foam clamshell 9 in',
           category: 'food_containers',
           attributes: {
             material: 'foam_eps',
@@ -157,8 +157,8 @@ export const demoSellers: DemoSeller[] = [
   {
     key: 'b',
     organizationName: 'GreenBox Supply',
-    owner: { name: 'Dueño de GreenBox Supply', email: 'owner@greenbox.demo' },
-    agent: { name: 'Agente de ventas GreenBox', access: { buyerLevel: null, sellerScopes } },
+    owner: { name: 'GreenBox Supply owner', email: 'owner@greenbox.demo' },
+    agent: { name: 'GreenBox sales agent', access: { buyerLevel: null, sellerScopes } },
     trackingId: 'demo-seller-b',
     shipRegions: ['TX', 'CA', 'AZ'],
     taxRate: '0.0825',
@@ -166,7 +166,7 @@ export const demoSellers: DemoSeller[] = [
       {
         product: {
           sku: 'GB-BAG24',
-          name: 'Bowl de bagazo 24 oz con tapa',
+          name: 'Bagasse bowl 24 oz with lid',
           category: 'food_containers',
           attributes: {
             material: 'bagasse',
@@ -198,7 +198,7 @@ export const demoSellers: DemoSeller[] = [
       {
         product: {
           sku: 'GB-PET16',
-          name: 'Contenedor PET 16 oz para ensaladas',
+          name: 'PET salad container 16 oz',
           category: 'food_containers',
           attributes: {
             material: 'pet',
@@ -220,7 +220,7 @@ export const demoSellers: DemoSeller[] = [
       {
         product: {
           sku: 'GB-ALU-L',
-          name: 'Bandeja de aluminio con tapa',
+          name: 'Aluminum tray with lid',
           category: 'food_containers',
           attributes: {
             material: 'aluminum',

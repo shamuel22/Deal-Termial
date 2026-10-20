@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import type { DbHandle } from '@deal/db';
 import { DB } from '../database.module.js';
 
-@ApiTags('sistema')
+@ApiTags('system')
 @Controller('health')
 export class HealthController {
   constructor(@Inject(DB) private readonly handle: DbHandle) {}

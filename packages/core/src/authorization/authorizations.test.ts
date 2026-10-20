@@ -37,12 +37,12 @@ async function expectCode(p: Promise<unknown>, code: ErrorCode) {
     () => null,
     (x: unknown) => x,
   );
-  expect(e, `se esperaba ${code}`).toBeInstanceOf(DomainError);
+  expect(e, `expected ${code}`).toBeInstanceOf(DomainError);
   expect((e as DomainError).code).toBe(code);
 }
 
-describe('autorizaciones de compra', () => {
-  it('el dueño crea una autorización estructurada y activa', async () => {
+describe('purchase authorizations', () => {
+  it('the owner creates a structured, active authorization', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'full_autonomy');
     const auth = await createAuthorization(
@@ -60,14 +60,14 @@ describe('autorizaciones de compra', () => {
     });
   });
 
-  it('valida atributos de la categoría, importes y fechas', async () => {
+  it('validates category attributes, amounts and dates', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'full_autonomy');
     const create = (terms: Parameters<typeof demoTerms>[0]) =>
       createAuthorization(h.db, owner, { agentId: agent.agentId, terms: demoTerms(terms) }, NOW);
 
     await expect(create({ requiredAttributes: { color: { eq: 'red' } } })).rejects.toThrow(
-      /desconocidos/,
+      /Unknown/,
     );
     await expect(create({ budgetTotal: '80.001' })).rejects.toThrow();
     await expect(create({ budgetTotal: '0' })).rejects.toThrow();
@@ -75,7 +75,7 @@ describe('autorizaciones de compra', () => {
     await expectCode(create({ expiresAt: '2026-10-19T00:00:00Z' }), 'VALIDATION_FAILED');
   });
 
-  it('no se puede autorizar a un agente sin facultades de compra', async () => {
+  it('cannot authorize an agent without buyer permissions', async () => {
     const owner = await newCompany(h.db);
     const seller = await newAgent(h.db, owner, null);
     await expectCode(
@@ -84,7 +84,7 @@ describe('autorizaciones de compra', () => {
     );
   });
 
-  it('modificar crea una versión nueva; revocar bloquea la autorización', async () => {
+  it('amending creates a new version; revoking blocks the authorization', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'full_autonomy');
     const auth = await createAuthorization(
@@ -120,7 +120,7 @@ describe('autorizaciones de compra', () => {
     expect(snapshot.status).toBe('revoked');
   });
 
-  it('una autorización vencida se informa como vencida y el barrido la marca', async () => {
+  it('an expired authorization is reported as expired and the sweep marks it', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'full_autonomy');
     const auth = await createAuthorization(
@@ -135,7 +135,7 @@ describe('autorizaciones de compra', () => {
     expect((await getAuthorization(h.db, owner, auth.id, NOW)).status).toBe('expired');
   });
 
-  it('solo dueño o administrador administran autorizaciones (criterio 8)', async () => {
+  it('only owners or administrators manage authorizations (criterion 8)', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'full_autonomy');
     await expectCode(
@@ -155,7 +155,7 @@ describe('autorizaciones de compra', () => {
     await expectCode(revokeAuthorization(h.db, agent, auth.id, NOW), 'FORBIDDEN');
   });
 
-  it('un agente solo ve sus autorizaciones; otra organización no ve ninguna (criterio 16)', async () => {
+  it('an agent only sees its own authorizations; another organization sees none (criterion 16)', async () => {
     const owner = await newCompany(h.db);
     const mine = await newAgent(h.db, owner, 'full_autonomy');
     const colleague = await newAgent(h.db, owner, 'full_autonomy');
@@ -180,7 +180,7 @@ describe('autorizaciones de compra', () => {
     expect(await listAuthorizations(h.db, stranger, {}, NOW)).toEqual([]);
   });
 
-  it('el estado para el agente no expone identificadores de tokens financieros', async () => {
+  it('agent status does not expose payment token identifiers', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'full_autonomy');
     await createAuthorization(h.db, owner, { agentId: agent.agentId, terms: demoTerms() }, NOW);
@@ -207,7 +207,7 @@ describe('autorizaciones de compra', () => {
     }
   });
 
-  it('bajar el nivel del agente se refleja al instante en su estado', async () => {
+  it("lowering an agent's access level is reflected immediately in its status", async () => {
     const owner = await newCompany(h.db);
     const { apiKey } = await newAgentWithKey(h.db, owner, 'full_autonomy');
     const before = await resolveAgentKey(h.db, apiKey);
@@ -218,14 +218,14 @@ describe('autorizaciones de compra', () => {
   });
 });
 
-describe('solicitudes de cambio del agente (brief §4)', () => {
-  it('el agente propone, no puede aprobar; el dueño aprueba y se aplica', async () => {
+describe('agent change requests (brief §4)', () => {
+  it('the agent proposes and cannot approve; the owner approves and the change takes effect', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'negotiate');
     const request = await submitChangeRequest(h.db, agent, {
       kind: 'new_authorization',
       terms: demoTerms(),
-      reason: 'Encargo del dueño por chat',
+      reason: "Owner's mandate in chat",
     });
     expect(request.status).toBe('pending');
 
@@ -241,7 +241,7 @@ describe('solicitudes de cambio del agente (brief §4)', () => {
     await expectCode(approveChangeRequest(h.db, owner, request.id, NOW), 'INVALID_STATE');
   });
 
-  it('una solicitud de nivel aprobada cambia el nivel; rechazada no cambia nada', async () => {
+  it('an approved access level request changes the level; a rejected request changes nothing', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'search_only');
     const up = await submitChangeRequest(h.db, agent, {
@@ -264,7 +264,7 @@ describe('solicitudes de cambio del agente (brief §4)', () => {
     expect(requests.map((r) => r.status).sort()).toEqual(['approved', 'rejected']);
   });
 
-  it('no puede pedir ampliar autorizaciones de otro agente', async () => {
+  it("cannot request an increase to another agent's authorization", async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'negotiate');
     const other = await newAgent(h.db, owner, 'full_autonomy');

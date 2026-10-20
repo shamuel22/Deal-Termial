@@ -11,13 +11,13 @@ const validEnv = {
 };
 
 describe('loadConfig', () => {
-  it('aplica valores por defecto', () => {
+  it('applies defaults', () => {
     const config = loadConfig(validEnv);
     expect(config.PORT).toBe(3000);
     expect(config.PAYPAL_ENV).toBe('sandbox');
   });
 
-  it('rechaza configuración incompleta listando los campos', () => {
+  it('rejects incomplete configuration and lists the fields', () => {
     expect(() => loadConfig({})).toThrow(ConfigError);
     try {
       loadConfig({});
@@ -26,7 +26,7 @@ describe('loadConfig', () => {
     }
   });
 
-  it('solo admite el entorno sandbox de PayPal', () => {
+  it('only allows the PayPal sandbox environment', () => {
     expect(() => loadConfig({ ...validEnv, PAYPAL_ENV: 'live' })).toThrow(ConfigError);
   });
 });

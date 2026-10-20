@@ -42,7 +42,7 @@ async function expectCode(p: Promise<unknown>, code: ErrorCode) {
     () => null,
     (x: unknown) => x,
   );
-  expect(e, `se esperaba ${code}`).toBeInstanceOf(DomainError);
+  expect(e, `expected ${code}`).toBeInstanceOf(DomainError);
   expect((e as DomainError).code).toBe(code);
 }
 
@@ -139,8 +139,8 @@ async function scene(
 const accept = (s: Scene, extra: { idempotencyKey?: string } = {}, now = NOW) =>
   acceptQuote(h.db, s.agent, { negotiationId: s.negotiationId, quoteId: s.quoteId, ...extra }, now);
 
-describe('accept_quote con autonomía total', () => {
-  it('acepta dentro de la autorización: pedido, reservas y auditoría', async () => {
+describe('accept_quote with full_autonomy', () => {
+  it('accepts within the purchase authorization: order, reservations and audit', async () => {
     const s = await scene();
     expect(s.total).toBe('76.86');
     const order = await accept(s);
@@ -175,10 +175,10 @@ describe('accept_quote con autonomía total', () => {
         ),
       );
     expect(event!.actorId).toBe(s.agent.agentId);
-    expect(JSON.stringify(event!.details)).toContain('nivel full_autonomy vigente');
+    expect(JSON.stringify(event!.details)).toContain('current full_autonomy access level');
   });
 
-  it('reintentar no duplica pedidos ni reservas, incluso en paralelo (criterio 12)', async () => {
+  it('retrying does not duplicate orders or reservations, even concurrently (criterion 12)', async () => {
     const s = await scene();
     const results = await Promise.all([accept(s), accept(s), accept(s), accept(s)]);
     expect(new Set(results.map((o) => o.id)).size).toBe(1);
@@ -189,7 +189,7 @@ describe('accept_quote con autonomía total', () => {
     expect(reservations).toHaveLength(1);
   });
 
-  it('una clave de idempotencia reutilizada con otros datos se rechaza', async () => {
+  it('rejects an idempotency key reused with different data', async () => {
     const s = await scene();
     const first = await accept(s, { idempotencyKey: 'clave-1' });
     const replay = await accept(s, { idempotencyKey: 'clave-1' });
@@ -205,7 +205,7 @@ describe('accept_quote con autonomía total', () => {
     );
   });
 
-  it('rechaza una cotización que supera el presupuesto y lo audita (criterio 17)', async () => {
+  it('rejects a quote that exceeds the authorized budget and audits it (criterion 17)', async () => {
     const s = await scene({ negotiate: false });
     expect(s.total).toBe('83.35');
     await expectCode(accept(s), 'BUDGET_EXCEEDED');
@@ -224,7 +224,7 @@ describe('accept_quote con autonomía total', () => {
     expect(denied[0]?.outcome).toBe('denied');
   });
 
-  it('no acepta cotizaciones vencidas, reemplazadas ni contrapropuestas (criterio 10)', async () => {
+  it('does not accept expired quotes, superseded quotes or counterproposals (criterion 10)', async () => {
     const s = await scene();
     await expectCode(accept(s, {}, new Date(NOW.getTime() + 49 * 3_600_000)), 'QUOTE_EXPIRED');
 
@@ -244,7 +244,7 @@ describe('accept_quote con autonomía total', () => {
     );
   });
 
-  it('rechaza con nivel reducido, autorización revocada o sin autorización (criterio 7)', async () => {
+  it('rejects with a reduced access level, revoked authorization or no authorization (criterion 7)', async () => {
     const reduced = await scene();
     await setAgentAccess(h.db, reduced.buyer, reduced.agent.agentId, { buyerLevel: 'negotiate' });
     const reducedActor = await resolveAgentKey(h.db, reduced.apiKey);
@@ -266,12 +266,12 @@ describe('accept_quote con autonomía total', () => {
     await expectCode(accept(unlinked), 'AUTHORIZATION_NOT_FOUND');
   });
 
-  it('solo negociación no puede aceptar (criterio 4)', async () => {
+  it('Negotiate only cannot accept (criterion 4)', async () => {
     const s = await scene({ level: 'negotiate' });
     await expectCode(accept(s), 'LEVEL_INSUFFICIENT');
   });
 
-  it('sin stock suficiente no se acepta', async () => {
+  it('does not accept without sufficient stock', async () => {
     const s = await scene({ offer: { ...OFFER_A, stockAvailable: 300 } });
     const other = await scene();
     // Otro pedido ya retiene 100 unidades de la misma oferta.
@@ -284,8 +284,8 @@ describe('accept_quote con autonomía total', () => {
   });
 });
 
-describe('aceptación manual del dueño (solo negociación)', () => {
-  it('el dueño acepta la propuesta enviada a revisión y el pedido queda para checkout manual', async () => {
+describe('manual owner acceptance (Negotiate only)', () => {
+  it('the owner accepts the proposal submitted for review and the order awaits manual checkout', async () => {
     const s = await scene({ level: 'negotiate', negotiate: false });
     await submitForReview(h.db, s.agent, s.negotiationId, {}, NOW);
     const order = await ownerAcceptQuote(
@@ -303,7 +303,7 @@ describe('aceptación manual del dueño (solo negociación)', () => {
     });
   });
 
-  it('un agente no puede usar la aceptación manual', async () => {
+  it('an agent cannot use manual acceptance', async () => {
     const s = await scene({ level: 'negotiate' });
     await expectCode(
       ownerAcceptQuote(
@@ -317,15 +317,15 @@ describe('aceptación manual del dueño (solo negociación)', () => {
   });
 });
 
-describe('cancelación y vencimiento', () => {
-  it('cancelar antes del pago libera stock y presupuesto', async () => {
+describe('cancellation and expiration', () => {
+  it('cancelling before payment releases stock and budget', async () => {
     const s = await scene();
     const order = await accept(s);
     const cancelled = await cancelOrder(
       h.db,
       s.agent,
       order.id,
-      { reason: 'Cambio de planes' },
+      { reason: 'Change of plans' },
       NOW,
     );
     expect(cancelled).toMatchObject({
@@ -339,7 +339,7 @@ describe('cancelación y vencimiento', () => {
     });
   });
 
-  it('no se cancela con un pago en curso', async () => {
+  it('cannot cancel with a payment in progress', async () => {
     const s = await scene();
     const order = await accept(s);
     await h.db.insert(schema.paymentAttempts).values({
@@ -353,7 +353,7 @@ describe('cancelación y vencimiento', () => {
     await expectCode(cancelOrder(h.db, s.agent, order.id, {}, NOW), 'INVALID_STATE');
   });
 
-  it('vence pedidos impagos al caducar la reserva, salvo con pago incierto (criterio 13)', async () => {
+  it('expires unpaid orders when the reservation expires, except with an uncertain payment (criterion 13)', async () => {
     const unpaid = await scene();
     const uncertain = await scene();
     const o1 = await accept(unpaid);
@@ -381,8 +381,8 @@ describe('cancelación y vencimiento', () => {
   });
 });
 
-describe('aislamiento (criterio 16)', () => {
-  it('comprador, proveedor y terceros', async () => {
+describe('isolation (criterion 16)', () => {
+  it('buyer, supplier and third parties', async () => {
     const s = await scene();
     const order = await accept(s);
     const stranger = await newCompany(h.db);

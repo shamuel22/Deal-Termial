@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { TOOLS } from './tools.js';
 
 /** Genera docs/mcp-tools.md a partir del catálogo real de herramientas (pnpm docs:mcp). */
-const SIDE = { common: 'Comunes', buyer: 'Comprador', supplier: 'Proveedor' } as const;
+const SIDE = { common: 'Common', buyer: 'Buyer', supplier: 'Supplier' } as const;
 const lines = [
-  '# Catálogo de herramientas MCP',
+  '# MCP tool catalog',
   '',
-  '> Generado con `pnpm docs:mcp` desde `apps/server/src/mcp/tools.ts`. No editar a mano.',
+  '> Generated with `pnpm docs:mcp` from `apps/server/src/mcp/tools.ts`. Do not edit manually.',
   '',
 ];
 for (const side of ['common', 'buyer', 'supplier'] as const) {
@@ -19,16 +19,16 @@ for (const side of ['common', 'buyer', 'supplier'] as const) {
     lines.push(`### \`${tool.name}\` — ${tool.title}`, '', tool.description, '');
     const props = Object.entries(schema.properties ?? {});
     if (props.length > 0) {
-      lines.push('| Parámetro | Obligatorio | Descripción |', '| --- | --- | --- |');
+      lines.push('| Parameter | Required | Description |', '| --- | --- | --- |');
       for (const [name, prop] of props) {
-        const required = schema.required?.includes(name) ? 'sí' : 'no';
+        const required = schema.required?.includes(name) ? 'yes' : 'no';
         lines.push(
           `| \`${name}\` | ${required} | ${(prop.description ?? '').replace(/\|/g, '\\|')} |`,
         );
       }
       lines.push('');
     }
-    lines.push(`Solo lectura: ${tool.readOnly ? 'sí' : 'no'}`, '');
+    lines.push(`Read only: ${tool.readOnly ? 'yes' : 'no'}`, '');
   }
 }
 process.stdout.write(lines.join('\n'));

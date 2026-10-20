@@ -49,15 +49,15 @@ A failed tool call returns `isError: true` and a JSON body:
 {
   "error": {
     "code": "BUDGET_EXCEEDED",
-    "message": "El total 83.35 supera el presupuesto del encargo 80.00",
-    "hint": "El total supera el presupuesto disponible del encargo. Negocia un total menor o pide ampliación.",
+    "message": "Total 83.35 exceeds the authorized budget 80.00",
+    "hint": "Negotiate a lower total or ask for a budget increase; the total exceeds the budget available to authorize.",
     "details": {
       "total": "83.35",
       "budgetTotal": "80.00",
       "violations": [
         {
           "code": "BUDGET_EXCEEDED",
-          "message": "El total 83.35 supera el presupuesto del encargo 80.00"
+          "message": "Total 83.35 exceeds the authorized budget 80.00"
         }
       ]
     }
@@ -65,7 +65,7 @@ A failed tool call returns `isError: true` and a JSON body:
 }
 ```
 
-Build your agent's decisions on `code`, which is stable. `message` and `hint` are human-readable and currently in Spanish. Input validation errors use `VALIDATION_FAILED` with the list of `issues`.
+Build your agent's decisions on `code`, which is stable. `message` and `hint` are human-readable English text. Input validation errors use `VALIDATION_FAILED` with the list of `issues`.
 
 ## Security guarantees
 

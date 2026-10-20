@@ -161,7 +161,7 @@ async function lockForAcceptance(tx: Tx, actor: Actor, negotiationId: string, qu
       ),
     );
   if (!row || (actor.kind === 'agent' && row.request.agentId !== actor.agentId)) {
-    throw new DomainError('NOT_FOUND', 'Negociación no encontrada');
+    throw new DomainError('NOT_FOUND', 'Negotiation not found');
   }
   if (row.request.authorizationId) {
     await tx
@@ -184,7 +184,7 @@ async function lockForAcceptance(tx: Tx, actor: Actor, negotiationId: string, qu
     .select()
     .from(schema.quotes)
     .where(and(eq(schema.quotes.id, quoteId), eq(schema.quotes.negotiationId, negotiationId)));
-  if (!quote) throw new DomainError('NOT_FOUND', 'Cotización no encontrada');
+  if (!quote) throw new DomainError('NOT_FOUND', 'Quote not found');
   return { negotiation: negotiation!, request: row.request, quote, offer: offer! };
 }
 
@@ -202,17 +202,17 @@ function assertQuoteAcceptable(loaded: Loaded, offerStatus: string, now: Date): 
   if (quote.kind !== 'quote') {
     throw new DomainError(
       'QUOTE_NOT_ACCEPTABLE',
-      'Solo se acepta una cotización del proveedor, no una contrapropuesta',
+      'Only a supplier quote can be accepted, not a counterproposal',
     );
   }
   if (quote.status === 'superseded' || quote.version !== negotiation.latestVersion) {
-    throw new DomainError('QUOTE_SUPERSEDED', 'Existe una versión más reciente de la negociación', {
+    throw new DomainError('QUOTE_SUPERSEDED', 'A newer version of the negotiation exists', {
       latestVersion: negotiation.latestVersion,
       quoteVersion: quote.version,
     });
   }
   if (quote.status === 'expired' || quote.expiresAt.getTime() <= now.getTime()) {
-    throw new DomainError('QUOTE_EXPIRED', 'La cotización venció; solicita una nueva', {
+    throw new DomainError('QUOTE_EXPIRED', 'The quote has expired; request a new one', {
       expiresAt: quote.expiresAt.toISOString(),
     });
   }
@@ -222,11 +222,11 @@ function assertQuoteAcceptable(loaded: Loaded, offerStatus: string, now: Date): 
   ) {
     throw new DomainError(
       'QUOTE_NOT_ACCEPTABLE',
-      `La cotización no se puede aceptar (estado ${quote.status})`,
+      `The quote cannot be accepted (status ${quote.status})`,
     );
   }
   if (offerStatus !== 'active') {
-    throw new DomainError('QUOTE_NOT_ACCEPTABLE', 'El proveedor retiró la oferta');
+    throw new DomainError('QUOTE_NOT_ACCEPTABLE', 'The supplier withdrew the offer');
   }
 }
 
@@ -250,7 +250,7 @@ async function reserveStock(
   if (available < quantity) {
     throw new DomainError(
       'STOCK_INSUFFICIENT',
-      `Existencias disponibles ${Math.max(0, available)} < ${quantity}`,
+      `Available stock ${Math.max(0, available)} < ${quantity}`,
       {
         available: Math.max(0, available),
         requested: quantity,
@@ -364,8 +364,8 @@ async function createOrder(tx: Tx, a: CreateOrderArgs): Promise<OrderRow> {
   await notify(tx, {
     orgId: negotiation.supplierOrgId,
     kind: 'order.accepted',
-    title: 'Nuevo pedido aceptado',
-    body: `Pedido por ${quote.total} ${quote.currency}: ${quote.quantity} ${quote.unit}, entrega ${quote.deliverBy}.`,
+    title: 'New order accepted',
+    body: `Order for ${quote.total} ${quote.currency}: ${quote.quantity} ${quote.unit}, delivery ${quote.deliverBy}.`,
     resourceType: 'order',
     resourceId: order!.id,
   });
@@ -404,7 +404,7 @@ export async function acceptQuote(
         if (!locked.request.authorizationId) {
           throw new DomainError(
             'AUTHORIZATION_NOT_FOUND',
-            'La solicitud no está vinculada a una autorización de compra; el agente no puede aceptar por su cuenta',
+            'The request is not linked to a purchase authorization; the agent cannot accept on its own',
           );
         }
         const authorization = await loadAuthorizationSnapshot(
@@ -416,7 +416,7 @@ export async function acceptQuote(
         if (authorization.agentId !== actor.agentId) {
           throw new DomainError(
             'AUTHORIZATION_NOT_FOUND',
-            'La autorización pertenece a otro agente',
+            'The authorization belongs to another agent',
           );
         }
         const terms = purchaseTermsOf(
@@ -433,11 +433,11 @@ export async function acceptQuote(
           paymentMode: 'delegated',
           enforceLimits: true,
           checks: [
-            'nivel full_autonomy vigente',
-            `autorización ${authorization.id} v${authorization.version} activa`,
-            'cotización vigente y última versión',
-            'categoría, atributos, cantidad, proveedor, moneda, total, destino y plazo dentro de la autorización',
-            'stock y presupuesto reservados',
+            'current full_autonomy access level',
+            `authorization ${authorization.id} v${authorization.version} is active`,
+            'quote is valid and is the latest version',
+            'category, attributes, quantity, supplier, currency, total, destination and deadline are within the purchase authorization',
+            'stock and budget reserved',
           ],
           now,
         });
@@ -501,9 +501,9 @@ export async function ownerAcceptQuote(
         paymentMode: 'manual',
         enforceLimits: false,
         checks: [
-          'aceptación manual del dueño con sesión',
-          'cotización vigente y última versión',
-          'stock reservado',
+          'manual acceptance by the owner with a session',
+          'quote is valid and is the latest version',
+          'stock reserved',
         ],
         now,
       });
@@ -514,18 +514,17 @@ export async function ownerAcceptQuote(
 }
 
 async function loadOrder(db: Executor, actor: Actor, orderId: string, lock = false) {
-  if (!z.uuid().safeParse(orderId).success)
-    throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+  if (!z.uuid().safeParse(orderId).success) throw new DomainError('NOT_FOUND', 'Order not found');
   const query = db.select().from(schema.orders).where(eq(schema.orders.id, orderId));
   const [order] = lock ? await query.for('no key update') : await query;
-  if (!order) throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+  if (!order) throw new DomainError('NOT_FOUND', 'Order not found');
   const side =
     order.buyerOrgId === actor.orgId
       ? 'buyer'
       : order.supplierOrgId === actor.orgId
         ? 'supplier'
         : null;
-  if (!side) throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+  if (!side) throw new DomainError('NOT_FOUND', 'Order not found');
   if (actor.kind === 'agent' && side === 'buyer') {
     // Un agente comprador solo ve pedidos de sus propias negociaciones.
     const [own] = await db
@@ -537,10 +536,10 @@ async function loadOrder(db: Executor, actor: Actor, orderId: string, lock = fal
         eq(schema.purchaseRequests.id, schema.negotiations.requestId),
       )
       .where(eq(schema.quotes.id, order.quoteId));
-    if (own?.agentId !== actor.agentId) throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+    if (own?.agentId !== actor.agentId) throw new DomainError('NOT_FOUND', 'Order not found');
   }
   if (actor.kind === 'agent' && side === 'supplier' && actor.grant.sellerScopes.length === 0) {
-    throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+    throw new DomainError('NOT_FOUND', 'Order not found');
   }
   if (actor.kind === 'user') requireAdmin(actor);
   return { order, side };
@@ -699,16 +698,19 @@ export async function cancelOrder(
     async (tx) => {
       const { order, side } = await loadOrder(tx, actor, orderId, true);
       if (side !== 'buyer')
-        throw new DomainError('FORBIDDEN', 'Solo el comprador puede cancelar el pedido');
+        throw new DomainError('FORBIDDEN', 'Only the buyer can cancel the order');
       if (actor.kind === 'agent') assertBuyerAction(actor, 'accept_quote');
       if (order.status === 'cancelled') return null;
       if (!['pending_review', 'pending_payment'].includes(order.status)) {
-        throw new DomainError('INVALID_STATE', `No se puede cancelar un pedido ${order.status}`);
+        throw new DomainError(
+          'INVALID_STATE',
+          `Cannot cancel an order with status ${order.status}`,
+        );
       }
       if (await hasPaymentInFlight(tx, order.id)) {
         throw new DomainError(
           'INVALID_STATE',
-          'Hay un pago en curso o por reconciliar; no se puede cancelar',
+          'A payment is in progress or awaiting reconciliation; the order cannot be cancelled',
         );
       }
       await tx
@@ -728,8 +730,8 @@ export async function cancelOrder(
       await notify(tx, {
         orgId: order.supplierOrgId,
         kind: 'order.cancelled',
-        title: 'Pedido cancelado por el comprador',
-        body: data.reason ?? 'Sin motivo indicado.',
+        title: 'Order cancelled by the buyer',
+        body: data.reason ?? 'No reason provided.',
         resourceType: 'order',
         resourceId: order.id,
       });
@@ -779,7 +781,7 @@ export async function expireUnpaidOrders(db: Executor, now: Date): Promise<numbe
         resourceType: 'order',
         resourceId: orderId,
         outcome: 'succeeded',
-        details: { reason: 'Reserva de stock vencida sin pago' },
+        details: { reason: 'Stock reservation expired without payment' },
       });
       return true;
     });

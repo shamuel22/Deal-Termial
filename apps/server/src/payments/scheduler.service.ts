@@ -62,12 +62,12 @@ export class SchedulerService implements OnApplicationBootstrap, OnApplicationSh
       try {
         const db = this.handle.db;
         const tasks: Array<[string, () => Promise<number>]> = [
-          ['cotizaciones vencidas', () => expireQuotes(db, now)],
-          ['autorizaciones vencidas', () => expireAuthorizations(db, now)],
-          ['pagos por reconciliar', () => reconcilePendingPayments(db, this.gateway, now)],
-          ['pedidos impagos vencidos', () => expireUnpaidOrders(db, now)],
-          ['reembolsos en curso', () => reconcileRefunds(db, this.gateway)],
-          ['webhooks pendientes', () => retryWebhooks(db, this.gateway, now)],
+          ['expired quotes', () => expireQuotes(db, now)],
+          ['expired authorizations', () => expireAuthorizations(db, now)],
+          ['payments to reconcile', () => reconcilePendingPayments(db, this.gateway, now)],
+          ['expired unpaid orders', () => expireUnpaidOrders(db, now)],
+          ['refunds in progress', () => reconcileRefunds(db, this.gateway)],
+          ['pending webhooks', () => retryWebhooks(db, this.gateway, now)],
         ];
         for (const [name, task] of tasks) {
           try {

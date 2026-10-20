@@ -45,7 +45,7 @@ async function expectCode(p: Promise<unknown>, code: ErrorCode) {
     () => null,
     (x: unknown) => x,
   );
-  expect(e, `se esperaba ${code}`).toBeInstanceOf(DomainError);
+  expect(e, `expected ${code}`).toBeInstanceOf(DomainError);
   expect((e as DomainError).code).toBe(code);
 }
 
@@ -123,8 +123,8 @@ async function connectFinancial(orgId: string, userId: string, payee = MERCHANT)
 const execute = (s: Scene) =>
   executePurchase(h.db, gw, s.agent, { negotiationId: s.negotiationId, quoteId: s.quoteId }, NOW);
 
-describe('pago delegado (execute_purchase)', () => {
-  it('sin autorización financiera: el pedido queda pendiente de pago del dueño (criterio 6)', async () => {
+describe('delegated payment (execute_purchase)', () => {
+  it('without PayPal consent: the order awaits payment by the owner (criterion 6)', async () => {
     const s = await scene();
     const { order, payment } = await execute(s);
     expect(payment).toMatchObject({
@@ -148,7 +148,7 @@ describe('pago delegado (execute_purchase)', () => {
     expect(notes).toHaveLength(1);
   });
 
-  it('con autorización financiera: cobra sin checkout el importe exacto al proveedor (criterios 5 y 9)', async () => {
+  it('with PayPal consent: charge the exact amount to the supplier without checkout (criteria 5 and 9)', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
     const { order, payment } = await execute(s);
@@ -167,7 +167,7 @@ describe('pago delegado (execute_purchase)', () => {
     expect(JSON.stringify(order)).not.toContain('VAULT-TOKEN-SECRETO');
   });
 
-  it('reintentos y llamadas concurrentes no generan un segundo cobro (criterio 12)', async () => {
+  it('retries and concurrent calls do not create a second charge (criterion 12)', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
     const results = await Promise.all([execute(s), execute(s), execute(s)]);
@@ -177,13 +177,13 @@ describe('pago delegado (execute_purchase)', () => {
     expect(gw.captures).toHaveLength(1);
   });
 
-  it('una autorización financiera de otro proveedor no cubre el pedido', async () => {
+  it('PayPal consent for another supplier does not cover the order', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId, 'OTRO-PROVEEDOR');
     expect((await execute(s)).payment.status).toBe('owner_action_required');
   });
 
-  it('la revocación entre aceptar y pagar impide el cobro (criterio 15)', async () => {
+  it('revocation between acceptance and payment prevents the charge (criterion 15)', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
     const order = await acceptQuote(
@@ -200,7 +200,7 @@ describe('pago delegado (execute_purchase)', () => {
     expect(gw.captures).toEqual([]);
   });
 
-  it('un resultado desconocido conserva la reserva y se reconcilia sin cobrar dos veces (criterio 13)', async () => {
+  it('an unknown result keeps the reservation and is reconciled without charging twice (criterion 13)', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
     gw.nextCreate = 'unknown_after_create';
@@ -220,7 +220,7 @@ describe('pago delegado (execute_purchase)', () => {
     expect((await getOrder(h.db, s.agent, first.order.id)).status).toBe('paid');
   });
 
-  it('un rechazo de PayPal deja el pedido pendiente y el dueño puede pagarlo manualmente', async () => {
+  it('a PayPal rejection leaves the order pending and the owner can pay manually', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
     gw.nextCreate = { reject: 'INSTRUMENT_DECLINED' };
@@ -231,22 +231,22 @@ describe('pago delegado (execute_purchase)', () => {
     expect(checkout.approveUrl).toContain('checkoutnow');
   });
 
-  it('una discrepancia de importe o beneficiario se registra como incidencia', async () => {
+  it('an amount or payee mismatch is recorded as an incident', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
     gw.tamper = { amount: '1.00' };
     const { order } = await execute(s);
     expect(order.status).toBe('paid');
-    expect(order.incident).toContain('Discrepancia');
+    expect(order.incident).toContain('Payment mismatch');
   });
 
-  it('solo negociación no puede ejecutar pagos (criterio 4)', async () => {
+  it('Negotiate only cannot execute payments (criterion 4)', async () => {
     const s = await scene('negotiate');
     await expectCode(execute(s), 'LEVEL_INSUFFICIENT');
   });
 });
 
-describe('checkout manual del dueño (criterio 17)', () => {
+describe('manual owner checkout (criterion 17)', () => {
   async function ownerOrder() {
     const s = await scene('negotiate');
     await submitForReview(h.db, s.agent, s.negotiationId, {}, NOW);
@@ -259,7 +259,7 @@ describe('checkout manual del dueño (criterio 17)', () => {
     return { s, order };
   }
 
-  it('aprobación y captura con importe y beneficiario del acuerdo', async () => {
+  it('approval and capture use the agreed amount and payee', async () => {
     const { s, order } = await ownerOrder();
     const started = await startCheckout(h.db, gw, s.buyer, order.id, URLS);
     expect(started).toMatchObject({ status: 'requires_action', mode: 'manual' });
@@ -282,7 +282,7 @@ describe('checkout manual del dueño (criterio 17)', () => {
     expect((await getOrder(h.db, s.buyer, order.id)).status).toBe('paid');
   });
 
-  it('no se captura si el pedido venció antes de volver de PayPal', async () => {
+  it('no capture if the order expired before returning from PayPal', async () => {
     const { s, order } = await ownerOrder();
     await startCheckout(h.db, gw, s.buyer, order.id, URLS);
     const [ppOrder] = [...gw.orders.values()];
@@ -293,7 +293,7 @@ describe('checkout manual del dueño (criterio 17)', () => {
     expect(gw.captures).toEqual([]);
   });
 
-  it('exige proveedor conectado y no se ofrece a agentes', async () => {
+  it('requires a connected supplier and is not offered to agents', async () => {
     const s = await scene('negotiate', false);
     await submitForReview(h.db, s.agent, s.negotiationId, {}, NOW);
     const order = await ownerAcceptQuote(
@@ -311,7 +311,7 @@ describe('checkout manual del dueño (criterio 17)', () => {
 });
 
 describe('webhooks', () => {
-  it('un webhook repetido o fuera de orden no altera un pago ya confirmado (criterio 17)', async () => {
+  it('a repeated or out-of-order webhook does not alter a confirmed payment (criterion 17)', async () => {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
     gw.nextCreate = 'unknown_after_create';
@@ -344,7 +344,7 @@ describe('webhooks', () => {
     expect(gw.captures).toHaveLength(1);
   });
 
-  it('un webhook confirma un checkout aprobado si el comprador no volvió al sitio', async () => {
+  it('a webhook confirms an approved checkout if the buyer did not return to the site', async () => {
     const s = await scene('negotiate');
     await submitForReview(h.db, s.agent, s.negotiationId, {}, NOW);
     const order = await ownerAcceptQuote(
@@ -366,7 +366,7 @@ describe('webhooks', () => {
   });
 });
 
-describe('reembolsos (criterio 14)', () => {
+describe('refunds (criterion 14)', () => {
   async function paidOrder() {
     const s = await scene();
     await connectFinancial(s.buyer.orgId, s.buyer.userId);
@@ -374,12 +374,12 @@ describe('reembolsos (criterio 14)', () => {
     return { s, order };
   }
 
-  it('el proveedor autoriza, PayPal confirma y el presupuesto delegado no se restaura', async () => {
+  it('the supplier authorizes, PayPal confirms and the delegated budget is not restored', async () => {
     const { s, order } = await paidOrder();
     const before = await authorizationBudgetSummary(h.db, s.authorizationId);
     const refund = await requestRefund(h.db, s.agent, order.id, {
       amount: '20.00',
-      reason: 'Llegaron 80 tapas rotas',
+      reason: '80 lids arrived broken',
     });
     expect(refund.status).toBe('requested');
 
@@ -402,18 +402,18 @@ describe('reembolsos (criterio 14)', () => {
     );
   });
 
-  it('el proveedor puede rechazar una solicitud', async () => {
+  it('the supplier can reject a request', async () => {
     const { s, order } = await paidOrder();
-    const refund = await requestRefund(h.db, s.buyer, order.id, { reason: 'No los necesitamos' });
+    const refund = await requestRefund(h.db, s.buyer, order.id, { reason: 'We do not need them' });
     expect(refund.amount).toBe('76.86');
-    const rejected = await rejectRefund(h.db, s.supplier, refund.id, 'Producto entregado conforme');
+    const rejected = await rejectRefund(h.db, s.supplier, refund.id, 'Product delivered as agreed');
     expect(rejected.status).toBe('failed');
     expect(gw.refunds.size).toBe(0);
   });
 });
 
-describe('conexión de cobro del proveedor', () => {
-  it('genera el enlace de PayPal y activa la cuenta cuando PayPal confirma', async () => {
+describe('supplier payment connection', () => {
+  it('generates the PayPal link and activates the account when PayPal confirms', async () => {
     const supplier = await newCompany(h.db, 'GreenBox');
     const started = await startSellerOnboarding(
       h.db,

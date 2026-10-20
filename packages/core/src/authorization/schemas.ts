@@ -58,7 +58,7 @@ export const US_STATES = [
 
 export const moneyString = z
   .string()
-  .refine(isValidMoney, 'Importe inválido: usa un decimal con hasta 2 decimales, p. ej. "80.00"')
+  .refine(isValidMoney, 'Invalid amount: use a decimal with up to 2 decimal places, e.g. "80.00"')
   .transform(toMoney);
 
 export const isoDate = z.iso.date();
@@ -68,7 +68,7 @@ export const deliveryAddress = z.object({
   line2: z.string().trim().max(200).optional(),
   city: z.string().trim().min(1).max(100),
   state: z.enum(US_STATES),
-  postalCode: z.string().regex(/^\d{5}(-\d{4})?$/, 'Código postal de EE. UU.'),
+  postalCode: z.string().regex(/^\d{5}(-\d{4})?$/, 'US postal code'),
   country: z.literal('US').default('US'),
 });
 export type DeliveryAddress = z.output<typeof deliveryAddress>;
@@ -90,11 +90,11 @@ export const authorizationTerms = z
   })
   .refine((t) => t.quantityMin <= t.quantityMax, {
     path: ['quantityMax'],
-    message: 'quantityMax debe ser mayor o igual que quantityMin',
+    message: 'quantityMax must be greater than or equal to quantityMin',
   })
   .refine((t) => compareMoney(t.budgetTotal, '0') > 0, {
     path: ['budgetTotal'],
-    message: 'El presupuesto debe ser mayor que cero',
+    message: 'The authorized budget must be greater than zero',
   });
 export type AuthorizationTermsInput = z.input<typeof authorizationTerms>;
 export type AuthorizationTerms = z.output<typeof authorizationTerms>;

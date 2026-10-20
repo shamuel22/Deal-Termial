@@ -15,7 +15,7 @@ let server: ChildProcess;
 let logs = '';
 
 beforeAll(async () => {
-  if (!existsSync(mainJs)) throw new Error('Falta dist/main.js: ejecuta `pnpm build` antes');
+  if (!existsSync(mainJs)) throw new Error('dist/main.js is missing: run `pnpm build` first');
   const handle = await createTestDatabase();
   await handle.close();
   server = spawn(process.execPath, [mainJs], {
@@ -41,7 +41,7 @@ beforeAll(async () => {
     }
     await new Promise((r) => setTimeout(r, 100));
   }
-  throw new Error(`El servidor no arrancó:\n${logs}`);
+  throw new Error(`The server did not start:\n${logs}`);
 }, 30_000);
 
 afterAll(() => {
@@ -78,7 +78,7 @@ async function company(name: string) {
   const res = await call('POST', '/auth/register', {
     body: {
       email: `dueno${n}@${name}.test`,
-      name: 'Dueño',
+      name: 'Owner',
       password: 'contraseña-segura-123',
       organizationName: name,
     },
@@ -88,8 +88,8 @@ async function company(name: string) {
   return { cookie, orgId: res.body.orgId as string };
 }
 
-describe('API de identidad (e2e)', () => {
-  it('registro emite cookie httpOnly y /me devuelve la membresía', async () => {
+describe('identity API (e2e)', () => {
+  it('registration issues an httpOnly cookie and /me returns the membership', async () => {
     const res = await call('POST', '/auth/register', {
       body: {
         email: 'e2e@empresa.test',
@@ -110,7 +110,7 @@ describe('API de identidad (e2e)', () => {
     ]);
   });
 
-  it('errores con formato estable y accionable', async () => {
+  it('errors have a stable, actionable format', async () => {
     const invalid = await call('POST', '/auth/register', { body: { email: 'no-es-email' } });
     expect(invalid.status).toBe(400);
     expect(invalid.body.error).toMatchObject({ code: 'VALIDATION_FAILED' });
@@ -120,11 +120,11 @@ describe('API de identidad (e2e)', () => {
     expect(anon.body.error).toMatchObject({ code: 'UNAUTHENTICATED' });
   });
 
-  it('dueño crea agente y credencial; el agente se autentica con su nivel', async () => {
+  it('owner creates agent and credential; the agent authenticates with its access level', async () => {
     const { cookie, orgId } = await company('compras');
     const agent = await call('POST', `/orgs/${orgId}/agents`, {
       cookie,
-      body: { name: 'Agente', access: { buyerLevel: 'negotiate' } },
+      body: { name: 'Agent', access: { buyerLevel: 'negotiate' } },
     });
     expect(agent.status).toBe(201);
 
@@ -153,12 +153,12 @@ describe('API de identidad (e2e)', () => {
     expect(JSON.stringify(list.body)).not.toContain(apiKey);
   });
 
-  it('aislamiento: otra organización recibe 404 en recursos ajenos (criterio 16)', async () => {
+  it('isolation: another organization receives 404 for resources it does not own (criterion 16)', async () => {
     const a = await company('alfa');
     const b = await company('beta');
     const agentA = await call('POST', `/orgs/${a.orgId}/agents`, {
       cookie: a.cookie,
-      body: { name: 'De alfa', access: { buyerLevel: 'search_only' } },
+      body: { name: 'From alpha', access: { buyerLevel: 'search_only' } },
     });
 
     // B intenta usar la organización de A en la ruta.
@@ -169,18 +169,18 @@ describe('API de identidad (e2e)', () => {
     ).toBe(404);
   });
 
-  it('autorizaciones: el dueño concede, el agente consulta y propone, el dueño revoca', async () => {
+  it('authorizations: owner grants, agent checks and proposes, owner revokes', async () => {
     const { cookie, orgId } = await company('delegacion');
     const agent = await call('POST', `/orgs/${orgId}/agents`, {
       cookie,
-      body: { name: 'Comprador', access: { buyerLevel: 'full_autonomy' } },
+      body: { name: 'Buyer', access: { buyerLevel: 'full_autonomy' } },
     });
     const { apiKey } = (
       await call('POST', `/orgs/${orgId}/agents/${agent.body.id}/credentials`, { cookie })
     ).body as { apiKey: string };
 
     const terms = {
-      mandate: '300 envases con tapa para caliente, sin foam, hasta US$80',
+      mandate: '300 containers with lids for hot food, no foam, up to US$80',
       category: 'food_containers',
       requiredAttributes: {
         hot_food_safe: { eq: true },
@@ -220,7 +220,7 @@ describe('API de identidad (e2e)', () => {
         kind: 'amend_authorization',
         authorizationId: created.body.id,
         terms: { ...terms, budgetTotal: '95.00' },
-        reason: 'El proveedor cobra transporte',
+        reason: 'The supplier charges for shipping',
       },
     });
     expect(proposal.status).toBe(201);
@@ -239,13 +239,13 @@ describe('API de identidad (e2e)', () => {
     expect(invalid.body.error).toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 
-  it('catálogo: dueño publica, agente proveedor actualiza y otra organización recibe 404', async () => {
+  it('catalog: owner publishes, supplier agent updates and another organization receives 404', async () => {
     const { cookie, orgId } = await company('catalogo');
     const product = await call('POST', `/orgs/${orgId}/products`, {
       cookie,
       body: {
         sku: 'ENV-16',
-        name: 'Envase kraft',
+        name: 'Kraft container',
         category: 'food_containers',
         attributes: {
           material: 'kraft_paper',
@@ -276,7 +276,7 @@ describe('API de identidad (e2e)', () => {
     expect(offer.body).toMatchObject({ version: 1, status: 'active' });
     const agent = await call('POST', `/orgs/${orgId}/agents`, {
       cookie,
-      body: { name: 'Proveedor', access: { buyerLevel: null, sellerScopes: ['publish_offers'] } },
+      body: { name: 'Supplier', access: { buyerLevel: null, sellerScopes: ['publish_offers'] } },
     });
     expect(agent.status).toBe(201);
     const cred = await call('POST', `/orgs/${orgId}/agents/${agent.body.id}/credentials`, {
@@ -303,13 +303,13 @@ describe('API de identidad (e2e)', () => {
     ).toBe(404);
   });
 
-  it('negociación por HTTP: el agente negocia y deja la propuesta para el dueño', async () => {
+  it('HTTP negotiation: the agent negotiates and leaves the proposal for the owner', async () => {
     const supplier = await company('proveedorneg');
     const product = await call('POST', `/orgs/${supplier.orgId}/products`, {
       cookie: supplier.cookie,
       body: {
         sku: 'KR16',
-        name: 'Envase kraft 16 oz',
+        name: 'Kraft container 16 oz',
         category: 'food_containers',
         attributes: {
           material: 'kraft_paper',
@@ -348,7 +348,7 @@ describe('API de identidad (e2e)', () => {
     const buyer = await company('compradorneg');
     const agent = await call('POST', `/orgs/${buyer.orgId}/agents`, {
       cookie: buyer.cookie,
-      body: { name: 'Negociador', access: { buyerLevel: 'negotiate' } },
+      body: { name: 'Negotiator', access: { buyerLevel: 'negotiate' } },
     });
     const { apiKey } = (
       await call('POST', `/orgs/${buyer.orgId}/agents/${agent.body.id}/credentials`, {
@@ -439,7 +439,7 @@ describe('API de identidad (e2e)', () => {
     );
   });
 
-  it('webhook de PayPal: fuera de /api y rechaza eventos sin firma válida', async () => {
+  it('PayPal webhook: outside /api and rejects events without a valid signature', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/webhooks/paypal`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -453,7 +453,7 @@ describe('API de identidad (e2e)', () => {
     expect((await fetch(`${base}/webhooks/paypal`, { method: 'POST' })).status).toBe(404);
   });
 
-  it('publica OpenAPI con las rutas y los esquemas de entrada', async () => {
+  it('publishes OpenAPI with routes and input schemas', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/docs-json`);
     expect(res.status).toBe(200);
     const doc = (await res.json()) as { paths: Record<string, unknown> };

@@ -33,7 +33,7 @@ export function assertBuyerAction(actor: AgentActor, action: BuyerAction): void 
   if (!levelAllows(actor.grant.buyerLevel, action)) {
     throw new DomainError(
       'LEVEL_INSUFFICIENT',
-      `La acción "${action}" requiere nivel ${BUYER_ACTION_LEVEL[action]}`,
+      `Action "${action}" requires access level ${BUYER_ACTION_LEVEL[action]}`,
       { action, requiredLevel: BUYER_ACTION_LEVEL[action], currentLevel: actor.grant.buyerLevel },
     );
   }
@@ -102,26 +102,29 @@ export function evaluatePurchase(
   const violations: Violation[] = [];
 
   if (auth.status === 'revoked') {
-    violations.push({ code: 'AUTHORIZATION_REVOKED', message: 'La autorización fue revocada' });
+    violations.push({ code: 'AUTHORIZATION_REVOKED', message: 'The authorization was revoked' });
   } else if (auth.status === 'exhausted') {
     violations.push({
       code: 'AUTHORIZATION_EXHAUSTED',
-      message: 'La autorización agotó su presupuesto',
+      message: 'The authorization has exhausted its budget',
     });
   } else if (auth.status === 'expired' || auth.expiresAt.getTime() <= now.getTime()) {
     violations.push({
       code: 'AUTHORIZATION_EXPIRED',
-      message: 'La autorización está vencida',
+      message: 'The authorization has expired',
       details: { expiresAt: auth.expiresAt.toISOString() },
     });
   } else if (auth.status !== 'active') {
-    violations.push({ code: 'AUTHORIZATION_NOT_FOUND', message: 'La autorización no está activa' });
+    violations.push({
+      code: 'AUTHORIZATION_NOT_FOUND',
+      message: 'The authorization is not active',
+    });
   }
 
   if (terms.category !== auth.category) {
     violations.push({
       code: 'TERMS_OUTSIDE_AUTHORIZATION',
-      message: `Categoría ${terms.category} no autorizada`,
+      message: `Category ${terms.category} is not authorized`,
       details: { field: 'category', authorized: auth.category, actual: terms.category },
     });
   }
@@ -130,13 +133,13 @@ export function evaluatePurchase(
     if (check.status === 'unconfirmed') {
       violations.push({
         code: 'ATTRIBUTE_UNCONFIRMED',
-        message: `Atributo obligatorio "${check.attribute}" sin confirmar`,
+        message: `Required attribute "${check.attribute}" is unconfirmed`,
         details: { attribute: check.attribute, constraint: check.constraint },
       });
     } else if (check.status === 'violated') {
       violations.push({
         code: 'TERMS_OUTSIDE_AUTHORIZATION',
-        message: `El atributo "${check.attribute}" no cumple la restricción`,
+        message: `Attribute "${check.attribute}" does not satisfy the constraint`,
         details: { attribute: check.attribute, value: check.value, constraint: check.constraint },
       });
     }
@@ -145,14 +148,14 @@ export function evaluatePurchase(
   if (terms.unit !== auth.unit) {
     violations.push({
       code: 'TERMS_OUTSIDE_AUTHORIZATION',
-      message: `Unidad ${terms.unit} distinta de la autorizada (${auth.unit})`,
+      message: `Unit ${terms.unit} differs from the authorized unit (${auth.unit})`,
       details: { field: 'unit' },
     });
   }
   if (terms.quantity < auth.quantityMin || terms.quantity > auth.quantityMax) {
     violations.push({
       code: 'TERMS_OUTSIDE_AUTHORIZATION',
-      message: `Cantidad ${terms.quantity} fuera del rango autorizado ${auth.quantityMin}–${auth.quantityMax}`,
+      message: `Quantity ${terms.quantity} is outside the authorized range ${auth.quantityMin}–${auth.quantityMax}`,
       details: {
         field: 'quantity',
         min: auth.quantityMin,
@@ -165,7 +168,7 @@ export function evaluatePurchase(
   if (auth.allowedSupplierOrgIds && !auth.allowedSupplierOrgIds.includes(terms.supplierOrgId)) {
     violations.push({
       code: 'SUPPLIER_NOT_ALLOWED',
-      message: 'El proveedor no está entre los autorizados',
+      message: 'The supplier is not among the authorized suppliers',
       details: { supplierOrgId: terms.supplierOrgId },
     });
   }
@@ -173,7 +176,7 @@ export function evaluatePurchase(
   if (terms.currency !== auth.currency) {
     violations.push({
       code: 'TERMS_OUTSIDE_AUTHORIZATION',
-      message: `Moneda ${terms.currency} no autorizada`,
+      message: `Currency ${terms.currency} is not authorized`,
       details: { field: 'currency' },
     });
   }
@@ -181,7 +184,7 @@ export function evaluatePurchase(
   if (gt(terms.total, auth.budgetTotal)) {
     violations.push({
       code: 'BUDGET_EXCEEDED',
-      message: `El total ${terms.total} supera el presupuesto del encargo ${auth.budgetTotal}`,
+      message: `Total ${terms.total} exceeds the authorized budget ${auth.budgetTotal}`,
       details: { total: terms.total, budgetTotal: auth.budgetTotal },
     });
   }
@@ -189,7 +192,7 @@ export function evaluatePurchase(
   if (normalizeAddress(terms.deliveryAddress) !== normalizeAddress(auth.deliveryAddress)) {
     violations.push({
       code: 'TERMS_OUTSIDE_AUTHORIZATION',
-      message: 'La dirección de entrega no coincide con la autorizada',
+      message: 'The delivery address does not match the authorized address',
       details: { field: 'deliveryAddress' },
     });
   }
@@ -198,7 +201,7 @@ export function evaluatePurchase(
   if (terms.deliverBy > auth.deliverBy) {
     violations.push({
       code: 'TERMS_OUTSIDE_AUTHORIZATION',
-      message: `La entrega (${terms.deliverBy}) es posterior a la fecha límite autorizada (${auth.deliverBy})`,
+      message: `Delivery (${terms.deliverBy}) is after the authorized deadline (${auth.deliverBy})`,
       details: { field: 'deliverBy', authorized: auth.deliverBy, actual: terms.deliverBy },
     });
   }

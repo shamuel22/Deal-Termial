@@ -50,7 +50,7 @@ export async function submitChangeRequest(
             eq(schema.purchaseAuthorizations.agentId, actor.agentId),
           ),
         );
-      if (!own) throw new DomainError('NOT_FOUND', 'Autorización no encontrada');
+      if (!own) throw new DomainError('NOT_FOUND', 'Authorization not found');
     }
     const [row] = await tx
       .insert(schema.authorizationChangeRequests)
@@ -93,7 +93,7 @@ export async function listChangeRequests(db: Executor, actor: Actor) {
 
 async function loadPending(db: Executor, orgId: string, requestId: string) {
   if (!z.uuid().safeParse(requestId).success) {
-    throw new DomainError('NOT_FOUND', 'Solicitud no encontrada');
+    throw new DomainError('NOT_FOUND', 'Request not found');
   }
   const [row] = await db
     .select()
@@ -104,11 +104,11 @@ async function loadPending(db: Executor, orgId: string, requestId: string) {
         eq(schema.authorizationChangeRequests.orgId, orgId),
       ),
     );
-  if (!row) throw new DomainError('NOT_FOUND', 'Solicitud no encontrada');
+  if (!row) throw new DomainError('NOT_FOUND', 'Request not found');
   if (row.status !== 'pending') {
     throw new DomainError(
       'INVALID_STATE',
-      `La solicitud ya fue ${row.status === 'approved' ? 'aprobada' : 'rechazada'}`,
+      `The request was already ${row.status === 'approved' ? 'approved' : 'rejected'}`,
     );
   }
   return row;

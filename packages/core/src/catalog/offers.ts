@@ -31,17 +31,17 @@ export type ProductInput = z.input<typeof productInput>;
 const unitPriceString = z
   .string()
   .refine(isValidUnitPrice, {
-    message: 'Precio inválido: usa un decimal con hasta 4 decimales',
+    message: 'Invalid price: use a decimal with up to 4 decimal places',
     abort: true,
   })
-  .refine((v) => gt(v, '0'), 'El precio debe ser mayor que cero')
+  .refine((v) => gt(v, '0'), 'The price must be greater than zero')
   .transform(toUnitPrice);
 
 function fraction(max: string) {
   return z
     .string()
-    .regex(/^0(\.\d{1,4})?$/, 'Usa una fracción decimal con hasta 4 decimales')
-    .refine((v) => !/^0(\.\d{1,4})?$/.test(v) || lte(v, max), `La fracción máxima es ${max}`);
+    .regex(/^0(\.\d{1,4})?$/, 'Use a decimal fraction with up to 4 decimal places')
+    .refine((v) => !/^0(\.\d{1,4})?$/.test(v) || lte(v, max), `The maximum fraction is ${max}`);
 }
 
 export const negotiationRulesInput = z.object({
@@ -63,7 +63,7 @@ const offerConditions = z.object({
   shipRegions: z
     .array(z.enum(US_STATES))
     .min(1)
-    .refine((v) => new Set(v).size === v.length, 'Las regiones no pueden repetirse'),
+    .refine((v) => new Set(v).size === v.length, 'Regions must not be repeated'),
   leadTimeDays: z.number().int().min(0).max(60),
   shippingFlat: moneyString.default('0.00'),
   taxRate: fraction('0.25').default('0'),
@@ -82,14 +82,18 @@ type OfferConditions = z.output<typeof offerConditions>;
 
 function checkConditions(data: OfferConditions, ctx: z.RefinementCtx): void {
   if (data.maxOrderQty !== undefined && data.maxOrderQty < data.minOrderQty) {
-    ctx.addIssue({ code: 'custom', path: ['maxOrderQty'], message: 'Debe ser >= minOrderQty' });
+    ctx.addIssue({ code: 'custom', path: ['maxOrderQty'], message: 'Must be >= minOrderQty' });
   }
   const tiers = [...data.priceTiers].sort((a, b) => a.minQty - b.minQty);
   if (new Set(tiers.map((t) => t.minQty)).size !== tiers.length) {
-    ctx.addIssue({ code: 'custom', path: ['priceTiers'], message: 'minQty no puede repetirse' });
+    ctx.addIssue({ code: 'custom', path: ['priceTiers'], message: 'minQty must not be repeated' });
   }
   if (tiers[0] && tiers[0].minQty > data.minOrderQty) {
-    ctx.addIssue({ code: 'custom', path: ['priceTiers'], message: 'Falta el tramo inicial' });
+    ctx.addIssue({
+      code: 'custom',
+      path: ['priceTiers'],
+      message: 'The initial price tier is missing',
+    });
   }
   for (let i = 0; i < tiers.length; i++) {
     const tier = tiers[i]!;
@@ -98,14 +102,14 @@ function checkConditions(data: OfferConditions, ctx: z.RefinementCtx): void {
       ctx.addIssue({
         code: 'custom',
         path: ['priceTiers'],
-        message: 'Los precios no pueden crecer',
+        message: 'Prices must not increase',
       });
     }
     if (gt(data.negotiationRules.floorUnitPrice, tier.unitPrice)) {
       ctx.addIssue({
         code: 'custom',
         path: ['negotiationRules', 'floorUnitPrice'],
-        message: 'El precio mínimo no puede superar ningún tramo',
+        message: 'The minimum price must not exceed any price tier',
       });
     }
   }
@@ -113,7 +117,7 @@ function checkConditions(data: OfferConditions, ctx: z.RefinementCtx): void {
     ctx.addIssue({
       code: 'custom',
       path: ['negotiationRules', 'minLeadTimeDays'],
-      message: 'El plazo mínimo no puede superar leadTimeDays',
+      message: 'The minimum lead time must not exceed leadTimeDays',
     });
   }
 }
@@ -142,12 +146,12 @@ function assertUuid(id: string, message: string): void {
 }
 
 async function findOwnProduct(db: Executor, orgId: string, productId: string) {
-  assertUuid(productId, 'Producto no encontrado');
+  assertUuid(productId, 'Product not found');
   const [row] = await db
     .select()
     .from(schema.products)
     .where(and(eq(schema.products.id, productId), eq(schema.products.supplierOrgId, orgId)));
-  if (!row) throw new DomainError('NOT_FOUND', 'Producto no encontrado');
+  if (!row) throw new DomainError('NOT_FOUND', 'Product not found');
   return row;
 }
 
@@ -157,13 +161,13 @@ async function findOwnOffer(
   offerId: string,
   lock: 'no key update' | 'share',
 ) {
-  assertUuid(offerId, 'Oferta no encontrada');
+  assertUuid(offerId, 'Offer not found');
   const [row] = await db
     .select()
     .from(schema.offers)
     .where(and(eq(schema.offers.id, offerId), eq(schema.offers.supplierOrgId, orgId)))
     .for(lock);
-  if (!row) throw new DomainError('NOT_FOUND', 'Oferta no encontrada');
+  if (!row) throw new DomainError('NOT_FOUND', 'Offer not found');
   return row;
 }
 
@@ -182,7 +186,7 @@ function duplicateSku(error: unknown): boolean {
 
 function rethrowProductError(error: unknown): never {
   if (duplicateSku(error)) {
-    throw new DomainError('VALIDATION_FAILED', 'Ya existe un producto con ese SKU', {
+    throw new DomainError('VALIDATION_FAILED', 'A product with that SKU already exists', {
       field: 'sku',
     });
   }
@@ -303,7 +307,7 @@ async function supplierView(db: Executor, offer: Offer): Promise<SupplierOfferVi
     .select()
     .from(schema.negotiationRules)
     .where(eq(schema.negotiationRules.offerId, offer.id));
-  if (!rules) throw new Error(`Oferta ${offer.id} sin reglas de negociación`);
+  if (!rules) throw new Error(`Offer ${offer.id} has no negotiation rules`);
   return { ...offer, product, priceTiers, negotiationRules: rules };
 }
 
@@ -314,7 +318,7 @@ export async function createOffer(
 ): Promise<SupplierOfferView> {
   requireSellerScope(actor, 'publish_offers');
   if (input && typeof input === 'object' && 'productId' in input) {
-    assertUuid(input.productId, 'Producto no encontrado');
+    assertUuid(input.productId, 'Product not found');
   }
   const { productId, ...data } = offerInput.parse(input);
   return inTransaction(db, async (tx) => {
@@ -353,7 +357,7 @@ export async function updateOffer(
   return inTransaction(db, async (tx) => {
     const previous = await findOwnOffer(tx, actor.orgId, offerId, 'no key update');
     if (previous.status === 'archived') {
-      throw new DomainError('INVALID_STATE', 'Una oferta archivada no se puede modificar');
+      throw new DomainError('INVALID_STATE', 'An archived offer cannot be modified');
     }
     const [offer] = await tx
       .update(schema.offers)
@@ -392,7 +396,7 @@ export async function setOfferStatus(
     const previous = await findOwnOffer(tx, actor.orgId, offerId, 'no key update');
     if (previous.status === data.status) return supplierView(tx, previous);
     if (previous.status === 'archived') {
-      throw new DomainError('INVALID_STATE', 'Una oferta archivada no se puede modificar');
+      throw new DomainError('INVALID_STATE', 'An archived offer cannot be modified');
     }
     const [offer] = await tx
       .update(schema.offers)

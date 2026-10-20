@@ -118,7 +118,7 @@ export class PayPalClient {
       });
     } catch (error) {
       throw new PayPalUnknownOutcomeError(
-        `Sin respuesta de PayPal: ${(error as Error).message}`,
+        `No response from PayPal: ${(error as Error).message}`,
         error,
       );
     }

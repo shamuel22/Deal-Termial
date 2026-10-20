@@ -107,7 +107,7 @@ For keyed acceptance/cancellation, repeat the same operation and inputs. A confl
 
 ## Error responses
 
-Domain errors use `{ error: { code, message, hint, details } }`, with `details` omitted when absent. Messages and hints currently come from the server in Spanish; branch on `code` rather than translated text. Validation responses include field issues. Framework and unexpected errors may have only `code` and `message`, including `HTTP_ERROR` or `INTERNAL` outside the domain catalog.
+Domain errors use `{ error: { code, message, hint, details } }`, with `details` omitted when absent. Messages and hints are human-readable English text; branch on `code` rather than message text. Validation responses include field issues. Framework and unexpected errors may have only `code` and `message`, including `HTTP_ERROR` or `INTERNAL` outside the domain catalog.
 
 Every code in `ERROR_CATALOG` is listed below.
 

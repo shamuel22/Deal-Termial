@@ -29,7 +29,7 @@ import { DB } from '../database.module.js';
 import { ApiZodBody } from '../http/zod.js';
 import { Auth, CurrentAgent, CurrentUser } from '../auth/auth.guard.js';
 
-@ApiTags('portal: autorizaciones')
+@ApiTags('portal: authorizations')
 @ApiCookieAuth()
 @Controller('orgs/:orgId')
 @Auth('org-user')
@@ -43,7 +43,7 @@ export class AuthorizationsController {
   }
 
   @Post('authorizations')
-  @ApiOperation({ summary: 'Crea y activa una autorización de compra estructurada para un agente' })
+  @ApiOperation({ summary: 'Create and activate a structured purchase authorization for an agent' })
   @ApiZodBody(createAuthorizationInput)
   create(@CurrentUser() actor: UserActor, @Body() raw: CreateAuthorizationInput) {
     return createAuthorization(this.handle.db, actor, raw);
@@ -55,7 +55,7 @@ export class AuthorizationsController {
   }
 
   @Put('authorizations/:authorizationId/terms')
-  @ApiOperation({ summary: 'Modifica condiciones (nueva versión de la autorización)' })
+  @ApiOperation({ summary: 'Amend terms (create a new authorization version)' })
   @ApiZodBody(authorizationTerms)
   amend(
     @CurrentUser() actor: UserActor,
@@ -67,7 +67,7 @@ export class AuthorizationsController {
 
   @Post('authorizations/:authorizationId/revoke')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Revoca la autorización; bloquea nuevas aceptaciones y pagos' })
+  @ApiOperation({ summary: 'Revoke the authorization; block new acceptances and payments' })
   revoke(@CurrentUser() actor: UserActor, @Param('authorizationId') id: string) {
     return revokeAuthorization(this.handle.db, actor, id);
   }
@@ -79,7 +79,7 @@ export class AuthorizationsController {
 
   @Put('budget/monthly')
   @ApiOperation({
-    summary: 'Fija el límite mensual (UTC) compartido por los agentes; null = sin límite',
+    summary: 'Set the monthly limit (UTC) shared by all agents; null = no limit',
   })
   @ApiZodBody(monthlyLimitInput)
   setMonthly(@CurrentUser() actor: UserActor, @Body() raw: MonthlyLimitInput) {
@@ -104,7 +104,7 @@ export class AuthorizationsController {
   }
 }
 
-@ApiTags('agente')
+@ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent')
 @Auth('agent')
@@ -113,14 +113,14 @@ export class AgentAuthorizationController {
 
   @Get('authorization-status')
   @ApiOperation({
-    summary: 'Nivel, autorizaciones, presupuesto disponible y estado financiero (sin secretos)',
+    summary: 'Access level, authorizations, available budget and financial status (no secrets)',
   })
   status(@CurrentAgent() agent: AgentActor) {
     return getAgentAuthorizationStatus(this.handle.db, agent);
   }
 
   @Post('change-requests')
-  @ApiOperation({ summary: 'Propone un cambio de permisos para revisión del dueño' })
+  @ApiOperation({ summary: 'Propose a permission change for owner review' })
   @ApiZodBody(changeRequestInput)
   submit(@CurrentAgent() agent: AgentActor, @Body() raw: ChangeRequestInput) {
     return submitChangeRequest(this.handle.db, agent, raw);

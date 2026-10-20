@@ -34,18 +34,18 @@ const rules: SupplierRules = {
 };
 const listTerms = { unitPrice: '0.2400', waiveShipping: false, deliverBy: '2026-10-22' };
 
-describe('precio mínimo permitido', () => {
-  it('aplica el mayor entre el descuento máximo y el precio piso', () => {
+describe('minimum permitted price', () => {
+  it('applies the higher of the maximum-discount price and the price floor', () => {
     // 0.24 × 0.90 = 0.216 < piso 0.22
     expect(allowedMinUnitPrice(offer, rules, 300)).toBe('0.2200');
     expect(allowedMinUnitPrice(offer, { ...rules, floorUnitPrice: '0.2000' }, 300)).toBe('0.2160');
   });
 
-  it('sin descuento por debajo de la cantidad mínima para descuento', () => {
+  it('no discount below the minimum quantity for a discount', () => {
     expect(allowedMinUnitPrice(offer, rules, 100)).toBe('0.3100');
   });
 
-  it('redondea hacia arriba para no conceder de más', () => {
+  it('rounds up to avoid granting an excessive discount', () => {
     // 0.2333 × 0.9 = 0.20997 → 0.2100
     const o = { ...offer, tiers: [{ minQty: 1, unitPrice: '0.2333' }] };
     expect(
@@ -54,8 +54,8 @@ describe('precio mínimo permitido', () => {
   });
 });
 
-describe('cotización inicial', () => {
-  it('caso de uso: 300 a precio de lista, total 83.35 por encima de US$80', () => {
+describe('initial quote', () => {
+  it('use case: 300 at list price, total 83.35 above US$80', () => {
     const out = initialQuote(
       offer,
       rules,
@@ -68,7 +68,7 @@ describe('cotización inicial', () => {
     expect(out.terms.pricing.total).toBe('83.35');
   });
 
-  it('ofrece la fecha pedida si cabe en el plazo mínimo', () => {
+  it('offers the requested date if it meets the minimum lead time', () => {
     const out = initialQuote(
       offer,
       rules,
@@ -85,7 +85,7 @@ describe('cotización inicial', () => {
     expect(tooSoon.kind === 'counter' && tooSoon.terms.deliverBy).toBe('2026-10-21');
   });
 
-  it('escala al proveedor si no puede resolver automáticamente', () => {
+  it('escalates to the supplier if it cannot resolve automatically', () => {
     expect(
       initialQuote(
         offer,
@@ -102,14 +102,14 @@ describe('cotización inicial', () => {
     );
     expect(out.kind).toBe('escalate');
     expect(out.kind === 'escalate' && out.reasons).toEqual([
-      'Existencias insuficientes (4000)',
-      'No se entrega en CA',
+      'Insufficient stock (4000)',
+      'No delivery to CA',
     ]);
   });
 });
 
-describe('respuesta a contrapropuestas', () => {
-  it('acepta una propuesta dentro de las reglas', () => {
+describe('response to counterproposals', () => {
+  it('accepts a proposal within the rules', () => {
     const out = respondToCounter(
       offer,
       rules,
@@ -122,7 +122,7 @@ describe('respuesta a contrapropuestas', () => {
     expect(out.kind !== 'escalate' && out.terms.unitPrice).toBe('0.2250');
   });
 
-  it('contraoferta al mínimo permitido si piden menos: 300 × 0.22 + 5 + 8.25 % = 76.86', () => {
+  it('counters at the minimum permitted price if less is requested: 300 × 0.22 + 5 + 8.25 % = 76.86', () => {
     const out = respondToCounter(
       offer,
       rules,
@@ -142,7 +142,7 @@ describe('respuesta a contrapropuestas', () => {
     expect(out.trace.join(' ')).toContain('0.2200');
   });
 
-  it('no bonifica transporte ni acorta plazos fuera de las reglas', () => {
+  it('does not waive shipping or shorten lead times outside the rules', () => {
     const out = respondToCounter(
       offer,
       rules,
@@ -159,7 +159,7 @@ describe('respuesta a contrapropuestas', () => {
     });
   });
 
-  it('bonifica transporte si está permitido', () => {
+  it('waives shipping if permitted', () => {
     const out = respondToCounter(
       offer,
       { ...rules, canWaiveShipping: true },
@@ -172,7 +172,7 @@ describe('respuesta a contrapropuestas', () => {
     expect(out.kind !== 'escalate' && out.terms.pricing.shipping).toBe('0.00');
   });
 
-  it('no sube por encima del precio de lista', () => {
+  it('does not exceed the list price', () => {
     const out = respondToCounter(
       offer,
       rules,
@@ -185,8 +185,8 @@ describe('respuesta a contrapropuestas', () => {
   });
 });
 
-describe('cotizaciones emitidas por el agente del proveedor', () => {
-  it('no puede conceder fuera de las reglas', () => {
+describe("quotes issued by the supplier's agent", () => {
+  it('cannot grant terms outside the rules', () => {
     expect(
       agentQuoteViolations(
         offer,

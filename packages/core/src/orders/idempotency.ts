@@ -20,7 +20,7 @@ export async function withIdempotency<T>(
   if (args.key.length > 200) {
     throw new DomainError(
       'VALIDATION_FAILED',
-      'La clave de idempotencia admite hasta 200 caracteres',
+      'The idempotency key can contain up to 200 characters',
     );
   }
   const requestHash = sha256(
@@ -46,7 +46,7 @@ export async function withIdempotency<T>(
       if (!existing || existing.requestHash !== requestHash) {
         throw new DomainError(
           'IDEMPOTENCY_KEY_REUSED',
-          'La clave ya se usó con otra operación o datos',
+          'The key has already been used with another operation or different data',
         );
       }
       return existing.response as T;

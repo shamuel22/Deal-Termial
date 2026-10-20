@@ -49,7 +49,7 @@ beforeAll(async () => {
     }
     await new Promise((r) => setTimeout(r, 100));
   }
-  throw new Error(`El servidor no arrancó:\n${logs}`);
+  throw new Error(`The server did not start:\n${logs}`);
 }, 60_000);
 
 afterAll(() => {
@@ -58,7 +58,7 @@ afterAll(() => {
 
 function key(name: string): string {
   const agent = demo.agents.find((a) => a.name === name);
-  if (!agent) throw new Error(`Agente ${name} no encontrado`);
+  if (!agent) throw new Error(`Agent ${name} not found`);
   return agent.apiKey;
 }
 
@@ -87,21 +87,21 @@ async function call<T = Record<string, unknown>>(
   return { isError: Boolean(result.isError), data: JSON.parse(text) as T };
 }
 
-describe('servidor MCP', () => {
-  it('exige credencial de agente y solo acepta POST', async () => {
+describe('MCP server', () => {
+  it('requires an agent credential and only accepts POST', async () => {
     await expect(connect()).rejects.toThrow();
     await expect(connect('dtk_inventada_123')).rejects.toThrow();
     expect(
       (
         await fetch(`${origin}/mcp`, {
-          headers: { Authorization: `Bearer ${key('Asistente de compras')}` },
+          headers: { Authorization: `Bearer ${key('Purchasing assistant')}` },
         })
       ).status,
     ).toBe(405);
   });
 
-  it('expone el catálogo de herramientas con instrucciones', async () => {
-    const client = await connect(key('Asistente investigador'));
+  it('exposes the tool catalog with instructions', async () => {
+    const client = await connect(key('Research assistant'));
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
     for (const expected of [
@@ -133,8 +133,8 @@ describe('servidor MCP', () => {
     await client.close();
   });
 
-  it('solo búsqueda: consulta y compara, pero no puede negociar (criterio 3)', async () => {
-    const client = await connect(key('Asistente investigador'));
+  it('Search only: queries and compares, but cannot negotiate (criterion 3)', async () => {
+    const client = await connect(key('Research assistant'));
     const status = await call<{ agent: { buyerLevel: string } }>(
       client,
       'get_authorization_status',
@@ -182,12 +182,12 @@ describe('servidor MCP', () => {
     });
     expect(denied.isError).toBe(true);
     expect(denied.data.error.code).toBe('LEVEL_INSUFFICIENT');
-    expect(denied.data.error.hint).toContain('dueño');
+    expect(denied.data.error.hint).toContain('owner');
     await client.close();
   });
 
-  it('autonomía total: busca, negocia, acepta y deja el pago al dueño sin autorización financiera', async () => {
-    const client = await connect(key('Asistente de compras'));
+  it('full_autonomy: searches, negotiates, accepts and leaves payment to the owner without PayPal consent', async () => {
+    const client = await connect(key('Purchasing assistant'));
     const status = await call<{
       authorizations: Array<{ id: string; budget: { available: string } }>;
     }>(client, 'get_authorization_status');
@@ -252,7 +252,7 @@ describe('servidor MCP', () => {
     });
 
     // El proveedor ve la negociación y el pedido desde su propio agente.
-    const seller = await connect(key('Agente de ventas EcoPack'));
+    const seller = await connect(key('EcoPack sales agent'));
     const negotiations = await call<Array<{ id: string; status: string }>>(
       seller,
       'list_pending_negotiations',
@@ -267,12 +267,12 @@ describe('servidor MCP', () => {
     await client.close();
   });
 
-  it('un agente no puede ampliar sus permisos; solo proponerlo (criterio 8)', async () => {
-    const client = await connect(key('Asistente investigador'));
+  it('an agent cannot extend its own permissions; it can only propose changes (criterion 8)', async () => {
+    const client = await connect(key('Research assistant'));
     const proposal = await call<{ status: string }>(client, 'request_authorization_change', {
       kind: 'change_level',
       buyerLevel: 'full_autonomy',
-      reason: 'Necesito comprar',
+      reason: 'I need to buy',
     });
     expect(proposal.data.status).toBe('pending');
     const status = await call<{ agent: { buyerLevel: string } }>(
@@ -283,7 +283,7 @@ describe('servidor MCP', () => {
     await client.close();
   });
 
-  it('ninguna respuesta MCP contiene secretos ni tokens (criterio 16)', () => {
+  it('no MCP response contains secrets or tokens (criterion 16)', () => {
     expect(transcripts.length).toBeGreaterThan(10);
     const all = transcripts.join('\n');
     for (const pattern of [

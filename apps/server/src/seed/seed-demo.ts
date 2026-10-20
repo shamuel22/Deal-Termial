@@ -23,7 +23,7 @@ const DAY_MS = 86_400_000;
 
 /** Primer viernes a las 00:00 UTC situado al menos 72 horas después de now. */
 export function nextFriday(now: Date): string {
-  if (!Number.isFinite(now.getTime())) throw new Error('La fecha now no es válida');
+  if (!Number.isFinite(now.getTime())) throw new Error('The now date is invalid');
   const earliest = now.getTime() + 3 * DAY_MS;
   const friday = new Date(earliest);
   friday.setUTCHours(0, 0, 0, 0);
@@ -88,7 +88,7 @@ export async function seedDemo(db: Database, options: DemoOptions): Promise<Demo
     if (existing) {
       throw new DomainError(
         'VALIDATION_FAILED',
-        `Ya existe el email ${demoBuyer.owner.email}; no se cargaron datos de demostración.`,
+        `The email ${demoBuyer.owner.email} already exists; no demo data was loaded.`,
         { field: 'email' },
       );
     }

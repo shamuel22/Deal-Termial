@@ -16,7 +16,7 @@ function fakeFetch(responses: Array<{ status: number; body?: unknown } | Error>)
       });
     }
     const next = responses.shift();
-    if (!next) throw new Error('sin respuesta preparada');
+    if (!next) throw new Error('no response prepared');
     if (next instanceof Error) throw next;
     return new Response(next.body === undefined ? '' : JSON.stringify(next.body), {
       status: next.status,
@@ -30,7 +30,7 @@ const header = (call: Call, name: string): string | undefined =>
   (call.init.headers as Record<string, string>)[name];
 
 describe('PayPalClient', () => {
-  it('envía importe, moneda y beneficiario exactos, con idempotencia y BN code', async () => {
+  it('sends the exact amount, currency and payee, with idempotency and BN code', async () => {
     const f = fakeFetch([{ status: 201, body: { id: 'O1', status: 'COMPLETED' } }]);
     const client = new PayPalClient({
       clientId: 'cid',
@@ -44,7 +44,7 @@ describe('PayPalClient', () => {
       payeeMerchantId: 'SELLER1',
       referenceId: 'order-1',
       invoiceId: 'DT-order-1',
-      description: 'Pedido',
+      description: 'Order',
       requestId: 'req-1',
       vaultId: 'VAULT1',
     });
@@ -59,7 +59,7 @@ describe('PayPalClient', () => {
     expect(header(call, 'PayPal-Partner-Attribution-Id')).toBe('BN');
   });
 
-  it('reutiliza el token OAuth', async () => {
+  it('reuses the OAuth token', async () => {
     const f = fakeFetch([
       { status: 200, body: { id: 'O1', status: 'CREATED' } },
       { status: 200, body: { id: 'O1', status: 'CREATED' } },
@@ -70,7 +70,7 @@ describe('PayPalClient', () => {
     expect(f.calls.filter((c) => c.url.endsWith('/oauth2/token'))).toHaveLength(1);
   });
 
-  it('un 4xx es definitivo y conserva el código de PayPal', async () => {
+  it('a 4xx is definitive and preserves the PayPal code', async () => {
     const f = fakeFetch([
       {
         status: 422,
@@ -88,14 +88,14 @@ describe('PayPalClient', () => {
     });
   });
 
-  it('5xx, timeout o red caída dejan el resultado como desconocido', async () => {
+  it('5xx, timeout or network failure leave the result unknown', async () => {
     const f = fakeFetch([{ status: 503, body: {} }, new Error('ECONNRESET')]);
     const client = new PayPalClient({ clientId: 'c', clientSecret: 's', fetch: f.impl });
     await expect(client.captureOrder('O1', 'r')).rejects.toBeInstanceOf(PayPalUnknownOutcomeError);
     await expect(client.captureOrder('O1', 'r')).rejects.toBeInstanceOf(PayPalUnknownOutcomeError);
   });
 
-  it('los reembolsos actúan en nombre del proveedor con PayPal-Auth-Assertion', async () => {
+  it('refunds act on behalf of the supplier with PayPal-Auth-Assertion', async () => {
     const f = fakeFetch([{ status: 201, body: { id: 'R1', status: 'COMPLETED' } }]);
     const client = new PayPalClient({ clientId: 'cid', clientSecret: 's', fetch: f.impl });
     await client.refundCapture({
@@ -113,7 +113,7 @@ describe('PayPalClient', () => {
     });
   });
 
-  it('un webhook sin cabeceras de firma no se verifica', async () => {
+  it('a webhook without signature headers is not verified', async () => {
     const client = new PayPalClient({
       clientId: 'c',
       clientSecret: 's',
@@ -124,7 +124,7 @@ describe('PayPalClient', () => {
     ).resolves.toBe(false);
   });
 
-  it('extrae el enlace de aprobación', () => {
+  it('extracts the approval link', () => {
     expect(
       approveLink({
         id: 'O',

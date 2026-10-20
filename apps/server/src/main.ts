@@ -18,7 +18,7 @@ async function bootstrap(): Promise<void> {
   const config = loadConfig();
 
   const migration = await runMigrations(config.DATABASE_URL);
-  logger.log(migration.applied ? 'Migraciones al día' : 'Sin migraciones que aplicar');
+  logger.log(migration.applied ? 'Migrations are up to date' : 'No migrations to apply');
 
   // rawBody: la firma de los webhooks de PayPal se verifica sobre el cuerpo original.
   const app = await NestFactory.create(AppModule.forRoot(config), {
@@ -33,13 +33,13 @@ async function bootstrap(): Promise<void> {
 
   const openapi = new DocumentBuilder()
     .setTitle('Deal Terminal API')
-    .setDescription('API comercial B2B para agentes de IA con compras autorizadas')
+    .setDescription('B2B commerce API for AI agents with authorized purchases')
     .setVersion('0.1.0')
     .build();
   SwaggerModule.setup('api/docs', app, () => SwaggerModule.createDocument(app, openapi));
 
   await app.listen(config.PORT, config.HOST);
-  logger.log(`Deal Terminal escuchando en http://${config.HOST}:${config.PORT}`);
+  logger.log(`Deal Terminal listening at http://${config.HOST}:${config.PORT}`);
 }
 
 bootstrap().catch((error: unknown) => {

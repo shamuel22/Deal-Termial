@@ -20,7 +20,7 @@ describe('nextFriday (UTC)', () => {
     ['2026-10-20T00:00:01Z', '2026-10-30'], // menos de 72 horas hasta este viernes
     ['2026-12-31T12:00:00Z', '2027-01-08'], // cambio de año
     ['2026-10-19T23:00:00-05:00', '2026-10-30'], // ya es martes UTC
-  ])('%s → %s sin modificar now', (input, expected) => {
+  ])('%s -> %s without modifying now', (input, expected) => {
     const now = new Date(input);
     const original = now.getTime();
     expect(nextFriday(now)).toBe(expected);
@@ -30,8 +30,8 @@ describe('nextFriday (UTC)', () => {
     );
   });
 
-  it('rechaza fechas inválidas', () => {
-    expect(() => nextFriday(new Date('invalid'))).toThrow('La fecha now no es válida');
+  it('rejects invalid dates', () => {
+    expect(() => nextFriday(new Date('invalid'))).toThrow('The now date is invalid');
   });
 });
 
@@ -42,7 +42,7 @@ const options = {
   sellerMerchantIds: { a: 'TEST-MERCHANT-A', b: 'TEST-MERCHANT-B' },
 };
 
-describe('seedDemo sobre PostgreSQL real', () => {
+describe('seedDemo on real PostgreSQL', () => {
   let handle: DbHandle;
 
   beforeEach(async () => {
@@ -78,7 +78,7 @@ describe('seedDemo sobre PostgreSQL real', () => {
     );
   }
 
-  it('crea cuentas, permisos, catálogo y autorizaciones con auditoría de los agentes', async () => {
+  it('creates accounts, permissions, catalog and authorizations with agent audit records', async () => {
     const result = await seedDemo(handle.db, options);
     const orgs = await handle.db.select().from(schema.organizations);
     expect(orgs).toHaveLength(3);
@@ -184,7 +184,7 @@ describe('seedDemo sobre PostgreSQL real', () => {
       expect(JSON.stringify(credentials)).not.toContain(agent.apiKey);
   });
 
-  it('encuentra las tres alternativas por atributos/plazo y explica el exceso de presupuesto', async () => {
+  it('finds the three alternatives by attributes/deadline and explains the budget excess', async () => {
     const result = await seedDemo(handle.db, options);
     const buyer = result.agents.find((agent) => agent.buyerLevel === 'full_autonomy')!;
     const actor = await resolveAgentKey(handle.db, buyer.apiKey);
@@ -254,25 +254,25 @@ describe('seedDemo sobre PostgreSQL real', () => {
     }
   });
 
-  it('rechaza una segunda ejecución por email duplicado sin modificar ningún dato', async () => {
+  it('rejects a second run due to duplicate email without changing any data', async () => {
     await seedDemo(handle.db, options);
     const before = await snapshot();
     await expect(seedDemo(handle.db, options)).rejects.toThrow(
-      'Ya existe el email owner@taqueria-elsol.demo',
+      'The email owner@taqueria-elsol.demo already exists',
     );
     expect(await snapshot()).toEqual(before);
   });
 
-  it('revierte toda la carga si falla después de crear comprador y proveedor A', async () => {
+  it('rolls back the entire seed if it fails after creating the buyer and supplier A', async () => {
     await registerOwner(handle.db, {
       email: 'owner@greenbox.demo',
-      name: 'Dueño existente',
-      organizationName: 'Empresa existente',
+      name: 'Existing owner',
+      organizationName: 'Existing organization',
       password: options.password,
     });
     const before = await snapshot();
     await expect(seedDemo(handle.db, options)).rejects.toThrow(
-      'Ya existe una cuenta con ese email',
+      'An account with that email already exists',
     );
     expect(await snapshot()).toEqual(before);
   });

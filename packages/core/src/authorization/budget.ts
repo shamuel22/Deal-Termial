@@ -63,13 +63,13 @@ async function authorizationBudget(tx: Executor, authorizationId: string): Promi
       ),
     )
     .where(eq(schema.purchaseAuthorizations.id, authorizationId));
-  if (!row) throw new DomainError('AUTHORIZATION_NOT_FOUND', 'Autorización no encontrada');
+  if (!row) throw new DomainError('AUTHORIZATION_NOT_FOUND', 'Authorization not found');
   return row.budget;
 }
 
 export async function reserveBudget(tx: Tx, args: ReserveArgs): Promise<ReserveResult> {
   const amount = toMoney(args.amount);
-  if (!gt(amount, '0')) throw new Error('El importe a reservar debe ser positivo');
+  if (!gt(amount, '0')) throw new Error('The amount to reserve must be positive');
   const period = utcPeriod(args.now);
 
   // 1. Bloqueos en orden fijo: organización, luego encargo.
@@ -78,7 +78,7 @@ export async function reserveBudget(tx: Tx, args: ReserveArgs): Promise<ReserveR
     .from(schema.organizations)
     .where(eq(schema.organizations.id, args.orgId))
     .for('no key update');
-  if (!org) throw new DomainError('NOT_FOUND', 'Organización no encontrada');
+  if (!org) throw new DomainError('NOT_FOUND', 'Organization not found');
   if (args.authorizationId) {
     await tx
       .select({ id: schema.purchaseAuthorizations.id })
@@ -99,10 +99,14 @@ export async function reserveBudget(tx: Tx, args: ReserveArgs): Promise<ReserveR
     .where(eq(schema.budgetReservations.orderId, args.orderId));
   if (existing && existing.status !== 'released') {
     if (existing.amount !== amount) {
-      throw new DomainError('INVALID_STATE', 'El pedido ya tiene una reserva con otro importe', {
-        reserved: existing.amount,
-        requested: amount,
-      });
+      throw new DomainError(
+        'INVALID_STATE',
+        'The order already has a reservation for a different amount',
+        {
+          reserved: existing.amount,
+          requested: amount,
+        },
+      );
     }
     return {
       reservationId: existing.id,
@@ -124,7 +128,7 @@ export async function reserveBudget(tx: Tx, args: ReserveArgs): Promise<ReserveR
     if (args.enforceLimits && gt(amount, available)) {
       throw new DomainError(
         'BUDGET_EXCEEDED',
-        `El total ${amount} supera el disponible del encargo (${available})`,
+        `Total ${amount} exceeds the budget available to authorize (${available})`,
         {
           total: amount,
           available,
@@ -150,7 +154,7 @@ export async function reserveBudget(tx: Tx, args: ReserveArgs): Promise<ReserveR
     if (args.enforceLimits && gt(amount, available)) {
       throw new DomainError(
         'MONTHLY_LIMIT_EXCEEDED',
-        `El total ${amount} supera el disponible mensual (${available}) de ${period}`,
+        `Total ${amount} exceeds the monthly budget available to authorize (${available}) for ${period}`,
         { total: amount, available, monthlyLimit: org.monthlyLimit, period },
       );
     }
@@ -191,7 +195,7 @@ export async function consumeBudget(tx: Tx, orderId: string, now: Date): Promise
     .from(schema.budgetReservations)
     .where(eq(schema.budgetReservations.orderId, orderId))
     .for('no key update');
-  if (!reservation) throw new Error(`Pedido ${orderId} sin reserva de presupuesto`);
+  if (!reservation) throw new Error(`Order ${orderId} has no budget reservation`);
   if (reservation.status === 'consumed') return;
   // Un pago confirmado después de liberar la reserva se registra igualmente como gasto.
   await tx

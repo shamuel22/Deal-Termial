@@ -27,13 +27,9 @@ export class LoginLimiter {
     const list = this.recent(this.key(email, ip), now);
     if (list.length >= this.maxFailures) {
       const retryAfter = Math.ceil((list[0]! + this.windowMs - now) / 1000);
-      throw new DomainError(
-        'FORBIDDEN',
-        'Demasiados intentos fallidos; espera antes de volver a intentarlo',
-        {
-          retryAfterSeconds: retryAfter,
-        },
-      );
+      throw new DomainError('FORBIDDEN', 'Too many failed attempts; wait before trying again', {
+        retryAfterSeconds: retryAfter,
+      });
     }
   }
 

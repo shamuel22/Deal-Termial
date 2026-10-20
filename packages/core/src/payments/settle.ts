@@ -23,7 +23,7 @@ async function lockAttempt(tx: Tx, attemptId: string): Promise<AttemptRow> {
     .from(schema.paymentAttempts)
     .where(eq(schema.paymentAttempts.id, attemptId))
     .for('no key update');
-  if (!attempt) throw new Error(`Intento de pago ${attemptId} inexistente`);
+  if (!attempt) throw new Error(`Payment attempt ${attemptId} does not exist`);
   return attempt;
 }
 
@@ -99,8 +99,8 @@ export async function failAttempt(
     await notify(tx, {
       orgId: order!.buyerOrgId,
       kind: 'payment.failed',
-      title: status === 'failed' ? 'El pago no se completó' : 'PayPal requiere una acción',
-      body: `${failure.message}. El pedido sigue pendiente de pago; puedes completarlo desde el portal.`,
+      title: status === 'failed' ? 'Payment was not completed' : 'PayPal requires action',
+      body: `${failure.message}. The order still awaits payment; you can complete it through the portal.`,
       resourceType: 'order',
       resourceId: order!.id,
     });
@@ -134,7 +134,7 @@ export async function settleGatewayOrder(
     await markAttempt(db, attemptId, { paypalOrderId: result.id, paypalCaptureId: capture.id });
     return failAttempt(db, attemptId, {
       code: `CAPTURE_${capture.status}`,
-      message: `Captura ${capture.status}`,
+      message: `Capture ${capture.status}`,
     });
   }
 
@@ -144,13 +144,13 @@ export async function settleGatewayOrder(
       .select({ orderId: schema.paymentAttempts.orderId })
       .from(schema.paymentAttempts)
       .where(eq(schema.paymentAttempts.id, attemptId));
-    if (!ref) throw new Error(`Intento de pago ${attemptId} inexistente`);
+    if (!ref) throw new Error(`Payment attempt ${attemptId} does not exist`);
     const [order] = await tx
       .select()
       .from(schema.orders)
       .where(eq(schema.orders.id, ref.orderId))
       .for('no key update');
-    if (!order) throw new Error(`Pedido ${ref.orderId} inexistente`);
+    if (!order) throw new Error(`Order ${ref.orderId} does not exist`);
     const attempt = await lockAttempt(tx, attemptId);
     if (attempt.status === 'completed') return attempt;
 
@@ -162,13 +162,13 @@ export async function settleGatewayOrder(
       result.payeeMerchantId !== attempt.payeeMerchantId
     ) {
       incidents.push(
-        `Discrepancia en el cobro: esperado ${attempt.amount} ${attempt.currency} a ${attempt.payeeMerchantId}, ` +
-          `PayPal informa ${capture.amount} ${capture.currency} a ${result.payeeMerchantId}`,
+        `Payment mismatch: expected ${attempt.amount} ${attempt.currency} to ${attempt.payeeMerchantId}, ` +
+          `PayPal reports ${capture.amount} ${capture.currency} to ${result.payeeMerchantId}`,
       );
     }
     if (order.status !== 'pending_payment' && order.status !== 'paid') {
       incidents.push(
-        `Pago recibido con el pedido en estado ${order.status}; requiere resolución expresa`,
+        `Payment received with order status ${order.status}; explicit resolution is required`,
       );
     }
 
@@ -202,7 +202,7 @@ export async function settleGatewayOrder(
         })
         .where(eq(schema.offers.id, stock.offerId));
     } else if (stock && stock.status !== 'consumed') {
-      incidents.push('La reserva de stock ya no estaba activa; disponibilidad no garantizada');
+      incidents.push('The stock reservation was no longer active; availability is not guaranteed');
     }
 
     await consumeBudget(tx, order.id, now);
@@ -235,8 +235,8 @@ export async function settleGatewayOrder(
       await notify(tx, {
         orgId,
         kind: incidents.length > 0 ? 'payment.completed_with_incident' : 'payment.completed',
-        title: incidents.length > 0 ? 'Pago confirmado con incidencia' : 'Pago confirmado',
-        body: `PayPal confirmó ${capture.amount} ${capture.currency} (captura ${capture.id}).${incidents.length > 0 ? ` ${incidents.join(' · ')}` : ''}`,
+        title: incidents.length > 0 ? 'Payment confirmed with an incident' : 'Payment confirmed',
+        body: `PayPal confirmed ${capture.amount} ${capture.currency} (capture ${capture.id}).${incidents.length > 0 ? ` ${incidents.join(' · ')}` : ''}`,
         resourceType: 'order',
         resourceId: order.id,
       });

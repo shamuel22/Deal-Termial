@@ -18,7 +18,7 @@ const UNIT_PRICE_PATTERN = /^\d{1,10}(\.\d{1,4})?$/;
 export function dec(value: DecimalInput): Decimal {
   if (typeof value === 'number' && !Number.isInteger(value)) {
     // Los floats introducen error binario: solo se aceptan enteros como number.
-    throw new TypeError(`Importe no entero recibido como number: ${value}. Usa string decimal.`);
+    throw new TypeError(`Non-integer amount received as a number: ${value}. Use a decimal string.`);
   }
   return new D(value);
 }
@@ -52,7 +52,7 @@ export function subMoney(a: DecimalInput, b: DecimalInput): string {
 /** Importe de línea: cantidad × precio unitario, redondeado una sola vez al final. */
 export function lineTotal(quantity: number, unitPrice: DecimalInput): string {
   if (!Number.isInteger(quantity) || quantity < 0) {
-    throw new RangeError(`Cantidad inválida: ${quantity}`);
+    throw new RangeError(`Invalid quantity: ${quantity}`);
   }
   return toMoney(dec(unitPrice).times(quantity));
 }

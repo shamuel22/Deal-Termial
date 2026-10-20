@@ -50,7 +50,7 @@ export class McpController {
       .set('Allow', 'POST')
       .json({
         jsonrpc: '2.0',
-        error: { code: -32000, message: 'Método no permitido: usa POST' },
+        error: { code: -32000, message: 'Method not allowed: use POST' },
         id: null,
       });
   }

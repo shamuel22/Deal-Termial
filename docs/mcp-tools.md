@@ -1,281 +1,281 @@
-# Catálogo de herramientas MCP
+# MCP tool catalog
 
-> Generado con `pnpm docs:mcp` desde `apps/server/src/mcp/tools.ts`. No editar a mano.
+> Generated with `pnpm docs:mcp` from `apps/server/src/mcp/tools.ts`. Do not edit manually.
 
-## Comunes
+## Common
 
-### `get_authorization_status` — Estado de mis permisos
+### `get_authorization_status` — Check my permissions
 
-Devuelve tu nivel de acceso (search_only, negotiate, full_autonomy), facultades de venta, autorizaciones de compra con su presupuesto disponible y si existe autorización financiera. Úsala primero para saber qué puedes hacer. No incluye secretos.
+Get your access level (search_only, negotiate, full_autonomy), seller permissions, purchase authorizations with their available budgets, and whether PayPal consent exists. Call this first to learn what you can do. No secrets are included.
 
-Solo lectura: sí
+Read only: yes
 
-### `request_authorization_change` — Solicitar cambio de permisos
+### `request_authorization_change` — Request a permission change
 
-Propone al dueño una autorización nueva, una ampliación o un cambio de nivel. No concede nada: queda pendiente de que el dueño la apruebe en el portal.
+Propose a new authorization, an increase or an access level change to the owner. This grants nothing: the proposal awaits owner approval in the portal.
 
-| Parámetro         | Obligatorio | Descripción                                                                                                                                                           |
-| ----------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`            | sí          |                                                                                                                                                                       |
-| `authorizationId` | no          | ID (UUID) de la autorización a ampliar                                                                                                                                |
-| `buyerLevel`      | no          |                                                                                                                                                                       |
-| `terms`           | no          | Condiciones completas propuestas: mandate, category, requiredAttributes, quantityMin, quantityMax, budgetTotal, deliveryAddress, deliverBy, expiresAt (ISO con zona). |
-| `reason`          | no          |                                                                                                                                                                       |
+| Parameter         | Required | Description                                                                                                                                                       |
+| ----------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`            | yes      |                                                                                                                                                                   |
+| `authorizationId` | no       | Authorization to extend ID (UUID)                                                                                                                                 |
+| `buyerLevel`      | no       |                                                                                                                                                                   |
+| `terms`           | no       | Complete proposed terms: mandate, category, requiredAttributes, quantityMin, quantityMax, budgetTotal, deliveryAddress, deliverBy, expiresAt (ISO with timezone). |
+| `reason`          | no       |                                                                                                                                                                   |
 
-Solo lectura: no
+Read only: no
 
-### `get_quotes` — Ver cotizaciones
+### `get_quotes` — View quotes
 
-Historial de versiones de una negociación (negotiationId) o de todas las negociaciones de una necesidad (requestId), con importes, vigencia y comprobación contra tu autorización.
+Get the version history for a negotiation (negotiationId) or all negotiations for a purchase request (requestId), including amounts, validity and checks against your purchase authorization.
 
-| Parámetro       | Obligatorio | Descripción                 |
-| --------------- | ----------- | --------------------------- |
-| `negotiationId` | no          | ID (UUID) de la negociación |
-| `requestId`     | no          | ID (UUID) de la necesidad   |
+| Parameter       | Required | Description                |
+| --------------- | -------- | -------------------------- |
+| `negotiationId` | no       | Negotiation ID (UUID)      |
+| `requestId`     | no       | Purchase request ID (UUID) |
 
-Solo lectura: sí
+Read only: yes
 
-### `get_order` — Consultar pedido
+### `get_order` — Get an order
 
-Estado comercial, financiero y de entrega de un pedido. Sin orderId, lista tus pedidos.
+Get an order's commercial, payment and delivery status. Without orderId, list your orders.
 
-| Parámetro | Obligatorio | Descripción            |
-| --------- | ----------- | ---------------------- |
-| `orderId` | no          | ID (UUID) de el pedido |
-| `side`    | no          |                        |
+| Parameter | Required | Description     |
+| --------- | -------- | --------------- |
+| `orderId` | no       | Order ID (UUID) |
+| `side`    | no       |                 |
 
-Solo lectura: sí
+Read only: yes
 
-### `list_refunds` — Devoluciones
+### `list_refunds` — Refunds
 
-Con orderId: devoluciones de ese pedido. Sin orderId: devoluciones pendientes de tu decisión como proveedor.
+With orderId: list refunds for that order. Without orderId: list refunds awaiting your decision as supplier.
 
-| Parámetro | Obligatorio | Descripción            |
-| --------- | ----------- | ---------------------- |
-| `orderId` | no          | ID (UUID) de el pedido |
+| Parameter | Required | Description     |
+| --------- | -------- | --------------- |
+| `orderId` | no       | Order ID (UUID) |
 
-Solo lectura: sí
+Read only: yes
 
-## Comprador
+## Buyer
 
-### `create_request` — Guardar necesidad de compra
+### `create_request` — Save a purchase request
 
-Guarda una necesidad privada sin contactar proveedores (permitido en todos los niveles). Si tienes una autorización de compra, pasa solo authorizationId: los criterios se toman de ella y el máximo es tu presupuesto disponible.
+Save a private purchase request without contacting suppliers (allowed at all access levels). If you have a purchase authorization, pass only authorizationId: its terms provide the criteria and your available budget sets the maximum.
 
-| Parámetro         | Obligatorio | Descripción                                |
-| ----------------- | ----------- | ------------------------------------------ |
-| `authorizationId` | no          | ID (UUID) de tu autorización de compra     |
-| `criteria`        | no          | Criterios, solo si no usas authorizationId |
-| `preferences`     | no          |                                            |
+| Parameter         | Required | Description                                         |
+| ----------------- | -------- | --------------------------------------------------- |
+| `authorizationId` | no       | Your purchase authorization ID (UUID)               |
+| `criteria`        | no       | Criteria, only if you are not using authorizationId |
+| `preferences`     | no       |                                                     |
 
-Solo lectura: no
+Read only: no
 
-### `find_matches` — Buscar y comparar ofertas
+### `find_matches` — Search and compare offers
 
-Busca ofertas publicadas compatibles y las compara con total (incluye transporte e impuestos), entrega, stock y atributos sin confirmar. Pasa requestId para usar una necesidad guardada, o criteria. Una oferta por encima del presupuesto aparece con budget.withinBudget=false: se puede negociar.
+Search compatible published offers and compare totals (including shipping and tax), delivery, stock and unconfirmed attributes. Pass requestId to use a saved purchase request, or pass criteria. An offer over budget appears with budget.withinBudget=false: you can negotiate it.
 
-| Parámetro             | Obligatorio | Descripción                                     |
-| --------------------- | ----------- | ----------------------------------------------- |
-| `requestId`           | no          | ID (UUID) de una necesidad guardada             |
-| `criteria`            | no          |                                                 |
-| `includeIncompatible` | no          | Incluir también las incompatibles con su motivo |
+| Parameter             | Required | Description                                         |
+| --------------------- | -------- | --------------------------------------------------- |
+| `requestId`           | no       | Saved purchase request ID (UUID)                    |
+| `criteria`            | no       |                                                     |
+| `includeIncompatible` | no       | Also include incompatible offers with their reasons |
 
-Solo lectura: sí
+Read only: yes
 
-### `get_request` — Consultar una necesidad
+### `get_request` — Get a purchase request
 
-Consulta una de tus necesidades guardadas. Sin requestId, lista todas las tuyas.
+Get one of your saved purchase requests. Without requestId, list all your requests.
 
-| Parámetro   | Obligatorio | Descripción               |
-| ----------- | ----------- | ------------------------- |
-| `requestId` | no          | ID (UUID) de la necesidad |
+| Parameter   | Required | Description                |
+| ----------- | -------- | -------------------------- |
+| `requestId` | no       | Purchase request ID (UUID) |
 
-Solo lectura: sí
+Read only: yes
 
-### `cancel_request` — Cancelar una necesidad
+### `cancel_request` — Cancel a purchase request
 
-Cancela una necesidad abierta.
+Cancel an open purchase request.
 
-| Parámetro   | Obligatorio | Descripción               |
-| ----------- | ----------- | ------------------------- |
-| `requestId` | sí          | ID (UUID) de la necesidad |
+| Parameter   | Required | Description                |
+| ----------- | -------- | -------------------------- |
+| `requestId` | yes      | Purchase request ID (UUID) |
 
-Solo lectura: no
+Read only: no
 
-### `request_quote` — Pedir cotización
+### `request_quote` — Request a quote
 
-Pide cotización de una oferta para una necesidad tuya (nivel negotiate o full_autonomy). El proveedor responde con sus reglas aunque su agente no esté conectado; si no puede, queda pendiente de su respuesta. Repetir la llamada devuelve la misma negociación.
+Request a quote for an offer using your own purchase request (negotiate or full_autonomy access level). The supplier responds using its rules even if its agent is disconnected; if it cannot, the negotiation awaits the supplier's response. Repeating the call returns the same negotiation.
 
-| Parámetro   | Obligatorio | Descripción               |
-| ----------- | ----------- | ------------------------- |
-| `requestId` | sí          | ID (UUID) de tu necesidad |
-| `offerId`   | sí          | ID (UUID) de la oferta    |
-| `message`   | no          |                           |
+| Parameter   | Required | Description                     |
+| ----------- | -------- | ------------------------------- |
+| `requestId` | yes      | Your purchase request ID (UUID) |
+| `offerId`   | yes      | Offer ID (UUID)                 |
+| `message`   | no       |                                 |
 
-Solo lectura: no
+Read only: no
 
-### `counter_quote` — Contraofertar
+### `counter_quote` — Make a counterproposal
 
-Propone cambios sobre la última cotización del proveedor: precio unitario, cantidad, bonificar transporte o fecha. El proveedor acepta, contraoferta con lo máximo que permiten sus reglas o deja la negociación pendiente. Revisa authorizationCheck en la respuesta para saber si ya cabe en tu autorización.
+Propose changes to the supplier's latest quote: unit price, quantity, waived shipping or date. The supplier accepts, counters with the best terms its rules permit, or leaves the negotiation pending. Check authorizationCheck in the response to see whether the terms now fit your purchase authorization.
 
-| Parámetro       | Obligatorio | Descripción                                                   |
-| --------------- | ----------- | ------------------------------------------------------------- |
-| `negotiationId` | sí          | ID (UUID) de la negociación                                   |
-| `unitPrice`     | no          | Precio unitario en USD con hasta 4 decimales, p. ej. "0.2200" |
-| `quantity`      | no          |                                                               |
-| `waiveShipping` | no          |                                                               |
-| `deliverBy`     | no          | Nueva fecha de entrega (AAAA-MM-DD)                           |
-| `message`       | no          |                                                               |
+| Parameter       | Required | Description                                                  |
+| --------------- | -------- | ------------------------------------------------------------ |
+| `negotiationId` | yes      | Negotiation ID (UUID)                                        |
+| `unitPrice`     | no       | Unit price in USD with up to 4 decimal places, e.g. "0.2200" |
+| `quantity`      | no       |                                                              |
+| `waiveShipping` | no       |                                                              |
+| `deliverBy`     | no       | New delivery date (YYYY-MM-DD)                               |
+| `message`       | no       |                                                              |
 
-Solo lectura: no
+Read only: no
 
-### `submit_for_review` — Enviar propuesta final al dueño
+### `submit_for_review` — Submit the final proposal to the owner
 
-Nivel negotiate: deja la última cotización como propuesta final para que el dueño la revise, acepte y pague en el portal. No crea compromisos.
+negotiate access level: submit the latest quote as the final proposal for the owner to review, accept and pay in the portal. This creates no commitments.
 
-| Parámetro       | Obligatorio | Descripción                 |
-| --------------- | ----------- | --------------------------- |
-| `negotiationId` | sí          | ID (UUID) de la negociación |
-| `message`       | no          |                             |
+| Parameter       | Required | Description           |
+| --------------- | -------- | --------------------- |
+| `negotiationId` | yes      | Negotiation ID (UUID) |
+| `message`       | no       |                       |
 
-Solo lectura: no
+Read only: no
 
-### `accept_quote` — Aceptar cotización
+### `accept_quote` — Accept a quote
 
-Nivel full_autonomy: acepta la cotización indicada y crea el pedido, reservando stock y presupuesto. El servidor verifica tu nivel, tu autorización y todas las condiciones. Repetirla devuelve el mismo pedido.
+full_autonomy access level: accept the specified quote and create the order, reserving stock and budget. The server checks your access level, purchase authorization and all terms. Repeating the call returns the same order.
 
-| Parámetro        | Obligatorio | Descripción                                                                       |
-| ---------------- | ----------- | --------------------------------------------------------------------------------- |
-| `negotiationId`  | sí          | ID (UUID) de la negociación                                                       |
-| `quoteId`        | sí          | ID (UUID) de la versión a aceptar                                                 |
-| `idempotencyKey` | no          | Clave opcional: repetir la llamada con la misma clave devuelve el mismo resultado |
+| Parameter        | Required | Description                                                                |
+| ---------------- | -------- | -------------------------------------------------------------------------- |
+| `negotiationId`  | yes      | Negotiation ID (UUID)                                                      |
+| `quoteId`        | yes      | Quote version to accept ID (UUID)                                          |
+| `idempotencyKey` | no       | Optional key: repeating the call with the same key returns the same result |
 
-Solo lectura: no
+Read only: no
 
-### `execute_purchase` — Ejecutar compra
+### `execute_purchase` — Execute a purchase
 
-Nivel full_autonomy: acepta (o recupera) el pedido y ejecuta el pago autorizado. Si no hay autorización financiera para ese proveedor, el pedido queda aceptado y pendiente de pago del dueño, que es notificado (payment.status = owner_action_required). Nunca cobra dos veces.
+full_autonomy access level: accept (or retrieve) the order and execute the authorized payment. If no PayPal consent covers that supplier, the order remains accepted and awaits payment by the owner, who is notified (payment.status = owner_action_required). Never charges twice.
 
-| Parámetro        | Obligatorio | Descripción                                                                       |
-| ---------------- | ----------- | --------------------------------------------------------------------------------- |
-| `orderId`        | no          | ID (UUID) de un pedido ya aceptado                                                |
-| `negotiationId`  | no          | ID (UUID) de la negociación                                                       |
-| `quoteId`        | no          | ID (UUID) de la versión a aceptar                                                 |
-| `idempotencyKey` | no          | Clave opcional: repetir la llamada con la misma clave devuelve el mismo resultado |
+| Parameter        | Required | Description                                                                |
+| ---------------- | -------- | -------------------------------------------------------------------------- |
+| `orderId`        | no       | Previously accepted order ID (UUID)                                        |
+| `negotiationId`  | no       | Negotiation ID (UUID)                                                      |
+| `quoteId`        | no       | Quote version to accept ID (UUID)                                          |
+| `idempotencyKey` | no       | Optional key: repeating the call with the same key returns the same result |
 
-Solo lectura: no
+Read only: no
 
-### `cancel_order` — Cancelar pedido
+### `cancel_order` — Cancel an order
 
-Cancela un pedido antes del pago y libera stock y presupuesto.
+Cancel an order before payment and release stock and budget.
 
-| Parámetro        | Obligatorio | Descripción                                                                       |
-| ---------------- | ----------- | --------------------------------------------------------------------------------- |
-| `orderId`        | sí          | ID (UUID) de el pedido                                                            |
-| `reason`         | no          |                                                                                   |
-| `idempotencyKey` | no          | Clave opcional: repetir la llamada con la misma clave devuelve el mismo resultado |
+| Parameter        | Required | Description                                                                |
+| ---------------- | -------- | -------------------------------------------------------------------------- |
+| `orderId`        | yes      | Order ID (UUID)                                                            |
+| `reason`         | no       |                                                                            |
+| `idempotencyKey` | no       | Optional key: repeating the call with the same key returns the same result |
 
-Solo lectura: no
+Read only: no
 
-### `request_refund` — Solicitar devolución
+### `request_refund` — Request a refund
 
-Solicita revisión de una devolución sobre un pedido pagado. El proveedor decide; un reembolso no devuelve presupuesto delegado.
+Request a refund review for a paid order. The supplier decides; a refund does not restore delegated budget.
 
-| Parámetro        | Obligatorio | Descripción                                                                       |
-| ---------------- | ----------- | --------------------------------------------------------------------------------- |
-| `orderId`        | sí          | ID (UUID) de el pedido                                                            |
-| `amount`         | no          | Importe en USD como texto decimal, p. ej. "80.00"                                 |
-| `reason`         | sí          |                                                                                   |
-| `idempotencyKey` | no          | Clave opcional: repetir la llamada con la misma clave devuelve el mismo resultado |
+| Parameter        | Required | Description                                                                |
+| ---------------- | -------- | -------------------------------------------------------------------------- |
+| `orderId`        | yes      | Order ID (UUID)                                                            |
+| `amount`         | no       | Amount in USD as a decimal string, e.g. "80.00"                            |
+| `reason`         | yes      |                                                                            |
+| `idempotencyKey` | no       | Optional key: repeating the call with the same key returns the same result |
 
-Solo lectura: no
+Read only: no
 
-## Proveedor
+## Supplier
 
-### `publish_offer` — Publicar oferta
+### `publish_offer` — Publish an offer
 
-Facultad publish_offers: crea un producto con atributos normalizados y su oferta (tramos de precio por cantidad, stock, regiones, plazos y reglas privadas de negociación). Las reglas nunca se muestran a compradores.
+publish_offers permission: create a product with normalized attributes and its offer (quantity price tiers, stock, regions, lead times and private negotiation rules). The rules are never shown to buyers.
 
-| Parámetro | Obligatorio | Descripción                                                                                                                                                                                                                                                                                                                                |
-| --------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `product` | sí          | Producto; attributes: material, capacity_oz, hot_food_safe, microwave_safe?, has_lid, compartments?, pack_size                                                                                                                                                                                                                             |
-| `offer`   | sí          | Oferta: status ("draft"\|"active"), stockAvailable, minOrderQty, maxOrderQty?, shipRegions ["TX",...], leadTimeDays, shippingFlat "5.00", taxRate "0.0825", priceTiers [{minQty, unitPrice}], negotiationRules {autoRespond, maxDiscount "0.10", floorUnitPrice, minQtyForDiscount, minLeadTimeDays, canWaiveShipping, quoteValidityHours} |
+| Parameter | Required | Description                                                                                                                                                                                                                                                                                                                               |
+| --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `product` | yes      | Product; attributes: material, capacity_oz, hot_food_safe, microwave_safe?, has_lid, compartments?, pack_size                                                                                                                                                                                                                             |
+| `offer`   | yes      | Offer: status ("draft"\|"active"), stockAvailable, minOrderQty, maxOrderQty?, shipRegions ["TX",...], leadTimeDays, shippingFlat "5.00", taxRate "0.0825", priceTiers [{minQty, unitPrice}], negotiationRules {autoRespond, maxDiscount "0.10", floorUnitPrice, minQtyForDiscount, minLeadTimeDays, canWaiveShipping, quoteValidityHours} |
 
-Solo lectura: no
+Read only: no
 
-### `update_offer` — Actualizar oferta
+### `update_offer` — Update an offer
 
-Facultad publish_offers: reemplaza las condiciones de una oferta propia (nueva versión) o, con solo status, la activa, pausa o archiva.
+publish_offers permission: replace the terms of your own offer (new version), or pass only status to activate, pause or archive it.
 
-| Parámetro    | Obligatorio | Descripción                                  |
-| ------------ | ----------- | -------------------------------------------- |
-| `offerId`    | sí          | ID (UUID) de la oferta                       |
-| `status`     | no          |                                              |
-| `conditions` | no          | Condiciones completas, como en publish_offer |
+| Parameter    | Required | Description                         |
+| ------------ | -------- | ----------------------------------- |
+| `offerId`    | yes      | Offer ID (UUID)                     |
+| `status`     | no       |                                     |
+| `conditions` | no       | Complete terms, as in publish_offer |
 
-Solo lectura: no
+Read only: no
 
-### `list_my_offers` — Mis ofertas
+### `list_my_offers` — List my offers
 
-Facultad publish_offers: ofertas propias con tramos y reglas privadas.
+publish_offers permission: list your own offers with price tiers and private rules.
 
-Solo lectura: sí
+Read only: yes
 
-### `list_pending_negotiations` — Negociaciones pendientes
+### `list_pending_negotiations` — List pending negotiations
 
-Negociaciones de tus ofertas que esperan tu respuesta (o todas con status "all"). Incluye la traza de reglas aplicadas.
+List negotiations for your offers awaiting your response (or all negotiations with status "all"). Includes the trace of applied rules.
 
-| Parámetro | Obligatorio | Descripción                                                           |
-| --------- | ----------- | --------------------------------------------------------------------- |
-| `status`  | no          | awaiting_supplier (por defecto), awaiting_buyer, agreed, closed o all |
+| Parameter | Required | Description                                                        |
+| --------- | -------- | ------------------------------------------------------------------ |
+| `status`  | no       | awaiting_supplier (default), awaiting_buyer, agreed, closed or all |
 
-Solo lectura: sí
+Read only: yes
 
-### `submit_quote` — Enviar cotización
+### `submit_quote` — Submit a quote
 
-Facultad submit_quotes: cotiza una negociación pendiente. Un agente no puede conceder fuera de las reglas de su oferta (precio mínimo, plazo mínimo, transporte).
+submit_quotes permission: quote a pending negotiation. An agent cannot grant terms outside its offer's rules (minimum price, minimum lead time, shipping).
 
-| Parámetro       | Obligatorio | Descripción                                                   |
-| --------------- | ----------- | ------------------------------------------------------------- |
-| `negotiationId` | sí          | ID (UUID) de la negociación                                   |
-| `quantity`      | sí          |                                                               |
-| `unitPrice`     | sí          | Precio unitario en USD con hasta 4 decimales, p. ej. "0.2200" |
-| `waiveShipping` | no          |                                                               |
-| `deliverBy`     | sí          | Fecha de entrega comprometida (AAAA-MM-DD)                    |
-| `message`       | no          |                                                               |
+| Parameter       | Required | Description                                                  |
+| --------------- | -------- | ------------------------------------------------------------ |
+| `negotiationId` | yes      | Negotiation ID (UUID)                                        |
+| `quantity`      | yes      |                                                              |
+| `unitPrice`     | yes      | Unit price in USD with up to 4 decimal places, e.g. "0.2200" |
+| `waiveShipping` | no       |                                                              |
+| `deliverBy`     | yes      | Committed delivery date (YYYY-MM-DD)                         |
+| `message`       | no       |                                                              |
 
-Solo lectura: no
+Read only: no
 
-### `respond_to_counterquote` — Responder contrapropuesta
+### `respond_to_counterquote` — Respond to a counterproposal
 
-Responde a la contrapropuesta del comprador: accept (facultad accept_terms, dentro de tus reglas), reject, o counter con nuevas condiciones (submit_quotes).
+Respond to the buyer's counterproposal: accept (accept_terms permission, within your rules), reject, or counter with new terms (submit_quotes).
 
-| Parámetro       | Obligatorio | Descripción                 |
-| --------------- | ----------- | --------------------------- |
-| `negotiationId` | sí          | ID (UUID) de la negociación |
-| `action`        | sí          |                             |
-| `message`       | no          |                             |
-| `terms`         | no          | Solo para counter           |
+| Parameter       | Required | Description           |
+| --------------- | -------- | --------------------- |
+| `negotiationId` | yes      | Negotiation ID (UUID) |
+| `action`        | yes      |                       |
+| `message`       | no       |                       |
+| `terms`         | no       | Only for counter      |
 
-Solo lectura: no
+Read only: no
 
-### `approve_refund` — Aprobar devolución
+### `approve_refund` — Approve a refund
 
-Facultad approve_refunds: autoriza la devolución y la plataforma la ejecuta en PayPal en tu nombre.
+approve_refunds permission: authorize the refund and the platform executes it in PayPal on your behalf.
 
-| Parámetro  | Obligatorio | Descripción                |
-| ---------- | ----------- | -------------------------- |
-| `refundId` | sí          | ID (UUID) de la devolución |
+| Parameter  | Required | Description      |
+| ---------- | -------- | ---------------- |
+| `refundId` | yes      | Refund ID (UUID) |
 
-Solo lectura: no
+Read only: no
 
-### `reject_refund` — Rechazar devolución
+### `reject_refund` — Reject a refund
 
-Facultad approve_refunds: rechaza la solicitud indicando el motivo.
+approve_refunds permission: reject the request and provide a reason.
 
-| Parámetro  | Obligatorio | Descripción                |
-| ---------- | ----------- | -------------------------- |
-| `refundId` | sí          | ID (UUID) de la devolución |
-| `reason`   | sí          |                            |
+| Parameter  | Required | Description      |
+| ---------- | -------- | ---------------- |
+| `refundId` | yes      | Refund ID (UUID) |
+| `reason`   | yes      |                  |
 
-Solo lectura: no
+Read only: no

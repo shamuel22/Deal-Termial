@@ -36,11 +36,11 @@ export function requireAdmin(actor: Actor): UserActor {
   if (actor.kind !== 'user') {
     throw new DomainError(
       'FORBIDDEN',
-      'Solo una sesión de dueño o administrador puede realizar esta operación',
+      'Only an owner or administrator session can perform this operation',
     );
   }
   if (actor.role !== 'owner' && actor.role !== 'admin') {
-    throw new DomainError('FORBIDDEN', 'Se requiere rol de dueño o administrador');
+    throw new DomainError('FORBIDDEN', 'The owner or administrator role is required');
   }
   return actor;
 }
@@ -57,7 +57,7 @@ export function requireSellerScope(actor: Actor, scope: SellerScope): Actor {
   if (!actor.grant.sellerScopes.includes(scope)) {
     throw new DomainError(
       'SELLER_SCOPE_MISSING',
-      `El agente no tiene la facultad de venta "${scope}"`,
+      `The agent lacks the "${scope}" seller permission`,
       {
         requiredScope: scope,
         currentScopes: actor.grant.sellerScopes,
@@ -69,7 +69,7 @@ export function requireSellerScope(actor: Actor, scope: SellerScope): Actor {
 
 export function requireUser(actor: Actor): UserActor {
   if (actor.kind !== 'user') {
-    throw new DomainError('FORBIDDEN', 'Esta operación requiere una sesión del portal');
+    throw new DomainError('FORBIDDEN', 'This operation requires a portal session');
   }
   return actor;
 }

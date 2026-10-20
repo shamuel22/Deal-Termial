@@ -28,7 +28,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
       res.status(400).json({
         error: {
           code: 'VALIDATION_FAILED',
-          message: 'Datos de entrada inválidos',
+          message: 'Invalid input data',
           hint: ERROR_CATALOG.VALIDATION_FAILED.hint,
           details: {
             issues: exception.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
@@ -49,6 +49,6 @@ export class DomainExceptionFilter implements ExceptionFilter {
     }
 
     this.logger.error(exception instanceof Error ? exception.stack : String(exception));
-    res.status(500).json({ error: { code: 'INTERNAL', message: 'Error interno' } });
+    res.status(500).json({ error: { code: 'INTERNAL', message: 'Internal error' } });
   }
 }

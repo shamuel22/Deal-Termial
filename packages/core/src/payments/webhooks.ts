@@ -99,7 +99,7 @@ export async function processWebhook(
           status: 'revoked',
           revokedAt: new Date(),
           updatedAt: new Date(),
-          lastError: 'Token eliminado en PayPal',
+          lastError: 'Token deleted in PayPal',
         })
         .where(eq(schema.paymentConnections.paymentTokenId, resource.id))
         .returning({ orgId: schema.paymentConnections.orgId });

@@ -39,8 +39,8 @@ If an action is above the agent's level, the response is `LEVEL_INSUFFICIENT` wi
 {
   "error": {
     "code": "LEVEL_INSUFFICIENT",
-    "message": "La acción \"request_quote\" requiere nivel negotiate",
-    "hint": "El nivel del agente no permite esta acción. El dueño puede cambiarlo desde el portal.",
+    "message": "Action \"request_quote\" requires access level negotiate",
+    "hint": "Ask the owner to change the agent's access level in the portal; its current level does not allow this action.",
     "details": {
       "action": "request_quote",
       "requiredLevel": "negotiate",
@@ -50,7 +50,7 @@ If an action is above the agent's level, the response is `LEVEL_INSUFFICIENT` wi
 }
 ```
 
-> **Note:** Server messages and hints are currently written in Spanish. The `code` values are stable identifiers; build your agent's logic on them, not on the text.
+> **Note:** The `code` values are stable identifiers; build your agent's logic on them, not on the text.
 
 ## Selling is separate
 

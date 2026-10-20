@@ -26,7 +26,7 @@ import { DB } from '../database.module.js';
 import { ApiZodBody } from '../http/zod.js';
 import { Auth, CurrentAgent, CurrentUser } from '../auth/auth.guard.js';
 
-@ApiTags('portal: catálogo')
+@ApiTags('portal: catalog')
 @ApiCookieAuth()
 @Controller('orgs/:orgId')
 @Auth('org-user')
@@ -39,7 +39,7 @@ export class CatalogController {
   }
 
   @Post('products')
-  @ApiOperation({ summary: 'Crea un producto con atributos normalizados' })
+  @ApiOperation({ summary: 'Create a product with normalized attributes' })
   @ApiZodBody(productInput)
   createProduct(@CurrentUser() actor: UserActor, @Body() raw: ProductInput) {
     return createProduct(this.handle.db, actor, raw);
@@ -51,7 +51,7 @@ export class CatalogController {
   }
 
   @Put('products/:productId')
-  @ApiOperation({ summary: 'Reemplaza los datos de un producto propio' })
+  @ApiOperation({ summary: 'Replace the details of your own product' })
   @ApiZodBody(productInput)
   updateProduct(
     @CurrentUser() actor: UserActor,
@@ -67,7 +67,7 @@ export class CatalogController {
   }
 
   @Post('offers')
-  @ApiOperation({ summary: 'Crea una oferta con tramos y reglas privadas de negociación' })
+  @ApiOperation({ summary: 'Create an offer with price tiers and private negotiation rules' })
   @ApiZodBody(offerInput)
   createOffer(@CurrentUser() actor: UserActor, @Body() raw: OfferInput) {
     return createOffer(this.handle.db, actor, raw);
@@ -79,7 +79,7 @@ export class CatalogController {
   }
 
   @Put('offers/:offerId')
-  @ApiOperation({ summary: 'Reemplaza condiciones y crea una nueva versión de la oferta' })
+  @ApiOperation({ summary: 'Replace terms and create a new offer version' })
   @ApiZodBody(updateOfferInput)
   updateOffer(
     @CurrentUser() actor: UserActor,
@@ -90,7 +90,7 @@ export class CatalogController {
   }
 
   @Put('offers/:offerId/status')
-  @ApiOperation({ summary: 'Activa, pausa o archiva una oferta propia' })
+  @ApiOperation({ summary: 'Activate, pause or archive your own offer' })
   @ApiZodBody(offerStatusInput)
   setStatus(
     @CurrentUser() actor: UserActor,
@@ -101,7 +101,7 @@ export class CatalogController {
   }
 }
 
-@ApiTags('agente')
+@ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent')
 @Auth('agent')
@@ -114,7 +114,7 @@ export class AgentCatalogController {
   }
 
   @Post('products')
-  @ApiOperation({ summary: 'Crea un producto con atributos normalizados' })
+  @ApiOperation({ summary: 'Create a product with normalized attributes' })
   @ApiZodBody(productInput)
   createProduct(@CurrentAgent() actor: AgentActor, @Body() raw: ProductInput) {
     return createProduct(this.handle.db, actor, raw);
@@ -126,7 +126,7 @@ export class AgentCatalogController {
   }
 
   @Put('products/:productId')
-  @ApiOperation({ summary: 'Reemplaza los datos de un producto propio' })
+  @ApiOperation({ summary: 'Replace the details of your own product' })
   @ApiZodBody(productInput)
   updateProduct(
     @CurrentAgent() actor: AgentActor,
@@ -142,7 +142,7 @@ export class AgentCatalogController {
   }
 
   @Post('offers')
-  @ApiOperation({ summary: 'Crea una oferta con tramos y reglas privadas de negociación' })
+  @ApiOperation({ summary: 'Create an offer with price tiers and private negotiation rules' })
   @ApiZodBody(offerInput)
   createOffer(@CurrentAgent() actor: AgentActor, @Body() raw: OfferInput) {
     return createOffer(this.handle.db, actor, raw);
@@ -154,7 +154,7 @@ export class AgentCatalogController {
   }
 
   @Put('offers/:offerId')
-  @ApiOperation({ summary: 'Reemplaza condiciones y crea una nueva versión de la oferta' })
+  @ApiOperation({ summary: 'Replace terms and create a new offer version' })
   @ApiZodBody(updateOfferInput)
   updateOffer(
     @CurrentAgent() actor: AgentActor,
@@ -165,7 +165,7 @@ export class AgentCatalogController {
   }
 
   @Put('offers/:offerId/status')
-  @ApiOperation({ summary: 'Activa, pausa o archiva una oferta propia' })
+  @ApiOperation({ summary: 'Activate, pause or archive your own offer' })
   @ApiZodBody(offerStatusInput)
   setStatus(
     @CurrentAgent() actor: AgentActor,

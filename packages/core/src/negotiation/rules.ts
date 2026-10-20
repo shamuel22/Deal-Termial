@@ -76,14 +76,13 @@ export function feasibilityIssues(
 ): string[] {
   const issues: string[] = [];
   if (quantity < offer.minOrderQty)
-    issues.push(`Cantidad ${quantity} menor que el pedido mínimo ${offer.minOrderQty}`);
+    issues.push(`Quantity ${quantity} is below the minimum order quantity ${offer.minOrderQty}`);
   if (offer.maxOrderQty !== null && quantity > offer.maxOrderQty) {
-    issues.push(`Cantidad ${quantity} mayor que el pedido máximo ${offer.maxOrderQty}`);
+    issues.push(`Quantity ${quantity} exceeds the maximum order quantity ${offer.maxOrderQty}`);
   }
-  if (quantity > offer.availableStock)
-    issues.push(`Existencias insuficientes (${offer.availableStock})`);
-  if (!offer.shipRegions.includes(deliveryState)) issues.push(`No se entrega en ${deliveryState}`);
-  if (!pickTier(offer.tiers, quantity)) issues.push('Ningún tramo de precio aplica a esa cantidad');
+  if (quantity > offer.availableStock) issues.push(`Insufficient stock (${offer.availableStock})`);
+  if (!offer.shipRegions.includes(deliveryState)) issues.push(`No delivery to ${deliveryState}`);
+  if (!pickTier(offer.tiers, quantity)) issues.push('No price tier applies to this quantity');
   return issues;
 }
 
@@ -99,7 +98,7 @@ function resolve(
     unitPrice: p.unitPrice,
     waiveShipping: p.waiveShipping,
   });
-  if (!pricing) throw new Error('Sin tramo aplicable; debió detectarse antes');
+  if (!pricing) throw new Error('No applicable price tier; this should have been detected earlier');
   return {
     quantity: p.quantity,
     unitPrice: pricing.unitPrice,
@@ -121,7 +120,7 @@ export function initialQuote(
 ): RuleOutcome {
   const trace: string[] = [];
   const issues = feasibilityIssues(offer, request.quantity, request.deliveryState);
-  if (!rules.autoRespond) issues.unshift('El proveedor revisa manualmente cada solicitud');
+  if (!rules.autoRespond) issues.unshift('The supplier reviews each request manually');
   if (issues.length > 0) return { kind: 'escalate', reasons: issues, trace };
 
   const earliest = addDaysIso(now, rules.minLeadTimeDays);
@@ -132,7 +131,7 @@ export function initialQuote(
         ? earliest
         : request.deliverBy
       : standard;
-  trace.push(`Tramo de lista para ${request.quantity}; entrega ${deliverBy}`);
+  trace.push(`List price tier for ${request.quantity}; delivery ${deliverBy}`);
   const tier = pickTier(offer.tiers, request.quantity)!;
   return {
     kind: 'counter',
@@ -160,7 +159,7 @@ export function respondToCounter(
 ): RuleOutcome {
   const trace: string[] = [];
   const issues = feasibilityIssues(offer, proposal.quantity, deliveryState);
-  if (!rules.autoRespond) issues.unshift('El proveedor revisa manualmente cada contrapropuesta');
+  if (!rules.autoRespond) issues.unshift('The supplier reviews each counterproposal manually');
   if (issues.length > 0) return { kind: 'escalate', reasons: issues, trace };
 
   let adjusted = false;
@@ -171,14 +170,14 @@ export function respondToCounter(
   // Nunca por encima del precio de lista del tramo.
   if (gt(unitPrice, tier.unitPrice)) unitPrice = toUnitPrice(tier.unitPrice);
   if (compareMoney(unitPrice, minPrice) < 0) {
-    trace.push(`Precio ${unitPrice} por debajo del permitido; se ofrece ${minPrice}`);
+    trace.push(`Price ${unitPrice} is below the permitted price; offering ${minPrice}`);
     unitPrice = minPrice;
     adjusted = true;
   }
 
   let waiveShipping = proposal.waiveShipping ?? current.waiveShipping;
   if (waiveShipping && !rules.canWaiveShipping && compareMoney(offer.shippingFlat, '0') > 0) {
-    trace.push('El transporte no puede bonificarse');
+    trace.push('Shipping cannot be waived');
     waiveShipping = false;
     adjusted = true;
   }
@@ -186,7 +185,7 @@ export function respondToCounter(
   const earliest = addDaysIso(now, rules.minLeadTimeDays);
   let deliverBy = proposal.deliverBy ?? current.deliverBy;
   if (deliverBy < earliest) {
-    trace.push(`Entrega ${deliverBy} antes del plazo mínimo; se ofrece ${earliest}`);
+    trace.push(`Delivery ${deliverBy} is before the minimum lead time; offering ${earliest}`);
     deliverBy = earliest;
     adjusted = true;
   }
@@ -197,7 +196,7 @@ export function respondToCounter(
     waiveShipping,
     deliverBy,
   });
-  if (!adjusted) trace.push('Propuesta dentro de las reglas del proveedor');
+  if (!adjusted) trace.push("Proposal is within the supplier's rules");
   return { kind: adjusted ? 'counter' : 'accept', terms, trace };
 }
 
@@ -214,17 +213,17 @@ export function agentQuoteViolations(
   const reasons: string[] = [];
   const minPrice = allowedMinUnitPrice(offer, rules, proposal.quantity);
   if (minPrice && compareMoney(proposal.unitPrice, minPrice) < 0) {
-    reasons.push(`Precio ${toUnitPrice(proposal.unitPrice)} inferior al mínimo autorizado`);
+    reasons.push(`Price ${toUnitPrice(proposal.unitPrice)} is below the authorized minimum`);
   }
   if (
     proposal.waiveShipping &&
     !rules.canWaiveShipping &&
     compareMoney(offer.shippingFlat, '0') > 0
   ) {
-    reasons.push('Bonificar el transporte no está autorizado');
+    reasons.push('Waiving shipping is not authorized');
   }
   if (proposal.deliverBy < addDaysIso(now, rules.minLeadTimeDays)) {
-    reasons.push('Plazo de entrega inferior al mínimo autorizado');
+    reasons.push('Delivery lead time is below the authorized minimum');
   }
   return reasons;
 }

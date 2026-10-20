@@ -20,7 +20,7 @@ import { DB } from '../database.module.js';
 import { ApiZodBody } from '../http/zod.js';
 import { Auth, CurrentAgent, CurrentUser } from '../auth/auth.guard.js';
 
-@ApiTags('portal: agentes')
+@ApiTags('portal: agents')
 @ApiCookieAuth()
 @Controller('orgs/:orgId/agents')
 @Auth('org-user')
@@ -33,7 +33,7 @@ export class AgentsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Conecta un agente nuevo y fija su nivel inicial' })
+  @ApiOperation({ summary: 'Connect a new agent and set its initial access level' })
   @ApiZodBody(createAgentInput)
   create(@CurrentUser() actor: UserActor, @Body() body: CreateAgentInput) {
     return createAgent(this.handle.db, actor, body);
@@ -45,7 +45,7 @@ export class AgentsController {
   }
 
   @Put(':agentId/access')
-  @ApiOperation({ summary: 'Cambia nivel de compra y facultades de venta (nueva versión)' })
+  @ApiOperation({ summary: 'Change the buyer access level and seller permissions (new version)' })
   @ApiZodBody(accessInput)
   setAccess(
     @CurrentUser() actor: UserActor,
@@ -56,7 +56,7 @@ export class AgentsController {
   }
 
   @Post(':agentId/credentials')
-  @ApiOperation({ summary: 'Emite una credencial; el secreto solo se muestra en esta respuesta' })
+  @ApiOperation({ summary: 'Issue a credential; the secret is shown only in this response' })
   issue(@CurrentUser() actor: UserActor, @Param('agentId') agentId: string) {
     return issueCredential(this.handle.db, actor, agentId);
   }
@@ -73,19 +73,21 @@ export class AgentsController {
 
   @Delete(':agentId')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Deshabilita el agente y revoca todas sus credenciales' })
+  @ApiOperation({ summary: 'Disable the agent and revoke all its credentials' })
   async disable(@CurrentUser() actor: UserActor, @Param('agentId') agentId: string): Promise<void> {
     await disableAgent(this.handle.db, actor, agentId);
   }
 }
 
-@ApiTags('agente')
+@ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent')
 @Auth('agent')
 export class AgentSelfController {
   @Get('me')
-  @ApiOperation({ summary: 'Identidad, organización y nivel vigente del agente autenticado' })
+  @ApiOperation({
+    summary: 'Identity, organization and current access level of the authenticated agent',
+  })
   me(@CurrentAgent() agent: AgentActor) {
     return {
       agentId: agent.agentId,

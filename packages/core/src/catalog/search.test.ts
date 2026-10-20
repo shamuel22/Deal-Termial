@@ -30,7 +30,7 @@ async function expectCode(p: Promise<unknown>, code: ErrorCode) {
     () => null,
     (x: unknown) => x,
   );
-  expect(e, `se esperaba ${code}`).toBeInstanceOf(DomainError);
+  expect(e, `expected ${code}`).toBeInstanceOf(DomainError);
   expect((e as DomainError).code).toBe(code);
 }
 
@@ -59,7 +59,7 @@ async function market() {
 }
 
 describe('find_matches', () => {
-  it('caso de uso: compara totales, descarta foam y marca atributos sin confirmar', async () => {
+  it('use case: compares totals, excludes foam and flags unconfirmed attributes', async () => {
     const m = await market();
     // A: kraft, 0.26 × 300 + 6 + 8.25 % = 90.93
     const a = await newOffer(h.db, m.supA.orgId);
@@ -103,7 +103,7 @@ describe('find_matches', () => {
     expect(result.matches[1]!.unconfirmedAttributes).toEqual(['hot_food_safe']);
   });
 
-  it('explica por qué una oferta es incompatible', async () => {
+  it('explains why an offer is incompatible', async () => {
     const m = await market();
     await newOffer(h.db, m.supA.orgId, {
       shipRegions: ['CA'],
@@ -128,7 +128,7 @@ describe('find_matches', () => {
     expect(matches[0]!.budget).toEqual({ maxTotal: '50.00', withinBudget: false, overBy: '40.93' });
   });
 
-  it('una oferta por encima del presupuesto sigue apareciendo para negociarla', async () => {
+  it('an offer over budget still appears so it can be negotiated', async () => {
     const m = await market();
     const cheap = await newOffer(h.db, m.supA.orgId, {
       tiers: [{ minQty: 50, unitPrice: '0.2000' }],
@@ -147,7 +147,7 @@ describe('find_matches', () => {
     ]);
   });
 
-  it('descuenta el stock reservado y respeta mínimos y máximos de pedido', async () => {
+  it('deducts reserved stock and respects minimum and maximum order quantities', async () => {
     const m = await market();
     const { offerId } = await newOffer(h.db, m.supA.orgId, {
       stockAvailable: 600,
@@ -182,7 +182,7 @@ describe('find_matches', () => {
     ]);
   });
 
-  it('no ofrece ofertas propias, inactivas ni vencidas', async () => {
+  it('does not return own, inactive or expired offers', async () => {
     const m = await market();
     const ownSupplier = await newCompany(h.db, 'Mixta');
     const mixedAgent = await newAgent(h.db, ownSupplier, 'search_only');
@@ -204,7 +204,7 @@ describe('find_matches', () => {
     expect(res.matches).toEqual([]);
   });
 
-  it('nunca expone las reglas privadas de negociación del proveedor', async () => {
+  it("never exposes the supplier's private negotiation rules", async () => {
     const m = await market();
     await newOffer(h.db, m.supA.orgId, {
       rules: { floorUnitPrice: '0.1987', maxDiscount: '0.3333' },
@@ -217,7 +217,7 @@ describe('find_matches', () => {
     expect(json).not.toMatch(/floor|maxDiscount|autoRespond/i);
   });
 
-  it('exige facultad de compra y atributos válidos', async () => {
+  it('requires buyer access and valid attributes', async () => {
     const m = await market();
     const seller = await newAgent(h.db, m.buyer, null, ['publish_offers']);
     await expectCode(findMatches(h.db, seller, DEMO, {}, NOW), 'LEVEL_INSUFFICIENT');
@@ -229,11 +229,11 @@ describe('find_matches', () => {
         {},
         NOW,
       ),
-    ).rejects.toThrow(/desconocidos/);
+    ).rejects.toThrow(/Unknown/);
   });
 });
 
-describe('solicitudes privadas (create_request / get_request)', () => {
+describe('private requests (create_request / get_request)', () => {
   const criteria = {
     category: 'food_containers' as const,
     requiredAttributes: DEMO.requiredAttributes,
@@ -248,7 +248,7 @@ describe('solicitudes privadas (create_request / get_request)', () => {
     maxTotal: '95.00',
   };
 
-  it('solo búsqueda puede guardar y repetir una búsqueda, sin contactar proveedores', async () => {
+  it('Search only can save and repeat a search without contacting suppliers', async () => {
     const m = await market();
     await newOffer(h.db, m.supA.orgId);
     const request = await createRequest(h.db, m.agent, { criteria }, NOW);
@@ -261,7 +261,7 @@ describe('solicitudes privadas (create_request / get_request)', () => {
     expect(negotiations.filter((n) => n.requestId === request.id)).toEqual([]);
   });
 
-  it('desde una autorización hereda criterios y usa el presupuesto disponible', async () => {
+  it('inherits criteria from an authorization and uses the available budget', async () => {
     const owner = await newCompany(h.db);
     const agent = await newAgent(h.db, owner, 'full_autonomy');
     const auth = await createAuthorization(
@@ -279,7 +279,7 @@ describe('solicitudes privadas (create_request / get_request)', () => {
     });
   });
 
-  it('un agente solo ve sus solicitudes; otra organización no ve ninguna', async () => {
+  it('an agent only sees its own requests; another organization sees none', async () => {
     const m = await market();
     const colleague = await newAgent(h.db, m.buyer, 'negotiate');
     const request = await createRequest(h.db, m.agent, { criteria }, NOW);
@@ -297,7 +297,7 @@ describe('solicitudes privadas (create_request / get_request)', () => {
     await expectCode(cancelRequest(h.db, m.agent, request.id), 'INVALID_STATE');
   });
 
-  it('no se puede vincular una autorización ajena', async () => {
+  it("cannot link another agent's authorization", async () => {
     const owner = await newCompany(h.db);
     const mine = await newAgent(h.db, owner, 'full_autonomy');
     const other = await newAgent(h.db, owner, 'full_autonomy');

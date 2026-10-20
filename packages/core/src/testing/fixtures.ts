@@ -13,7 +13,7 @@ export async function newCompany(db: Database, name = `Empresa${next()}`): Promi
   const n = next();
   const { userId, orgId } = await registerOwner(db, {
     email: `owner${n}@${name.toLowerCase().replace(/\W/g, '')}.test`,
-    name: `Dueño ${name}`,
+    name: `Owner ${name}`,
     password: 'contraseña-segura-123',
     organizationName: name,
   });
@@ -27,7 +27,7 @@ export async function newAgentWithKey(
   sellerScopes: SellerScope[] = [],
 ): Promise<{ actor: AgentActor; apiKey: string }> {
   const agent = await createAgent(db, owner, {
-    name: `Agente ${next()}`,
+    name: `Agent ${next()}`,
     access: { buyerLevel, sellerScopes },
   });
   const { apiKey } = await issueCredential(db, owner, agent.id);
@@ -56,7 +56,7 @@ export function demoTerms(
   overrides: Partial<AuthorizationTermsInput> = {},
 ): AuthorizationTermsInput {
   return {
-    mandate: 'Compra 300 envases con tapa para comida caliente, sin foam. Hasta US$80.',
+    mandate: 'Buy 300 containers with lids for hot food, no foam. Up to US$80.',
     category: 'food_containers',
     requiredAttributes: {
       hot_food_safe: { eq: true },
@@ -88,7 +88,7 @@ export async function newOrder(
     (
       await db
         .insert(schema.organizations)
-        .values({ name: `Proveedor ${next()}` })
+        .values({ name: `Supplier ${next()}` })
         .returning()
     )[0]!.id;
   const [product] = await db
@@ -96,7 +96,7 @@ export async function newOrder(
     .values({
       supplierOrgId,
       sku: `SKU-${next()}`,
-      name: 'Envase 16 oz con tapa',
+      name: 'Container 16 oz with lid',
       category: 'food_containers',
       attributes: {
         material: 'kraft_paper',
@@ -191,7 +191,7 @@ export async function newOffer(
     .values({
       supplierOrgId,
       sku: `SKU-${next()}`,
-      name: 'Envase kraft 16 oz con tapa',
+      name: 'Kraft container 16 oz with lid',
       category: 'food_containers',
       attributes: o.attributes ?? {
         material: 'kraft_paper',

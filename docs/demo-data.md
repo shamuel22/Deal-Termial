@@ -12,11 +12,11 @@ Las migraciones se ejecutan antes de esa transacción.
 
 ## Cuentas y agentes
 
-| Empresa                      | Email del dueño             | Agentes / nivel                                                                                                 |
-| ---------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Taquería El Sol (Austin, TX) | `owner@taqueria-elsol.demo` | Asistente de compras: `full_autonomy`; Asistente investigador: `search_only`; Asistente negociador: `negotiate` |
-| EcoPack Texas                | `owner@ecopack.demo`        | Agente de ventas EcoPack: `buyerLevel: null`                                                                    |
-| GreenBox Supply              | `owner@greenbox.demo`       | Agente de ventas GreenBox: `buyerLevel: null`                                                                   |
+| Empresa                      | Email del dueño             | Agentes / nivel                                                                                              |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Taquería El Sol (Austin, TX) | `owner@taqueria-elsol.demo` | Purchasing assistant: `full_autonomy`; Research assistant: `search_only`; Negotiation assistant: `negotiate` |
+| EcoPack Texas                | `owner@ecopack.demo`        | EcoPack sales agent: `buyerLevel: null`                                                                      |
+| GreenBox Supply              | `owner@greenbox.demo`       | GreenBox sales agent: `buyerLevel: null`                                                                     |
 
 Contraseña común: `DEMO_PASSWORD`, por defecto `DealTerminal-demo-2026`. El servicio de registro
 exige entre 12 y 200 caracteres. Cada uno de los cinco agentes recibe una API key aleatoria nueva;
@@ -39,12 +39,11 @@ consentimiento financiero y el onboarding real de sandbox se verifican por separ
 
 ## Encargo y autorizaciones
 
-La compradora tiene un límite mensual compartido de US$500.00. El Asistente de compras y el
-Asistente negociador reciben cada uno una autorización activa de US$80.00, con cantidad mínima
+La compradora tiene un límite mensual compartido de US$500.00. El Purchasing assistant y el
+Negotiation assistant reciben cada uno una autorización activa de US$80.00, con cantidad mínima
 y máxima de 300 y categoría `food_containers`. El investigador no recibe autorización de compra.
 
-> Compra 300 envases con tapa para comida caliente, sin foam. Entrega antes del viernes en esta dirección.
-> Puedes negociar y pagar hasta US$80, incluyendo transporte e impuestos.
+> Buy 300 containers with lids for hot food, no foam. Deliver before Friday to this address. You may negotiate and pay up to $80, including shipping and tax.
 
 Restricciones: `hot_food_safe: {eq: true}`, `has_lid: {eq: true}` y
 `material: {not_in: ['foam_eps']}`. Dirección: 1100 E 6th St, Austin, TX 78702, US.
@@ -61,14 +60,14 @@ Precios unitarios en USD; tramos expresados como cantidad mínima → precio. To
 están activas, usan impuesto informado `0.0825` y tienen un pedido mínimo igual al primer tramo.
 Los plazos son días naturales; el impuesto de demo se aplica a mercancía neta más transporte.
 
-| Proveedor | SKU / producto                                   | Material / capacidad | Caliente / microondas / tapa | Unidades por paquete | Tramos                             | Envío | Plazo | Stock |
-| --------- | ------------------------------------------------ | -------------------- | ---------------------------- | -------------------- | ---------------------------------- | ----- | ----- | ----- |
-| EcoPack   | ENV-KR16-L — Envase kraft 16 oz con tapa         | kraft_paper / 16 oz  | Sí / No / Sí                 | 50                   | 50→0.3100; 250→0.2400; 1000→0.2200 | 5.00  | 2     | 4000  |
-| EcoPack   | ENV-PP32-L — Contenedor PP 32 oz apto microondas | pp / 32 oz           | Sí / Sí / Sí                 | 100                  | 100→0.4200; 500→0.3600             | 8.00  | 3     | 2500  |
-| EcoPack   | ENV-FOAM9 — Clamshell de foam 9 in               | foam_eps / 24 oz     | Sí / Sin confirmar / Sí      | 100                  | 100→0.1200                         | 4.00  | 1     | 10000 |
-| GreenBox  | GB-BAG24 — Bowl de bagazo 24 oz con tapa         | bagasse / 24 oz      | Sí / Sí / Sí                 | 50                   | 50→0.3000; 300→0.2500              | 0.00  | 2     | 3000  |
-| GreenBox  | GB-PET16 — Contenedor PET 16 oz para ensaladas   | pet / 16 oz          | No / Sin confirmar / Sí      | 50                   | 50→0.2000                          | 3.00  | 2     | 5000  |
-| GreenBox  | GB-ALU-L — Bandeja de aluminio con tapa          | aluminum / 32 oz     | Sí / Sin confirmar / Sí      | 50                   | 50→0.5500                          | 10.00 | 5     | 800   |
+| Proveedor | SKU / producto                                  | Material / capacidad | Caliente / microondas / tapa | Unidades por paquete | Tramos                             | Envío | Plazo | Stock |
+| --------- | ----------------------------------------------- | -------------------- | ---------------------------- | -------------------- | ---------------------------------- | ----- | ----- | ----- |
+| EcoPack   | ENV-KR16-L — Kraft container 16 oz with lid     | kraft_paper / 16 oz  | Sí / No / Sí                 | 50                   | 50→0.3100; 250→0.2400; 1000→0.2200 | 5.00  | 2     | 4000  |
+| EcoPack   | ENV-PP32-L — PP container 32 oz, microwave safe | pp / 32 oz           | Sí / Sí / Sí                 | 100                  | 100→0.4200; 500→0.3600             | 8.00  | 3     | 2500  |
+| EcoPack   | ENV-FOAM9 — Foam clamshell 9 in                 | foam_eps / 24 oz     | Sí / Sin confirmar / Sí      | 100                  | 100→0.1200                         | 4.00  | 1     | 10000 |
+| GreenBox  | GB-BAG24 — Bagasse bowl 24 oz with lid          | bagasse / 24 oz      | Sí / Sí / Sí                 | 50                   | 50→0.3000; 300→0.2500              | 0.00  | 2     | 3000  |
+| GreenBox  | GB-PET16 — PET salad container 16 oz            | pet / 16 oz          | No / Sin confirmar / Sí      | 50                   | 50→0.2000                          | 3.00  | 2     | 5000  |
+| GreenBox  | GB-ALU-L — Aluminum tray with lid               | aluminum / 32 oz     | Sí / Sin confirmar / Sí      | 50                   | 50→0.5500                          | 10.00 | 5     | 800   |
 
 La aptitud para microondas solo se publica donde fue especificada; no se inventan valores para
 foam, PET o aluminio. Todos los atributos obligatorios de la categoría están presentes.

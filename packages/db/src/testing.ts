@@ -6,10 +6,10 @@ import { runMigrations } from './migrate.js';
  * sobre una base cuyo nombre no termine en `_test`.
  */
 export async function createTestDatabase(url = process.env.TEST_DATABASE_URL): Promise<DbHandle> {
-  if (!url) throw new Error('TEST_DATABASE_URL no está definida');
+  if (!url) throw new Error('TEST_DATABASE_URL is not defined');
   const name = new URL(url).pathname.replace(/^\//, '');
   if (!name.endsWith('_test')) {
-    throw new Error(`Base de test rechazada: "${name}" no termina en _test`);
+    throw new Error(`Test database rejected: "${name}" does not end in _test`);
   }
   const reset = createDb(url, { max: 1 });
   try {

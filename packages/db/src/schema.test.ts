@@ -22,22 +22,22 @@ async function seedBase() {
     .returning();
   const [agent] = await h.db
     .insert(s.agents)
-    .values({ orgId: org!.id, name: 'Agente', createdByUserId: user!.id })
+    .values({ orgId: org!.id, name: 'Agent', createdByUserId: user!.id })
     .returning();
   return { org: org!, user: user!, agent: agent! };
 }
 
-describe('esquema', () => {
-  it('numeric llega como string, sin floats', async () => {
+describe('schema', () => {
+  it('numeric values arrive as strings, without floats', async () => {
     const [org] = await h.db
       .insert(s.organizations)
-      .values({ name: 'Con límite', monthlySpendLimit: '1000.10' })
+      .values({ name: 'With a limit', monthlySpendLimit: '1000.10' })
       .returning();
     const [row] = await h.db.select().from(s.organizations).where(eq(s.organizations.id, org!.id));
     expect(row!.monthlySpendLimit).toBe('1000.10');
   });
 
-  it('solo una concesión de acceso vigente por agente', async () => {
+  it('only one current access grant per agent', async () => {
     const { org, user, agent } = await seedBase();
     const base = { agentId: agent.id, orgId: org.id, grantedByUserId: user.id };
     await h.db.insert(s.agentAccessGrants).values({ ...base, version: 1, buyerLevel: 'negotiate' });
@@ -46,7 +46,7 @@ describe('esquema', () => {
     ).rejects.toThrow();
   });
 
-  it('el email de usuario es único sin distinguir mayúsculas', async () => {
+  it('user email is unique regardless of case', async () => {
     await h.db
       .insert(s.users)
       .values({ email: 'Dueño@Empresa.test', name: 'A', passwordHash: 'x' });
@@ -55,7 +55,7 @@ describe('esquema', () => {
     ).rejects.toThrow();
   });
 
-  it('el stock informado no puede ser negativo', async () => {
+  it('reported stock cannot be negative', async () => {
     const { org } = await seedBase();
     const [product] = await h.db
       .insert(s.products)

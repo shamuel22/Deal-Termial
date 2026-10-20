@@ -107,7 +107,7 @@ export function evaluateOffer(
     if (check.status === 'violated') {
       mismatches.push({
         code: 'ATTRIBUTE_VIOLATED',
-        message: `${check.attribute} = ${JSON.stringify(check.value)} no cumple ${JSON.stringify(check.constraint)}`,
+        message: `${check.attribute} = ${JSON.stringify(check.value)} does not satisfy ${JSON.stringify(check.constraint)}`,
       });
     }
   }
@@ -115,7 +115,7 @@ export function evaluateOffer(
   if (criteria.deliveryState && !offer.shipRegions.includes(criteria.deliveryState)) {
     mismatches.push({
       code: 'REGION_NOT_SERVED',
-      message: `No entrega en ${criteria.deliveryState}`,
+      message: `No delivery to ${criteria.deliveryState}`,
     });
   }
 
@@ -124,14 +124,20 @@ export function evaluateOffer(
   if (!sufficient) {
     mismatches.push({
       code: 'INSUFFICIENT_STOCK',
-      message: `Existencias informadas ${available} < ${criteria.quantity}`,
+      message: `Reported stock ${available} < ${criteria.quantity}`,
     });
   }
   if (criteria.quantity < offer.minOrderQty) {
-    mismatches.push({ code: 'BELOW_MIN_ORDER', message: `Pedido mínimo ${offer.minOrderQty}` });
+    mismatches.push({
+      code: 'BELOW_MIN_ORDER',
+      message: `Minimum order quantity ${offer.minOrderQty}`,
+    });
   }
   if (offer.maxOrderQty !== null && criteria.quantity > offer.maxOrderQty) {
-    mismatches.push({ code: 'ABOVE_MAX_ORDER', message: `Pedido máximo ${offer.maxOrderQty}` });
+    mismatches.push({
+      code: 'ABOVE_MAX_ORDER',
+      message: `Maximum order quantity ${offer.maxOrderQty}`,
+    });
   }
 
   const earliestDate = addDaysIso(now, offer.leadTimeDays);
@@ -139,7 +145,7 @@ export function evaluateOffer(
   if (meetsDeadline === false) {
     mismatches.push({
       code: 'MISSES_DEADLINE',
-      message: `Entrega más temprana ${earliestDate}, posterior a ${criteria.deliverBy}`,
+      message: `Earliest delivery ${earliestDate}, after ${criteria.deliverBy}`,
     });
   }
 

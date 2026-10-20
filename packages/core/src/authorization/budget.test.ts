@@ -57,8 +57,8 @@ async function errorCode(p: Promise<unknown>) {
   return e instanceof DomainError ? e.code : e;
 }
 
-describe('libro de presupuesto', () => {
-  it('reserva dentro del encargo y rechaza lo que exceda el disponible', async () => {
+describe('budget ledger', () => {
+  it('reserves within the authorized budget and rejects amounts above the available budget', async () => {
     const { owner, auth } = await scenario();
     const o1 = await newOrder(h.db, owner.orgId, '50.00');
     const o2 = await newOrder(h.db, owner.orgId, '30.01');
@@ -75,7 +75,7 @@ describe('libro de presupuesto', () => {
     });
   });
 
-  it('reintentar la reserva del mismo pedido no duplica (criterio 12)', async () => {
+  it('retrying the reservation for the same order does not duplicate it (criterion 12)', async () => {
     const { owner, auth } = await scenario();
     const order = await newOrder(h.db, owner.orgId, '40.00');
     const a = await reserve(owner.orgId, auth.id, order, '40.00');
@@ -85,7 +85,7 @@ describe('libro de presupuesto', () => {
     expect(await errorCode(reserve(owner.orgId, auth.id, order, '41.00'))).toBe('INVALID_STATE');
   });
 
-  it('consumir registra gasto; liberar devuelve solo reservas activas', async () => {
+  it('consuming records spending; releasing returns only active reservations', async () => {
     const { owner, auth } = await scenario();
     const paid = await newOrder(h.db, owner.orgId, '30.00');
     const failed = await newOrder(h.db, owner.orgId, '20.00');
@@ -105,7 +105,7 @@ describe('libro de presupuesto', () => {
     });
   });
 
-  it('un pago de resultado incierto conserva la reserva hasta reconciliar (criterio 13)', async () => {
+  it('a payment with an uncertain result keeps the reservation until reconciliation (criterion 13)', async () => {
     const { owner, auth } = await scenario();
     const uncertain = await newOrder(h.db, owner.orgId, '70.00');
     const other = await newOrder(h.db, owner.orgId, '20.00');
@@ -114,7 +114,7 @@ describe('libro de presupuesto', () => {
     expect(await errorCode(reserve(owner.orgId, auth.id, other, '20.00'))).toBe('BUDGET_EXCEEDED');
   });
 
-  it('agotar el encargo con gasto confirmado lo marca como agotado', async () => {
+  it('exhausting the authorized budget with confirmed spending marks it exhausted', async () => {
     const { owner, auth } = await scenario('50.00');
     const order = await newOrder(h.db, owner.orgId, '50.00');
     await reserve(owner.orgId, auth.id, order, '50.00');
@@ -122,7 +122,7 @@ describe('libro de presupuesto', () => {
     expect((await getAuthorization(h.db, owner, auth.id, NOW)).status).toBe('exhausted');
   });
 
-  it('el límite mensual se comparte entre encargos y agentes de la organización', async () => {
+  it('the monthly limit is shared across authorizations and agents in the organization', async () => {
     const owner = await newCompany(h.db);
     await setMonthlyLimit(h.db, owner, { monthlySpendLimit: '100.00' });
     const a1 = await newAgent(h.db, owner, 'full_autonomy');
@@ -160,12 +160,12 @@ describe('libro de presupuesto', () => {
     ).toBe('100.00');
   });
 
-  it('los periodos se calculan en UTC', () => {
+  it('periods are calculated in UTC', () => {
     expect(utcPeriod(new Date('2026-10-31T23:59:59-05:00'))).toBe('2026-11');
     expect(utcPeriod(new Date('2026-11-01T00:00:00Z'))).toBe('2026-11');
   });
 
-  it('las compras aceptadas por el dueño no se limitan por el presupuesto delegado', async () => {
+  it('purchases accepted by the owner are not limited by the delegated budget', async () => {
     const { owner, auth } = await scenario();
     const order = await newOrder(h.db, owner.orgId, '95.00');
     await expect(reserve(owner.orgId, auth.id, order, '95.00', false)).resolves.toMatchObject({
@@ -174,8 +174,8 @@ describe('libro de presupuesto', () => {
   });
 });
 
-describe('concurrencia (criterio 11)', () => {
-  it('dos compras simultáneas que juntas superan el encargo: solo una reserva', async () => {
+describe('concurrency (criterion 11)', () => {
+  it('two simultaneous purchases that together exceed the authorized budget: only one reservation', async () => {
     const { owner, auth } = await scenario();
     const orders = await Promise.all([
       newOrder(h.db, owner.orgId, '50.00'),
@@ -190,7 +190,7 @@ describe('concurrencia (criterio 11)', () => {
     expect((await authorizationBudgetSummary(h.db, auth.id)).reserved).toBe('50.00');
   });
 
-  it('diez intentos simultáneos de 20.00 sobre 80.00: exactamente cuatro reservan', async () => {
+  it('ten simultaneous 20.00 attempts against 80.00: exactly four reserve', async () => {
     const { owner, auth } = await scenario();
     const orders = await Promise.all(
       Array.from({ length: 10 }, () => newOrder(h.db, owner.orgId, '20.00')),
@@ -205,7 +205,7 @@ describe('concurrencia (criterio 11)', () => {
     });
   });
 
-  it('dos agentes con encargos distintos no exceden juntos el límite mensual', async () => {
+  it('two agents with different authorizations do not jointly exceed the monthly limit', async () => {
     const owner = await newCompany(h.db);
     await setMonthlyLimit(h.db, owner, { monthlySpendLimit: '100.00' });
     const auths = await Promise.all(

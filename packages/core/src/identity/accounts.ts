@@ -12,7 +12,7 @@ export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const registerInput = z.object({
   email: z.email().max(254),
   name: z.string().trim().min(1).max(120),
-  password: z.string().min(12, 'La contraseña debe tener al menos 12 caracteres').max(200),
+  password: z.string().min(12, 'The password must contain at least 12 characters').max(200),
   organizationName: z.string().trim().min(1).max(160),
 });
 export type RegisterInput = z.infer<typeof registerInput>;
@@ -52,7 +52,7 @@ export async function registerOwner(
       .from(schema.users)
       .where(sql`lower(${schema.users.email}) = ${normalizeEmail(data.email)}`);
     if (existing.length > 0) {
-      throw new DomainError('VALIDATION_FAILED', 'Ya existe una cuenta con ese email', {
+      throw new DomainError('VALIDATION_FAILED', 'An account with that email already exists', {
         field: 'email',
       });
     }
@@ -91,7 +91,7 @@ export async function login(db: Executor, input: LoginInput): Promise<SessionIss
   dummyHash ??= hashPassword(randomToken());
   const valid = await verifyPassword(data.password, user?.passwordHash ?? (await dummyHash));
   if (!user || !valid) {
-    throw new DomainError('UNAUTHENTICATED', 'Email o contraseña incorrectos');
+    throw new DomainError('UNAUTHENTICATED', 'Incorrect email or password');
   }
 
   const token = randomToken();
@@ -148,14 +148,14 @@ export async function resolveUserActor(
   orgId: string,
 ): Promise<UserActor> {
   if (!z.uuid().safeParse(orgId).success) {
-    throw new DomainError('NOT_FOUND', 'Organización no encontrada');
+    throw new DomainError('NOT_FOUND', 'Organization not found');
   }
   const [membership] = await db
     .select({ role: schema.memberships.role })
     .from(schema.memberships)
     .where(and(eq(schema.memberships.userId, userId), eq(schema.memberships.orgId, orgId)));
   if (!membership) {
-    throw new DomainError('NOT_FOUND', 'Organización no encontrada');
+    throw new DomainError('NOT_FOUND', 'Organization not found');
   }
   return { kind: 'user', userId, orgId, role: membership.role };
 }

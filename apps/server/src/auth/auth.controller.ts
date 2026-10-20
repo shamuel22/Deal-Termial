@@ -19,7 +19,7 @@ import { ApiZodBody } from '../http/zod.js';
 import { Auth, CurrentSession, SESSION_COOKIE } from './auth.guard.js';
 import { LoginLimiter } from './login-limiter.js';
 
-@ApiTags('portal: cuenta')
+@ApiTags('portal: account')
 @Controller()
 export class AuthController {
   private readonly limiter = new LoginLimiter();
@@ -41,7 +41,7 @@ export class AuthController {
   }
 
   @Post('auth/register')
-  @ApiOperation({ summary: 'Alta de empresa y de su usuario dueño; inicia sesión' })
+  @ApiOperation({ summary: 'Register an organization and its owner; sign in' })
   @ApiZodBody(registerInput)
   async register(@Body() body: RegisterInput, @Res({ passthrough: true }) res: Response) {
     const { userId, orgId } = await registerOwner(this.handle.db, body);
@@ -52,7 +52,7 @@ export class AuthController {
 
   @Post('auth/login')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Inicio de sesión del portal (cookie httpOnly)' })
+  @ApiOperation({ summary: 'Portal sign-in (httpOnly cookie)' })
   @ApiZodBody(loginInput)
   async login(
     @Body() body: LoginInput,
@@ -60,7 +60,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const email = typeof body?.email === 'string' ? body.email : '';
-    const ip = req.ip ?? 'desconocida';
+    const ip = req.ip ?? 'unknown';
     this.limiter.assertAllowed(email, ip);
     try {
       const session = await login(this.handle.db, body);
@@ -89,7 +89,7 @@ export class AuthController {
   @Get('me')
   @Auth('session')
   @ApiCookieAuth()
-  @ApiOperation({ summary: 'Usuario de la sesión y organizaciones a las que pertenece' })
+  @ApiOperation({ summary: 'Session user and the organizations they belong to' })
   async me(@CurrentSession() session: { userId: string; email: string; name: string }) {
     return {
       user: { id: session.userId, email: session.email, name: session.name },

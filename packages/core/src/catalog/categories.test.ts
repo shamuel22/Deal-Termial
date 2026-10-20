@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 import { checkAttributes, foodContainerAttributes, validateConstraints } from './categories.js';
 
-describe('atributos de categoría', () => {
+describe('category attributes', () => {
   const product = {
     material: 'bagasse',
     capacity_oz: 24,
@@ -11,7 +11,7 @@ describe('atributos de categoría', () => {
     pack_size: 50,
   };
 
-  it('evalúa eq, in, not_in y rangos', () => {
+  it('evaluates eq, in, not_in and ranges', () => {
     const checks = checkAttributes(
       {
         hot_food_safe: { eq: true },
@@ -33,11 +33,11 @@ describe('atributos de categoría', () => {
     });
   });
 
-  it('un rango sobre un valor no numérico no se cumple', () => {
+  it('a range on a non-numeric value is not satisfied', () => {
     expect(checkAttributes({ material: { min: 1 } }, product)[0]!.status).toBe('violated');
   });
 
-  it('rechaza restricciones sobre atributos inexistentes', () => {
+  it('rejects constraints on unknown attributes', () => {
     expect(() => validateConstraints('food_containers', { color: { eq: 'red' } })).toThrow(
       ZodError,
     );
@@ -46,7 +46,7 @@ describe('atributos de categoría', () => {
     ).not.toThrow();
   });
 
-  it('valida los atributos publicados por el proveedor', () => {
+  it('validates the attributes published by the supplier', () => {
     expect(foodContainerAttributes.safeParse(product).success).toBe(true);
     expect(foodContainerAttributes.safeParse({ ...product, material: 'styrofoam' }).success).toBe(
       false,

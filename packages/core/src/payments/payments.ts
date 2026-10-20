@@ -102,7 +102,7 @@ async function applyCall(
 
 function describe(order: { id: string; terms: unknown }): string {
   const t = order.terms as OrderTerms;
-  return `Deal Terminal ${order.id.slice(0, 8)}: ${t.quantity} × ${String(t.product.name ?? 'producto')}`;
+  return `Deal Terminal ${order.id.slice(0, 8)}: ${t.quantity} × ${String(t.product.name ?? 'product')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,26 +122,25 @@ export async function startCheckout(
 ): Promise<PaymentSummary> {
   requireAdmin(actor);
   const prepared = await inTransaction(db, async (tx) => {
-    if (!z.uuid().safeParse(orderId).success)
-      throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+    if (!z.uuid().safeParse(orderId).success) throw new DomainError('NOT_FOUND', 'Order not found');
     const [order] = await tx
       .select()
       .from(schema.orders)
       .where(and(eq(schema.orders.id, orderId), eq(schema.orders.buyerOrgId, actor.orgId)))
       .for('no key update');
-    if (!order) throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+    if (!order) throw new DomainError('NOT_FOUND', 'Order not found');
     const current = await activeAttempt(tx, order.id);
     // Un cobro automático que pidió acción en PayPal no impide que el dueño pague con checkout.
     const blocking =
       current && !(current.mode === 'delegated' && current.status === 'requires_action');
     if (current && blocking) return { order, attempt: current, fresh: false };
     if (order.status !== 'pending_payment') {
-      throw new DomainError('INVALID_STATE', `El pedido está ${order.status}`);
+      throw new DomainError('INVALID_STATE', `The order status is ${order.status}`);
     }
     if (!order.payeeMerchantId) {
       throw new DomainError(
         'SELLER_NOT_CONNECTED',
-        'El proveedor no tiene una conexión de cobro PayPal activa',
+        'The supplier has no active PayPal connection to receive payments',
       );
     }
     const [attempt] = await tx
@@ -220,7 +219,7 @@ export async function completeCheckout(
           eq(schema.orders.buyerOrgId, actor.orgId),
         ),
       );
-    if (!row) throw new DomainError('NOT_FOUND', 'Pago no encontrado');
+    if (!row) throw new DomainError('NOT_FOUND', 'Payment not found');
     const [order] = await tx
       .select()
       .from(schema.orders)
@@ -231,7 +230,7 @@ export async function completeCheckout(
     if (order!.status !== 'pending_payment') {
       const failed = await failAttempt(tx, row.attempt.id, {
         code: 'ORDER_NOT_PAYABLE',
-        message: `El pedido está ${order!.status}; no se capturó el pago`,
+        message: `The order status is ${order!.status}; payment was not captured`,
       });
       return { row: failed, capture: false };
     }
@@ -350,14 +349,17 @@ export async function executePurchase(
       .from(schema.orders)
       .where(eq(schema.orders.id, orderId))
       .for('no key update');
-    if (!order) throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+    if (!order) throw new DomainError('NOT_FOUND', 'Order not found');
 
     const current = await activeAttempt(tx, order.id);
     if (current) return { kind: 'existing', attempt: current };
     if (order.status !== 'pending_payment')
-      throw new DomainError('INVALID_STATE', `El pedido está ${order.status}`);
+      throw new DomainError('INVALID_STATE', `The order status is ${order.status}`);
     if (order.paymentMode !== 'delegated' || !order.authorizationId) {
-      throw new DomainError('FORBIDDEN', 'Este pedido requiere el pago del dueño desde el portal');
+      throw new DomainError(
+        'FORBIDDEN',
+        'This order requires payment by the owner through the portal',
+      );
     }
 
     // Segunda verificación de la delegación, inmediatamente antes de pagar.
@@ -368,7 +370,7 @@ export async function executePurchase(
       now,
     );
     if (authorization.agentId !== actor.agentId)
-      throw new DomainError('NOT_FOUND', 'Pedido no encontrado');
+      throw new DomainError('NOT_FOUND', 'Order not found');
     assertNoViolations(
       evaluatePurchase(
         authorization,
@@ -380,7 +382,7 @@ export async function executePurchase(
     if (!order.payeeMerchantId) {
       throw new DomainError(
         'SELLER_NOT_CONNECTED',
-        'El proveedor no tiene una conexión de cobro PayPal activa',
+        'The supplier has no active PayPal connection to receive payments',
       );
     }
     const connection = await financialAuthorizationFor(tx, actor.orgId, order.payeeMerchantId);
@@ -388,8 +390,8 @@ export async function executePurchase(
       await notify(tx, {
         orgId: actor.orgId,
         kind: 'order.owner_payment_required',
-        title: 'Pedido aceptado por tu agente: completa el pago',
-        body: `Tu agente aceptó un pedido de ${order.total} ${order.currency} dentro de su autorización. Falta la autorización financiera para pagarlo automáticamente; págalo desde el portal.`,
+        title: 'Order accepted by your agent: complete payment',
+        body: `Your agent accepted an order for ${order.total} ${order.currency} within its purchase authorization. PayPal consent is missing for automatic payment; pay through the portal.`,
         resourceType: 'order',
         resourceId: order.id,
       });
@@ -406,7 +408,7 @@ export async function executePurchase(
         kind: 'owner',
         reason: 'PAYMENT_CONNECTION_INACTIVE',
         message:
-          'No hay autorización financiera PayPal que cubra a este proveedor. El pedido queda pendiente de pago del dueño, que fue notificado.',
+          'No PayPal consent covers this supplier. The order awaits payment by the owner, who has been notified.',
       };
     }
 
@@ -496,7 +498,7 @@ export async function reconcileAttempt(
       eq(schema.paymentConnections.id, schema.paymentAttempts.paymentConnectionId),
     )
     .where(eq(schema.paymentAttempts.id, attemptId));
-  if (!row) throw new Error(`Intento ${attemptId} inexistente`);
+  if (!row) throw new Error(`Attempt ${attemptId} does not exist`);
   const { attempt, order, connection } = row;
   if (attempt.status === 'completed' || attempt.status === 'failed') return attempt;
 
@@ -529,7 +531,7 @@ export async function reconcileAttempt(
   }
   return failAttempt(db, attempt.id, {
     code: 'NOT_CREATED',
-    message: 'La orden de PayPal no llegó a crearse',
+    message: 'The PayPal order was not created',
   });
 }
 
@@ -603,8 +605,8 @@ export async function getFinancialStatus(db: Executor, actor: UserActor) {
       available: active.length > 0,
       explanation:
         active.length > 0
-          ? 'Hay autorización financiera activa: los agentes con autonomía total pueden pagar sin checkout a los proveedores cubiertos.'
-          : 'PayPal no ofrece hoy el guardado de medios de pago a nivel plataforma para pagar a varios vendedores. Tus agentes con autonomía total negocian, aceptan y reservan; tú completas el pago con un checkout de un clic.',
+          ? 'PayPal consent is active: agents with Full autonomy can pay covered suppliers without checkout. Within your authorized limits.'
+          : 'PayPal does not currently support saving payment methods at the platform level to pay multiple sellers. Your agents with Full autonomy negotiate, accept and reserve. Within your authorized limits. You complete payment with one-click checkout.',
     },
     connections,
   };

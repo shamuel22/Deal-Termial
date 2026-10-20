@@ -25,7 +25,7 @@ export type AppConfig = z.infer<typeof configSchema>;
 
 export class ConfigError extends Error {
   constructor(public readonly issues: string[]) {
-    super(`Configuración inválida:\n  - ${issues.join('\n  - ')}`);
+    super(`Invalid configuration:\n  - ${issues.join('\n  - ')}`);
     this.name = 'ConfigError';
   }
 }

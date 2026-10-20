@@ -41,7 +41,7 @@ async function expectCode(p: Promise<unknown>, code: ErrorCode) {
     () => null,
     (x: unknown) => x,
   );
-  expect(e, `se esperaba ${code}`).toBeInstanceOf(DomainError);
+  expect(e, `expected ${code}`).toBeInstanceOf(DomainError);
   expect((e as DomainError).code).toBe(code);
 }
 
@@ -89,8 +89,8 @@ async function scene(
   return { buyer, agent, supplier, offerId, requestId: request.id, authorizationId: auth.id };
 }
 
-describe('negociación automática por reglas (caso de uso)', () => {
-  it('cotización a precio de lista, contraoferta y ajuste dentro del presupuesto', async () => {
+describe('automatic rule-based negotiation (use case)', () => {
+  it('list-price quote, counterproposal and adjustment within budget', async () => {
     const s = await scene();
     const opened = await requestQuote(
       h.db,
@@ -126,7 +126,7 @@ describe('negociación automática por reglas (caso de uso)', () => {
     expect(countered.authorizationCheck?.violations).toEqual([]);
   });
 
-  it('el proveedor acepta una contrapropuesta dentro de sus reglas', async () => {
+  it('the supplier accepts a counterproposal within its rules', async () => {
     const s = await scene();
     const n = await requestQuote(
       h.db,
@@ -137,11 +137,11 @@ describe('negociación automática por reglas (caso de uso)', () => {
     const out = await counterQuote(h.db, s.agent, n.id, { unitPrice: '0.2250' }, NOW);
     expect(out.quotes.at(-1)).toMatchObject({
       unitPrice: '0.2250',
-      message: 'Aceptamos tu propuesta.',
+      message: 'We accept your proposal.',
     });
   });
 
-  it('pedir cotización dos veces devuelve la misma negociación', async () => {
+  it('requesting a quote twice returns the same negotiation', async () => {
     const s = await scene();
     const a = await requestQuote(
       h.db,
@@ -159,7 +159,7 @@ describe('negociación automática por reglas (caso de uso)', () => {
     expect(b.quotes).toHaveLength(1);
   });
 
-  it('el comprador nunca ve las reglas ni la traza del proveedor; el proveedor sí', async () => {
+  it("the buyer never sees the supplier's rules or rule trace; the supplier does", async () => {
     const s = await scene();
     const n = await requestQuote(
       h.db,
@@ -169,15 +169,15 @@ describe('negociación automática por reglas (caso de uso)', () => {
     );
     const buyerView = await counterQuote(h.db, s.agent, n.id, { unitPrice: '0.1000' }, NOW);
     const json = JSON.stringify(buyerView);
-    expect(json).not.toMatch(/ruleTrace|piso|permitido|floor/i);
+    expect(json).not.toMatch(/ruleTrace|floor|permitted/i);
 
     const supplierView = await getNegotiation(h.db, s.supplier, n.id, NOW);
     expect(JSON.stringify(supplierView.quotes.at(-1)?.ruleTrace)).toContain('0.2200');
   });
 });
 
-describe('niveles del comprador (criterios 3 y 4)', () => {
-  it('solo búsqueda no puede pedir cotizaciones ni contraofertar', async () => {
+describe('buyer access levels (criteria 3 and 4)', () => {
+  it('Search only cannot request quotes or counter', async () => {
     const s = await scene('search_only');
     await expectCode(
       requestQuote(h.db, s.agent, { requestId: s.requestId, offerId: s.offerId }, NOW),
@@ -185,7 +185,7 @@ describe('niveles del comprador (criterios 3 y 4)', () => {
     );
   });
 
-  it('solo negociación negocia y deja la propuesta final para el dueño', async () => {
+  it('Negotiate only negotiates and leaves the final proposal for the owner', async () => {
     const s = await scene('negotiate');
     const n = await requestQuote(
       h.db,
@@ -194,13 +194,7 @@ describe('niveles del comprador (criterios 3 y 4)', () => {
       NOW,
     );
     await counterQuote(h.db, s.agent, n.id, { unitPrice: '0.2200' }, NOW);
-    const reviewed = await submitForReview(
-      h.db,
-      s.agent,
-      n.id,
-      { message: 'Listo para pagar' },
-      NOW,
-    );
+    const reviewed = await submitForReview(h.db, s.agent, n.id, { message: 'Ready to pay' }, NOW);
     expect(reviewed.status).toBe('pending_owner_review');
 
     const notes = await h.db
@@ -221,7 +215,7 @@ describe('niveles del comprador (criterios 3 y 4)', () => {
     );
   });
 
-  it('no se puede enviar a revisión una cotización vencida', async () => {
+  it('cannot submit an expired quote for review', async () => {
     const s = await scene('negotiate');
     const n = await requestQuote(
       h.db,
@@ -236,10 +230,51 @@ describe('niveles del comprador (criterios 3 y 4)', () => {
   });
 });
 
-describe('proveedor sin respuesta automática', () => {
+describe('supplier without automatic responses', () => {
   const manual: OfferFixture = { ...OFFER_A, rules: { ...OFFER_A.rules, autoRespond: false } };
 
-  it('queda pendiente; su agente cotiza solo dentro de sus reglas y el dueño aprueba excepciones', async () => {
+  it.each([{ minOrderQty: 400 }, { maxOrderQty: 200 }])(
+    'only the owner can override order quantity limits: %j',
+    async (limits) => {
+      const s = await scene('full_autonomy', { ...manual, ...limits });
+      const seller = await newAgent(h.db, s.supplier, null, ['submit_quotes']);
+      const n = await requestQuote(
+        h.db,
+        s.agent,
+        { requestId: s.requestId, offerId: s.offerId },
+        NOW,
+      );
+      const terms = { quantity: 300, unitPrice: '0.2400', deliverBy: '2026-10-22' };
+      await expectCode(submitQuote(h.db, seller, n.id, terms, NOW), 'VALIDATION_FAILED');
+      const accepted = await submitQuote(h.db, s.supplier, n.id, terms, NOW);
+      expect(accepted.quotes.at(-1)).toMatchObject({ quantity: 300, unitPrice: '0.2400' });
+    },
+  );
+
+  it.each([{ stockAvailable: 200 }, { shipRegions: ['CA'] }])(
+    'the owner cannot override stock or delivery regions: %j',
+    async (limits) => {
+      const s = await scene('full_autonomy', { ...manual, ...limits });
+      const n = await requestQuote(
+        h.db,
+        s.agent,
+        { requestId: s.requestId, offerId: s.offerId },
+        NOW,
+      );
+      await expectCode(
+        submitQuote(
+          h.db,
+          s.supplier,
+          n.id,
+          { quantity: 300, unitPrice: '0.2400', deliverBy: '2026-10-22' },
+          NOW,
+        ),
+        'VALIDATION_FAILED',
+      );
+    },
+  );
+
+  it('remains pending; its agent quotes only within its rules and the owner approves exceptions', async () => {
     const s = await scene('full_autonomy', manual);
     const seller = await newAgent(h.db, s.supplier, null, ['submit_quotes']);
     const n = await requestQuote(
@@ -263,10 +298,10 @@ describe('proveedor sin respuesta automática', () => {
       author: 'supplier',
       autoGenerated: false,
     });
-    expect(JSON.stringify(exception.quotes.at(-1)?.ruleTrace)).toContain('Excepción aprobada');
+    expect(JSON.stringify(exception.quotes.at(-1)?.ruleTrace)).toContain('Exception approved');
   });
 
-  it('aceptar una contrapropuesta exige accept_terms y respeta las reglas', async () => {
+  it('accepting a counterproposal requires accept_terms and follows the rules', async () => {
     const s = await scene('full_autonomy', manual);
     const quoter = await newAgent(h.db, s.supplier, null, ['submit_quotes']);
     const closer = await newAgent(h.db, s.supplier, null, ['submit_quotes', 'accept_terms']);
@@ -309,7 +344,7 @@ describe('proveedor sin respuesta automática', () => {
     expect(accepted.quotes.at(-1)).toMatchObject({ unitPrice: '0.2200', total: '76.86' });
   });
 
-  it('rechazar cierra la negociación', async () => {
+  it('rejecting closes the negotiation', async () => {
     const s = await scene('full_autonomy', manual);
     const closer = await newAgent(h.db, s.supplier, null, ['submit_quotes']);
     const n = await requestQuote(
@@ -332,8 +367,8 @@ describe('proveedor sin respuesta automática', () => {
   });
 });
 
-describe('aislamiento', () => {
-  it('terceros y otros agentes de la misma organización no ven la negociación', async () => {
+describe('isolation', () => {
+  it('third parties and other agents in the same organization cannot see the negotiation', async () => {
     const s = await scene();
     const n = await requestQuote(
       h.db,
@@ -366,7 +401,7 @@ describe('aislamiento', () => {
     ]);
   });
 
-  it('no se puede negociar con una oferta propia ni con una solicitud ajena', async () => {
+  it("cannot negotiate with your own offer or another agent's request", async () => {
     const s = await scene();
     const own = await newOffer(h.db, s.buyer.orgId, OFFER_A);
     await expectCode(

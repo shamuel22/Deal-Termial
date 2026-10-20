@@ -47,14 +47,13 @@ export interface AuthorizationView {
 }
 
 function assertUuid(value: string, what: string): void {
-  if (!z.uuid().safeParse(value).success)
-    throw new DomainError('NOT_FOUND', `${what} no encontrada`);
+  if (!z.uuid().safeParse(value).success) throw new DomainError('NOT_FOUND', `${what} not found`);
 }
 
 function checkTerms(terms: AuthorizationTerms, now: Date): void {
   validateConstraints(terms.category, terms.requiredAttributes);
   if (terms.expiresAt.getTime() <= now.getTime()) {
-    throw new DomainError('VALIDATION_FAILED', 'La autorización debe vencer en el futuro', {
+    throw new DomainError('VALIDATION_FAILED', 'The authorization must expire in the future', {
       field: 'expiresAt',
     });
   }
@@ -103,8 +102,8 @@ async function agentBuyerLevel(tx: Executor, orgId: string, agentId: string) {
         isNull(schema.agentAccessGrants.supersededAt),
       ),
     );
-  if (!row) throw new DomainError('NOT_FOUND', 'Agente no encontrado');
-  if (row.disabledAt) throw new DomainError('INVALID_STATE', 'El agente está deshabilitado');
+  if (!row) throw new DomainError('NOT_FOUND', 'Agent not found');
+  if (row.disabledAt) throw new DomainError('INVALID_STATE', 'The agent is disabled');
   return row.buyerLevel;
 }
 
@@ -146,7 +145,7 @@ export async function expireAuthorizations(db: Executor, now: Date): Promise<num
 }
 
 async function loadRow(db: Executor, orgId: string, authorizationId: string, lock = false) {
-  assertUuid(authorizationId, 'Autorización');
+  assertUuid(authorizationId, 'Authorization');
   const query = db
     .select({ auth: schema.purchaseAuthorizations, version: schema.purchaseAuthorizationVersions })
     .from(schema.purchaseAuthorizations)
@@ -169,7 +168,7 @@ async function loadRow(db: Executor, orgId: string, authorizationId: string, loc
   const [row] = lock
     ? await query.for('no key update', { of: schema.purchaseAuthorizations })
     : await query;
-  if (!row) throw new DomainError('NOT_FOUND', 'Autorización no encontrada');
+  if (!row) throw new DomainError('NOT_FOUND', 'Authorization not found');
   return row;
 }
 
@@ -242,7 +241,7 @@ export async function createAuthorization(
   const id = await inTransaction(db, async (tx) => {
     const level = await agentBuyerLevel(tx, admin.orgId, data.agentId);
     if (!level) {
-      throw new DomainError('LEVEL_INSUFFICIENT', 'El agente no tiene facultades de compra', {
+      throw new DomainError('LEVEL_INSUFFICIENT', 'The agent has no buyer permissions', {
         agentId: data.agentId,
       });
     }
@@ -283,14 +282,10 @@ export async function amendAuthorization(
     const row = await loadRow(tx, admin.orgId, authorizationId, true);
     const status = effectiveStatus(row, now);
     if (status === 'revoked') {
-      throw new DomainError(
-        'AUTHORIZATION_REVOKED',
-        'Una autorización revocada no se puede modificar',
-      );
+      throw new DomainError('AUTHORIZATION_REVOKED', 'A revoked authorization cannot be modified');
     }
     const level = await agentBuyerLevel(tx, admin.orgId, row.auth.agentId);
-    if (!level)
-      throw new DomainError('LEVEL_INSUFFICIENT', 'El agente no tiene facultades de compra');
+    if (!level) throw new DomainError('LEVEL_INSUFFICIENT', 'The agent has no buyer permissions');
     const version = row.auth.currentVersion + 1;
     await tx
       .insert(schema.purchaseAuthorizationVersions)
@@ -357,7 +352,7 @@ export async function getAuthorization(
 ): Promise<AuthorizationView> {
   const row = await loadRow(db, actor.orgId, authorizationId);
   if (actor.kind === 'agent' && row.auth.agentId !== actor.agentId) {
-    throw new DomainError('NOT_FOUND', 'Autorización no encontrada');
+    throw new DomainError('NOT_FOUND', 'Authorization not found');
   }
   if (actor.kind === 'user') requireAdmin(actor);
   return toView(db, row, now);
@@ -375,7 +370,7 @@ export async function listAuthorizations(
   } else {
     requireAdmin(actor);
     if (filter.agentId) {
-      assertUuid(filter.agentId, 'Agente');
+      assertUuid(filter.agentId, 'Agent');
       conditions.push(eq(schema.purchaseAuthorizations.agentId, filter.agentId));
     }
   }
@@ -402,7 +397,7 @@ export async function loadAgentAuthorization(
 ): Promise<AuthorizationSnapshot> {
   const row = await loadRow(tx, actor.orgId, authorizationId, lock);
   if (row.auth.agentId !== actor.agentId) {
-    throw new DomainError('NOT_FOUND', 'Autorización no encontrada');
+    throw new DomainError('NOT_FOUND', 'Authorization not found');
   }
   return toSnapshot(row, now);
 }

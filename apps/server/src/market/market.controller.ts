@@ -48,7 +48,7 @@ class MarketRoutes {
   }
 }
 
-@ApiTags('agente')
+@ApiTags('agent')
 @ApiBearerAuth()
 @Controller('agent')
 @Auth('agent')
@@ -59,7 +59,7 @@ export class AgentMarketController extends MarketRoutes {
 
   @Post('matches')
   @HttpCode(200)
-  @ApiOperation({ summary: 'find_matches: busca y compara ofertas publicadas' })
+  @ApiOperation({ summary: 'find_matches: search and compare published offers' })
   @ApiZodBody(matchesBody)
   findMatches(@CurrentActor() actor: Actor, @Body() body: MatchesBody) {
     return this.matches(actor, body);
@@ -67,7 +67,7 @@ export class AgentMarketController extends MarketRoutes {
 
   @Post('requests')
   @ApiOperation({
-    summary: 'create_request: guarda una necesidad privada sin contactar proveedores',
+    summary: 'create_request: save a private purchase request without contacting suppliers',
   })
   @ApiZodBody(createRequestInput)
   createRequest(@CurrentActor() actor: Actor, @Body() body: CreateRequestInput) {
@@ -80,14 +80,14 @@ export class AgentMarketController extends MarketRoutes {
   }
 
   @Get('requests/:requestId')
-  @ApiOperation({ summary: 'get_request: consulta una solicitud propia' })
+  @ApiOperation({ summary: 'get_request: retrieve your own purchase request' })
   getRequest(@CurrentActor() actor: Actor, @Param('requestId') id: string) {
     return this.get(actor, id);
   }
 
   @Post('requests/:requestId/matches')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Repite la búsqueda con los criterios guardados' })
+  @ApiOperation({ summary: 'Repeat the search with the saved criteria' })
   findRequestMatches(
     @CurrentActor() actor: Actor,
     @Param('requestId') id: string,
@@ -103,7 +103,7 @@ export class AgentMarketController extends MarketRoutes {
   }
 }
 
-@ApiTags('portal: mercado')
+@ApiTags('portal: marketplace')
 @ApiCookieAuth()
 @Controller('orgs/:orgId')
 @Auth('org-user')

@@ -29,7 +29,7 @@ export const foodContainerAttributes = z.object({
 
 export const CATEGORIES = {
   food_containers: {
-    label: 'Envases para alimentos',
+    label: 'Food containers',
     attributes: foodContainerAttributes,
   },
 } as const;
@@ -64,7 +64,7 @@ export function validateConstraints(category: CategoryId, constraints: Attribute
       {
         code: 'custom',
         path: ['requiredAttributes', ...unknown],
-        message: `Atributos desconocidos para ${category}: ${unknown.join(', ')}`,
+        message: `Unknown attributes for ${category}: ${unknown.join(', ')}`,
         input: constraints,
       },
     ]);

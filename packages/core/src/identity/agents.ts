@@ -67,13 +67,13 @@ const KEY_PREFIX = 'dtk_';
 /** Carga un agente de la organización del actor; si es de otra organización, NOT_FOUND. */
 async function findOwnAgent(db: Executor, orgId: string, agentId: string) {
   if (!z.uuid().safeParse(agentId).success) {
-    throw new DomainError('NOT_FOUND', 'Agente no encontrado');
+    throw new DomainError('NOT_FOUND', 'Agent not found');
   }
   const [agent] = await db
     .select()
     .from(schema.agents)
     .where(and(eq(schema.agents.id, agentId), eq(schema.agents.orgId, orgId)));
-  if (!agent) throw new DomainError('NOT_FOUND', 'Agente no encontrado');
+  if (!agent) throw new DomainError('NOT_FOUND', 'Agent not found');
   return agent;
 }
 
@@ -144,7 +144,7 @@ export async function getAgent(db: Executor, actor: Actor, agentId: string): Pro
   const admin = requireAdmin(actor);
   const agent = await findOwnAgent(db, admin.orgId, agentId);
   const grant = await currentGrant(db, agent.id);
-  if (!grant) throw new Error(`Agente ${agent.id} sin concesión vigente`);
+  if (!grant) throw new Error(`Agent ${agent.id} has no current access grant`);
   const credentials = await db
     .select({
       id: schema.agentCredentials.id,
@@ -193,7 +193,7 @@ export async function setAgentAccess(
       .where(eq(schema.agents.id, agent.id))
       .for('no key update');
     const previous = await currentGrant(tx, agent.id);
-    if (!previous) throw new Error(`Agente ${agent.id} sin concesión vigente`);
+    if (!previous) throw new Error(`Agent ${agent.id} has no current access grant`);
     await tx
       .update(schema.agentAccessGrants)
       .set({ supersededAt: new Date() })
@@ -239,7 +239,7 @@ export async function issueCredential(
   const admin = requireAdmin(actor);
   return inTransaction(db, async (tx) => {
     const agent = await findOwnAgent(tx, admin.orgId, agentId);
-    if (agent.disabledAt) throw new DomainError('INVALID_STATE', 'El agente está deshabilitado');
+    if (agent.disabledAt) throw new DomainError('INVALID_STATE', 'The agent is disabled');
     const prefix = `${KEY_PREFIX}${randomToken(6)}`;
     const apiKey = `${prefix}_${randomToken(32)}`;
     const [credential] = await tx
@@ -270,7 +270,7 @@ export async function revokeCredential(
   await inTransaction(db, async (tx) => {
     const agent = await findOwnAgent(tx, admin.orgId, agentId);
     if (!z.uuid().safeParse(credentialId).success) {
-      throw new DomainError('NOT_FOUND', 'Credencial no encontrada');
+      throw new DomainError('NOT_FOUND', 'Credential not found');
     }
     const revoked = await tx
       .update(schema.agentCredentials)
@@ -283,7 +283,7 @@ export async function revokeCredential(
         ),
       )
       .returning({ id: schema.agentCredentials.id });
-    if (revoked.length === 0) throw new DomainError('NOT_FOUND', 'Credencial no encontrada');
+    if (revoked.length === 0) throw new DomainError('NOT_FOUND', 'Credential not found');
     await audit(tx, {
       orgId: admin.orgId,
       actorType: 'user',
@@ -334,7 +334,7 @@ export async function disableAgent(db: Executor, actor: Actor, agentId: string):
  */
 export async function resolveAgentKey(db: Executor, apiKey: string): Promise<AgentActor> {
   if (!apiKey.startsWith(KEY_PREFIX)) {
-    throw new DomainError('UNAUTHENTICATED', 'Credencial de agente inválida');
+    throw new DomainError('UNAUTHENTICATED', 'Invalid agent credential');
   }
   const [row] = await db
     .select({
@@ -351,9 +351,9 @@ export async function resolveAgentKey(db: Executor, apiKey: string): Promise<Age
         isNull(schema.agents.disabledAt),
       ),
     );
-  if (!row) throw new DomainError('UNAUTHENTICATED', 'Credencial de agente inválida o revocada');
+  if (!row) throw new DomainError('UNAUTHENTICATED', 'Invalid or revoked agent credential');
   const grant = await currentGrant(db, row.agentId);
-  if (!grant) throw new DomainError('UNAUTHENTICATED', 'El agente no tiene acceso vigente');
+  if (!grant) throw new DomainError('UNAUTHENTICATED', 'The agent has no current access');
   await db
     .update(schema.agentCredentials)
     .set({ lastUsedAt: new Date() })
