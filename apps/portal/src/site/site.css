@@ -362,7 +362,7 @@ html:has(.dt-site) {
 
 /* ---------- Flujo del acuerdo (visual del hero) ---------- */
 .dt-flow {
-  background: var(--bg-selected);
+  background: var(--bg-flow);
   border-radius: var(--radius-panel);
   padding: clamp(20px, 3vw, 36px);
   display: flex;
@@ -378,7 +378,7 @@ html:has(.dt-site) {
 }
 
 .dt-flow__step {
-  background: var(--bg-page);
+  background: var(--bg-flow-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
   padding: var(--space-5) var(--space-6);
@@ -525,7 +525,7 @@ html:has(.dt-site) {
   height: 9px;
   translate: -50% -50%;
   border-radius: 50%;
-  background: var(--bg-selected);
+  background: var(--bg-flow);
   border: 2px solid var(--dt-emerald);
 }
 

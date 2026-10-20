@@ -6,8 +6,10 @@
   --dt-emerald: #00b77a;
   --dt-sage: #dfe9e2;
 
-  /* Surfaces */
-  --bg-page: var(--dt-ivory);
+  /* Surfaces (fondo ajustado por el responsable de producto, 2026-10-19) */
+  --bg-page: #f4f4f4;
+  --bg-flow: #eeeeee;
+  --bg-flow-card: #f7f7f7;
   --bg-surface: #ffffff;
   --bg-subtle: #ecefe9;
   --bg-selected: var(--dt-sage);
