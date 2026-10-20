@@ -1,6 +1,6 @@
 import { AlertCircle, ArrowRight } from 'lucide-react';
-import { useId, useState, type FormEvent, type ReactNode } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router';
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { post } from '../../api';
 import { useAction } from '../../hooks';
 import { useSession } from '../../session';
@@ -79,6 +79,13 @@ function ErrorNotice({ message, hint }: { message?: string; hint?: string }) {
   );
 }
 
+/** Solo destinos internos: la consola o los retornos de PayPal. Evita redirecciones abiertas. */
+function safeNext(value: string | null): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\'))
+    return null;
+  return value.startsWith('/console') || value.startsWith('/api/paypal/') ? value : null;
+}
+
 export function SignInPage() {
   const t = useCopy();
   const { status, refresh } = useSession();
@@ -86,14 +93,22 @@ export function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const login = useAction((body: { email: string; password: string }) => post('/auth/login', body));
+  const next = safeNext(new URLSearchParams(useLocation().search).get('next'));
 
-  if (status === 'authenticated') return <Navigate to="/console" replace />;
+  // Los retornos de PayPal son rutas del servidor: se recargan fuera del router.
+  useEffect(() => {
+    if (status === 'authenticated' && next?.startsWith('/api/')) window.location.assign(next);
+  }, [status, next]);
+
+  if (status === 'authenticated') {
+    return next?.startsWith('/api/') ? null : <Navigate to={next ?? '/console'} replace />;
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if ((await login.run({ email, password })) !== undefined) {
       await refresh();
-      navigate('/console');
+      if (!next?.startsWith('/api/')) navigate(next ?? '/console');
     }
   }
 

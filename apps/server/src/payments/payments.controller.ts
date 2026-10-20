@@ -227,11 +227,18 @@ export class PayPalReturnController {
     @Inject(PAYMENT_GATEWAY) private readonly gateway: PaymentGateway,
   ) {}
 
-  private async user(req: Request, orgId: string | undefined): Promise<UserActor> {
+  /** Sin sesión (p. ej. el pago se aprobó en otro navegador) no hay usuario: se pide iniciar sesión. */
+  private async user(req: Request, orgId: string | undefined): Promise<UserActor | null> {
     const token = readCookie(req, SESSION_COOKIE);
     const session = token ? await resolveSession(this.handle.db, token) : null;
-    if (!session || !orgId) throw new DomainError('UNAUTHENTICATED', 'Sign in to the portal');
+    if (!session) return null;
+    if (!orgId) throw new DomainError('VALIDATION_FAILED', 'The organization is missing');
     return resolveUserActor(this.handle.db, session.userId, orgId);
+  }
+
+  /** Tras iniciar sesión, el portal vuelve a esta misma URL y la verificación continúa. */
+  private signIn(req: Request, res: Response): void {
+    res.redirect(`/login?next=${encodeURIComponent(req.originalUrl)}`);
   }
 
   @Get('checkout/return')
@@ -242,6 +249,7 @@ export class PayPalReturnController {
     @Query('token') paypalOrderId: string,
   ) {
     const user = await this.user(req, orgId);
+    if (!user) return this.signIn(req, res);
     const result = await completeCheckout(this.handle.db, this.gateway, user, paypalOrderId);
     res.redirect(`/console/orders/${result.orderId}?payment=${result.payment.status}`);
   }
@@ -254,6 +262,7 @@ export class PayPalReturnController {
   @Get('seller/return')
   async sellerReturn(@Req() req: Request, @Res() res: Response, @Query('orgId') orgId: string) {
     const user = await this.user(req, orgId);
+    if (!user) return this.signIn(req, res);
     await refreshSellerAccount(this.handle.db, this.gateway, user.orgId).catch(() => undefined);
     res.redirect('/console/settings/payments');
   }

@@ -453,6 +453,13 @@ describe('identity API (e2e)', () => {
     expect((await fetch(`${base}/webhooks/paypal`, { method: 'POST' })).status).toBe(404);
   });
 
+  it('PayPal return without a session sends the browser to sign in and back', async () => {
+    const path = '/api/paypal/checkout/return?orgId=org-1&token=PAYPAL-ORDER&PayerID=PAYER';
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { redirect: 'manual' });
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(`/login?next=${encodeURIComponent(path)}`);
+  });
+
   it('publishes OpenAPI with routes and input schemas', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/docs-json`);
     expect(res.status).toBe(200);

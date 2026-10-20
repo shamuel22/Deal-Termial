@@ -145,3 +145,20 @@ Recorrido ejecutado con el servidor real (`apps/server`), datos de `pnpm seed:de
 | Pedido                                                                                | `paid`; presupuesto y stock consumidos                                                                           |
 | Reembolso parcial aprobado por el agente de ventas de EcoPack (PayPal-Auth-Assertion) | `258063294T6704230` COMPLETED; captura `PARTIALLY_REFUNDED`                                                      |
 | Presupuesto delegado tras el reembolso                                                | Sin restaurar: consumido 76.86, disponible 3.14 (criterio 14)                                                    |
+
+## Validación en producción con webhooks en vivo (2026-10-20)
+
+Recorrido en `https://dealterminal.lucuo.dev` (VPS, detrás de Cloudflare + nginx), con el webhook del dashboard
+apuntando a `/webhooks/paypal`. El agente actuó por la API REST con una credencial temporal, revocada al terminar.
+
+| Paso                                                               | Resultado                                                                                                    |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Agente `full_autonomy` intenta comprar la oferta de 81.19          | Bloqueado: `BUDGET_EXCEEDED` (total 81.19 > presupuesto 80.00)                                               |
+| Contrapropuesta del agente (0.22) → respuesta por reglas           | 0.235 → **76.32** (GreenBox), sin violaciones                                                                |
+| `execute_purchase`                                                 | Pedido `pending_payment`, pago `owner_action_required` (sin consentimiento de PayPal que cubra al proveedor) |
+| Checkout del dueño y aprobación de la compradora                   | Orden PayPal `8YX23237FB653270Y`                                                                             |
+| Retorno del navegador                                              | Sin sesión en ese navegador: devolvía JSON `UNAUTHENTICATED` (corregido: ahora lleva a `/login?next=…`)      |
+| Webhook en vivo                                                    | El servidor verificó la firma y capturó: `5E313384YM373420J`, pedido `paid`, actor del evento `PayPal`       |
+| Reembolso parcial 10.00 pedido por el dueño, aprobado por GreenBox | `30W639730E039930V` COMPLETED; `refund.completed` registrado por el webhook                                  |
+
+Conclusión: los webhooks firmados llegan, se verifican y completan el pago aunque el navegador no vuelva al portal.
