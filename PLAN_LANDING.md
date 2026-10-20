@@ -1,6 +1,6 @@
 # Plan — Landing pública y Base de conocimientos
 
-> Plan aparte del [plan principal](./PLAN.md). **Estado: ⏸ en espera del kit de marca del equipo de diseño.**
+> Plan aparte del [plan principal](./PLAN.md). **Estado: 🔄 primera versión construida sobre `DESIGN.md` (2026-10-19); pendiente de revisión del equipo de diseño.**
 > No se construye frontend de este plan hasta recibir instrucciones explícitas.
 
 **Última actualización:** 2026-10-19
@@ -85,16 +85,16 @@ máxima fidelidad.
 
 ## 6. Etapas
 
-| #   | Etapa                                        | Resultado verificable                                                                | Estado |
-| --- | -------------------------------------------- | ------------------------------------------------------------------------------------ | ------ |
-| L0  | Recepción del kit y decisiones abiertas (§8) | Insumos D1–D10 y decisiones confirmadas                                              | ⏸      |
-| L1  | Sistema de diseño en código                  | Tokens, tipografías, componentes base; página de muestra validada por diseño         | ⬜     |
-| L2  | Reestructura de rutas (`/`, `/docs`, `/app`) | Portal funcionando en `/app`; retornos de PayPal actualizados; tests en verde        | ⬜     |
-| L3  | Landing                                      | Fiel a los diseños en desktop, tablet y móvil; tema claro y oscuro                   | ⬜     |
-| L4  | Motor de la Base de conocimientos            | Markdown → páginas, navegación lateral, tabla de contenidos, enlaces entre artículos | ⬜     |
-| L5  | Búsqueda                                     | Índice en build, búsqueda instantánea con resaltado y navegación por teclado         | ⬜     |
-| L6  | Contenido                                    | Artículos de §4 redactados y revisados; secciones generadas desde el código          | ⬜     |
-| L7  | Calidad y pulido                             | Criterios de §7 cumplidos y revisión final con el equipo de diseño                   | ⬜     |
+| #   | Etapa                                                                   | Resultado verificable                                                                | Estado |
+| --- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------ |
+| L0  | Recepción del kit y decisiones abiertas (§8)                            | Insumos D1–D10 y decisiones confirmadas                                              | ✅     |
+| L1  | Sistema de diseño en código                                             | Tokens, tipografías, componentes base; página de muestra validada por diseño         | ✅     |
+| L2  | Reestructura de rutas (`/`, `/knowledge`, `/console`, según DESIGN §10) | Portal funcionando en `/app`; retornos de PayPal actualizados; tests en verde        | ✅     |
+| L3  | Landing                                                                 | Fiel a los diseños en desktop, tablet y móvil; tema claro y oscuro                   | ✅     |
+| L4  | Motor de la Base de conocimientos                                       | Markdown → páginas, navegación lateral, tabla de contenidos, enlaces entre artículos | ✅     |
+| L5  | Búsqueda                                                                | Índice en build, búsqueda instantánea con resaltado y navegación por teclado         | ✅     |
+| L6  | Contenido                                                               | Artículos de §4 redactados y revisados; secciones generadas desde el código          | ✅     |
+| L7  | Calidad y pulido                                                        | Criterios de §7 cumplidos y revisión final con el equipo de diseño                   | 🔄     |
 
 ## 7. Criterios de calidad
 
@@ -118,3 +118,4 @@ máxima fidelidad.
 ## 9. Bitácora
 
 - **2026-10-19** — Plan creado. En espera del kit de marca y los diseños del equipo de diseño.
+- **2026-10-19** — Recibido `DESIGN.md` con logo, icono y mockup. Construidos landing (`/`), Knowledge (`/knowledge`, 13 artículos en inglés, búsqueda) y acceso (`/login`, `/register`) sobre los tokens del kit; consola movida a `/console`. Revisión con capturas a 375/768/1024/1440 px y auditoría de Web Interface Guidelines. Pendiente: revisión del equipo de diseño, consola con la nueva identidad y en inglés, versión vectorial del logo.

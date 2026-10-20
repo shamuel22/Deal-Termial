@@ -1,0 +1,104 @@
+/* Deal Terminal design tokens — DESIGN.md §4–§6. Fuente única de valores visuales del sitio público. */
+:root {
+  /* Brand primitives */
+  --dt-ivory: #f5f3ec;
+  --dt-ink: #151a18;
+  --dt-emerald: #00b77a;
+  --dt-sage: #dfe9e2;
+
+  /* Surfaces */
+  --bg-page: var(--dt-ivory);
+  --bg-surface: #ffffff;
+  --bg-subtle: #ecefe9;
+  --bg-selected: var(--dt-sage);
+  --bg-inverse: var(--dt-ink);
+  --bg-overlay: rgb(21 26 24 / 42%);
+
+  /* Text */
+  --text-primary: var(--dt-ink);
+  --text-secondary: #4d5b53;
+  --text-muted: #626d66;
+  --text-inverse: var(--dt-ivory);
+  --text-inverse-muted: #c0ccc4;
+  --text-link: #007a52;
+
+  /* Actions */
+  --action-primary: var(--dt-ink);
+  --action-primary-hover: #29342e;
+  --action-primary-text: var(--dt-ivory);
+  --action-accent: var(--dt-emerald);
+  --action-accent-hover: #00a66f;
+  --action-accent-text: var(--dt-ink);
+  --action-disabled: #e2e6e0;
+  --action-disabled-text: #717b74;
+
+  /* Borders */
+  --border-subtle: #d8ded8;
+  --border-control: #7b8880;
+  --border-active: #007a52;
+  --focus-ring: #007a52;
+
+  /* Semantic feedback */
+  --success-fg: #006342;
+  --success-bg: #e1f3e9;
+  --warning-fg: #805300;
+  --warning-bg: #fff0cc;
+  --danger-fg: #a52b35;
+  --danger-bg: #fdebed;
+  --info-fg: #245578;
+  --info-bg: #e6f0f7;
+
+  /* Type */
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --tracking-display: -0.045em;
+  --tracking-heading: -0.025em;
+  --tracking-label: 0.12em;
+
+  /* Space, geometry, elevation, motion */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --radius-sm: 4px;
+  --radius-control: 6px;
+  --radius-card: 10px;
+  --radius-panel: 14px;
+  --radius-pill: 999px;
+  --shadow-card: 0 4px 16px rgb(21 26 24 / 4%);
+  --shadow-float: 0 16px 40px rgb(21 26 24 / 10%);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --z-base: 0;
+  --z-sticky: 20;
+  --z-menu: 40;
+  --z-overlay: 60;
+  --z-dialog: 70;
+  --z-toast: 80;
+}
+
+[data-surface='dark'] {
+  --bg-page: #151a18;
+  --bg-surface: #202923;
+  --bg-subtle: #28342d;
+  --text-primary: #f5f3ec;
+  --text-secondary: #c0ccc4;
+  --text-muted: #a8b8ad;
+  --text-link: #41d9a4;
+  --border-subtle: #45534a;
+  --border-control: #7e9185;
+  --border-active: #41d9a4;
+  --focus-ring: #41d9a4;
+  --action-primary: #00b77a;
+  --action-primary-hover: #20c78f;
+  --action-primary-text: #151a18;
+}

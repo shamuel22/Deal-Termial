@@ -5,3 +5,5 @@ pnpm-lock.yaml
 packages/db/migrations
 BRIEF_API_COMERCIO_ENTRE_AGENTES.md
 credencialsPayPal.md
+DESIGN.md
+assets/brand

@@ -34,13 +34,13 @@ export default function DashboardPage() {
       {incidents.length > 0 && (
         <div className="alert warn">
           {incidents.length} pedido(s) con incidencia.{' '}
-          <Link to={`/orders/${incidents[0]!.id}`}>Revisar</Link>
+          <Link to={`/console/orders/${incidents[0]!.id}`}>Revisar</Link>
         </div>
       )}
 
       <div className="grid">
         <Link
-          to="/review"
+          to="/console/review"
           className="card stat"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
@@ -48,7 +48,7 @@ export default function DashboardPage() {
           <div className="value">{proposals.data?.length ?? '…'}</div>
         </Link>
         <Link
-          to="/orders"
+          to="/console/orders"
           className="card stat"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
@@ -80,7 +80,7 @@ export default function DashboardPage() {
           )}
         </div>
         <Link
-          to="/orders"
+          to="/console/orders"
           className="card stat"
           style={{ textDecoration: 'none', color: 'inherit' }}
         >
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                   </td>
                   <td>{o.acceptedBy.agentId ? 'Aceptado por tu agente' : 'Aceptado por ti'}</td>
                   <td>
-                    <Link to={`/orders/${o.id}`}>Pagar →</Link>
+                    <Link to={`/console/orders/${o.id}`}>Pagar →</Link>
                   </td>
                 </tr>
               ))}
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             ))}
           </tbody>
         </table>
-        <Link to="/activity">Ver toda la actividad →</Link>
+        <Link to="/console/activity">Ver toda la actividad →</Link>
       </section>
     </>
   );

@@ -3,23 +3,23 @@ import { useResource } from '../hooks';
 import { useSession } from '../session';
 
 const BUYER = [
-  ['/', 'Resumen'],
-  ['/review', 'Propuestas'],
-  ['/orders', 'Pedidos'],
-  ['/agents', 'Agentes'],
-  ['/authorizations', 'Autorizaciones'],
+  ['/console', 'Resumen'],
+  ['/console/review', 'Propuestas'],
+  ['/console/orders', 'Pedidos'],
+  ['/console/agents', 'Agentes'],
+  ['/console/authorizations', 'Autorizaciones'],
 ] as const;
 
 const SUPPLIER = [
-  ['/catalog', 'Catálogo'],
-  ['/supplier/negotiations', 'Negociaciones'],
-  ['/supplier/refunds', 'Devoluciones'],
+  ['/console/catalog', 'Catálogo'],
+  ['/console/supplier/negotiations', 'Negociaciones'],
+  ['/console/supplier/refunds', 'Devoluciones'],
 ] as const;
 
 const ACCOUNT = [
-  ['/settings/payments', 'Pagos PayPal'],
-  ['/activity', 'Actividad'],
-  ['/notifications', 'Notificaciones'],
+  ['/console/settings/payments', 'Pagos PayPal'],
+  ['/console/activity', 'Actividad'],
+  ['/console/notifications', 'Notificaciones'],
 ] as const;
 
 export function Layout() {
@@ -32,9 +32,9 @@ export function Layout() {
   if (status === 'anonymous') return <Navigate to="/login" replace />;
 
   const link = ([to, text]: readonly [string, string]) => (
-    <NavLink key={to} to={to} end={to === '/'}>
+    <NavLink key={to} to={to} end={to === '/console'}>
       {text}
-      {to === '/notifications' && (unread.data?.unread ?? 0) > 0 && (
+      {to === '/console/notifications' && (unread.data?.unread ?? 0) > 0 && (
         <span className="count">{unread.data!.unread}</span>
       )}
     </NavLink>

@@ -92,7 +92,7 @@ export default function PaymentsSettingsPage() {
           <div>
             <h3>1. Autorización comercial</h3>
             <p>Qué puede comprar cada agente, a quién, cuánto y hasta cuándo.</p>
-            <Link to="/authorizations">Gestionar autorizaciones →</Link>
+            <Link to="/console/authorizations">Gestionar autorizaciones →</Link>
           </div>
           <div>
             <h3>2. Autorización financiera</h3>
@@ -106,7 +106,7 @@ export default function PaymentsSettingsPage() {
           <div className="alert info">
             Tus agentes con autonomía total buscan, negocian, aceptan y reservan dentro de su
             autorización. Cuando cierran un pedido recibes una notificación y lo pagas desde{' '}
-            <Link to="/orders">Pedidos</Link> con un checkout de PayPal.
+            <Link to="/console/orders">Pedidos</Link> con un checkout de PayPal.
           </div>
         )}
       </section>

@@ -241,19 +241,19 @@ export class PayPalReturnController {
   ) {
     const user = await this.user(req, orgId);
     const result = await completeCheckout(this.handle.db, this.gateway, user, paypalOrderId);
-    res.redirect(`/orders/${result.orderId}?payment=${result.payment.status}`);
+    res.redirect(`/console/orders/${result.orderId}?payment=${result.payment.status}`);
   }
 
   @Get('checkout/cancel')
   checkoutCancel(@Res() res: Response, @Query('orderId') orderId: string) {
-    res.redirect(`/orders/${encodeURIComponent(orderId ?? '')}?payment=cancelled`);
+    res.redirect(`/console/orders/${encodeURIComponent(orderId ?? '')}?payment=cancelled`);
   }
 
   @Get('seller/return')
   async sellerReturn(@Req() req: Request, @Res() res: Response, @Query('orgId') orgId: string) {
     const user = await this.user(req, orgId);
     await refreshSellerAccount(this.handle.db, this.gateway, user.orgId).catch(() => undefined);
-    res.redirect('/settings/payments');
+    res.redirect('/console/settings/payments');
   }
 }
 

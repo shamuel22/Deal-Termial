@@ -65,7 +65,7 @@ function Agents({ base }: { base: string }) {
                 {agents.data.map((a) => (
                   <tr key={a.id}>
                     <td>
-                      <Link to={`/agents/${a.id}`}>{a.name}</Link>
+                      <Link to={`/console/agents/${a.id}`}>{a.name}</Link>
                       <div className="muted">{a.description}</div>
                     </td>
                     <td>

@@ -93,7 +93,7 @@ function RefundCard({
   return (
     <section className="card stack">
       <h2>
-        Pedido <Link to={`/orders/${r.orderId}`}>{r.orderId}</Link>
+        Pedido <Link to={`/console/orders/${r.orderId}`}>{r.orderId}</Link>
       </h2>
       <dl className="kv">
         <dt>Importe</dt>

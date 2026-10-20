@@ -21,13 +21,13 @@ interface Notifications {
 function resourceLink(n: Notification): string | null {
   switch (n.resourceType) {
     case 'order':
-      return n.resourceId ? `/orders/${n.resourceId}` : null;
+      return n.resourceId ? `/console/orders/${n.resourceId}` : null;
     case 'negotiation':
-      return '/review';
+      return '/console/review';
     case 'refund':
-      return '/supplier/refunds';
+      return '/console/supplier/refunds';
     case 'seller_account':
-      return '/settings/payments';
+      return '/console/settings/payments';
     default:
       return null;
   }

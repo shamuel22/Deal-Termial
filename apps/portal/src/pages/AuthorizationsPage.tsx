@@ -95,7 +95,7 @@ function Authorizations({ base }: { base: string }) {
       <PageHeader
         title="Autorizaciones"
         subtitle="Define los encargos y límites que tus agentes deben respetar."
-        actions={<Link to="/authorizations/new">Nueva autorización</Link>}
+        actions={<Link to="/console/authorizations/new">Nueva autorización</Link>}
       />
       {message && (
         <p className="alert ok" role="status">

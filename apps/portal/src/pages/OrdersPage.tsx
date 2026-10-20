@@ -51,7 +51,7 @@ export default function OrdersPage() {
               {orders.data.map((o) => (
                 <tr key={o.id}>
                   <td>
-                    <Link to={`/orders/${o.id}`}>{formatDate(o.acceptedAt, true)}</Link>
+                    <Link to={`/console/orders/${o.id}`}>{formatDate(o.acceptedAt, true)}</Link>
                   </td>
                   <td>{side === 'buyer' ? o.supplier.name : o.buyer.name}</td>
                   <td>{String(o.terms.product.name ?? '—')}</td>

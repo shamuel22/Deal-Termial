@@ -114,7 +114,7 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
       <PageHeader
         title={agent.data?.name ?? 'Agente'}
         subtitle={agent.data?.description ?? undefined}
-        actions={<Link to="/agents">Todos los agentes</Link>}
+        actions={<Link to="/console/agents">Todos los agentes</Link>}
       />
       <ErrorBox error={agent.error} />
       {agent.loading && <Loading />}
@@ -257,7 +257,7 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
               ) : (
                 <Empty>Sin autorizaciones de compra.</Empty>
               ))}
-            <Link to="/authorizations">Administrar autorizaciones</Link>
+            <Link to="/console/authorizations">Administrar autorizaciones</Link>
           </section>
           <section className="card">
             <h2>Deshabilitar agente</h2>

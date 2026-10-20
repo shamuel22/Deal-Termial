@@ -1,0 +1,6 @@
+/* Reglas globales mínimas: el resto vive encapsulado en .dt-site (sitio público) y .dt-console (consola). */
+html,
+body {
+  margin: 0;
+  background: #f5f3ec;
+}

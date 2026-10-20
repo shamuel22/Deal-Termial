@@ -99,7 +99,7 @@ function AuthorizationForm({ base }: { base: string }) {
     if (!review) return;
     if (await create.run(review)) {
       agents.reload();
-      navigate('/authorizations');
+      navigate('/console/authorizations');
     }
   }
   return (
@@ -107,14 +107,14 @@ function AuthorizationForm({ base }: { base: string }) {
       <PageHeader
         title="Nueva autorización"
         subtitle="Primero define el encargo. Después revisa exactamente qué facultades vas a conceder."
-        actions={<Link to="/authorizations">Volver a autorizaciones</Link>}
+        actions={<Link to="/console/authorizations">Volver a autorizaciones</Link>}
       />
       <ErrorBox error={agents.error} />
       {agents.loading && <Loading />}
       {!agents.loading && agents.data && !eligible.length && (
         <Empty>
           Necesitas un agente activo con nivel de compra.{' '}
-          <Link to="/agents">Configurar agentes</Link>
+          <Link to="/console/agents">Configurar agentes</Link>
         </Empty>
       )}
       {eligible.length > 0 && (

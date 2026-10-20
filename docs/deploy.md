@@ -141,10 +141,11 @@ pg_dump -Fc -U deal_terminal deal_terminal > /var/backups/deal-terminal-$(date +
 
 ## Rutas del servicio
 
-| Ruta                 | Uso                                   |
-| -------------------- | ------------------------------------- |
-| `/`                  | Portal                                |
-| `/api` · `/api/docs` | API REST · OpenAPI                    |
-| `/mcp`               | Servidor MCP ([guía](./mcp.md))       |
-| `/webhooks/paypal`   | Webhooks de PayPal                    |
-| `/api/health`        | Salud del servicio y la base de datos |
+| Ruta                 | Uso                                     |
+| -------------------- | --------------------------------------- |
+| `/` · `/knowledge`   | Landing pública y base de conocimientos |
+| `/console`           | Consola del dueño (login en `/login`)   |
+| `/api` · `/api/docs` | API REST · OpenAPI                      |
+| `/mcp`               | Servidor MCP ([guía](./mcp.md))         |
+| `/webhooks/paypal`   | Webhooks de PayPal                      |
+| `/api/health`        | Salud del servicio y la base de datos   |

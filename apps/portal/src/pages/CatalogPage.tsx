@@ -102,7 +102,8 @@ function Catalog({ base }: { base: string }) {
         subtitle="Publica envases y fija los límites dentro de los que se podrá negociar."
       />
       <p className="alert info">
-        Para poder cobrar tus ventas, <Link to="/settings/payments">conecta tu cuenta PayPal</Link>.
+        Para poder cobrar tus ventas,{' '}
+        <Link to="/console/settings/payments">conecta tu cuenta PayPal</Link>.
       </p>
       {message && (
         <p className="alert ok" role="status">

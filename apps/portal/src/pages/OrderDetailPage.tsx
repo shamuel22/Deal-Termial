@@ -60,7 +60,7 @@ export default function OrderDetailPage() {
       <PageHeader
         title={`Pedido ${o.id.slice(0, 8)}`}
         subtitle={`${isBuyer ? 'Compra a' : 'Venta a'} ${isBuyer ? o.supplier.name : o.buyer.name} · aceptado el ${formatDate(o.acceptedAt, true)}`}
-        actions={<Link to="/orders">← Pedidos</Link>}
+        actions={<Link to="/console/orders">← Pedidos</Link>}
       />
       {banner && <div className={`alert ${banner[0]}`}>{banner[1]}</div>}
       {o.incident && (
