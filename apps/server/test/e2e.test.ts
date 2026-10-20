@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -467,5 +468,169 @@ describe('identity API (e2e)', () => {
     expect(Object.keys(doc.paths)).toEqual(
       expect.arrayContaining(['/api/auth/register', '/api/orgs/{orgId}/agents', '/api/agent/me']),
     );
+  });
+});
+
+describe('OAuth for MCP apps (e2e)', () => {
+  const origin = `http://127.0.0.1:${port}`;
+  const redirectUri = 'http://127.0.0.1:43123/callback';
+
+  async function form(path: string, fields: Record<string, string>) {
+    const res = await fetch(`${origin}${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(fields),
+    });
+    return { status: res.status, body: (await res.json()) as Json };
+  }
+
+  async function mcp(token?: string) {
+    return fetch(`${origin}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'e2e', version: '1' },
+        },
+      }),
+    });
+  }
+
+  it('an MCP app discovers OAuth, the owner picks the agent and the token works on /mcp', async () => {
+    // 1. Descubrimiento: 401 con resource_metadata y metadatos del servidor de autorización.
+    const anonymous = await mcp();
+    expect(anonymous.status).toBe(401);
+    const challenge = anonymous.headers.get('www-authenticate')!;
+    expect(challenge).toMatch(
+      /^Bearer resource_metadata="[^"]+\/\.well-known\/oauth-protected-resource\/mcp"$/,
+    );
+    const resource = (await (
+      await fetch(`${origin}/.well-known/oauth-protected-resource/mcp`)
+    ).json()) as { resource: string; authorization_servers: string[] };
+    expect(resource.resource).toMatch(/\/mcp$/);
+    const metadata = (await (
+      await fetch(`${origin}/.well-known/oauth-authorization-server`)
+    ).json()) as Json;
+    expect(metadata).toMatchObject({
+      issuer: resource.authorization_servers[0],
+      code_challenge_methods_supported: ['S256'],
+    });
+    expect(metadata.registration_endpoint).toMatch(/\/oauth\/register$/);
+
+    // 2. Registro dinámico del cliente (público, con PKCE).
+    const registered = await fetch(`${origin}/oauth/register`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_name: 'E2E Assistant',
+        redirect_uris: [redirectUri],
+        token_endpoint_auth_method: 'none',
+        grant_types: ['authorization_code', 'refresh_token'],
+        response_types: ['code'],
+      }),
+    });
+    expect(registered.status).toBe(201);
+    const clientId = ((await registered.json()) as Json).client_id as string;
+
+    // 3. /oauth/authorize guarda la solicitud y manda al dueño a la pantalla de consentimiento.
+    const verifier = randomBytes(32).toString('base64url');
+    const codeChallenge = createHash('sha256').update(verifier).digest('base64url');
+    const authorize = new URL(`${origin}/oauth/authorize`);
+    for (const [key, value] of Object.entries({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      state: 'e2e-state',
+      scope: 'agent',
+      resource: resource.resource,
+    })) {
+      authorize.searchParams.set(key, value);
+    }
+    const redirect = await fetch(authorize, { redirect: 'manual' });
+    expect(redirect.status).toBe(302);
+    const consent = new URL(redirect.headers.get('location')!, origin);
+    expect(consent.pathname).toBe('/oauth/consent');
+    const requestId = consent.searchParams.get('request')!;
+
+    // 4. El dueño ve la solicitud y conecta la aplicación como uno de sus agentes.
+    const { cookie, orgId } = await company('oauth');
+    const agent = await call('POST', `/orgs/${orgId}/agents`, {
+      cookie,
+      body: { name: 'Buyer', access: { buyerLevel: 'negotiate' } },
+    });
+    const view = await call('GET', `/oauth/requests/${requestId}`, { cookie });
+    expect(view.status).toBe(200);
+    expect(view.body).toMatchObject({
+      status: 'pending',
+      client: { name: 'E2E Assistant', redirectHost: '127.0.0.1:43123' },
+    });
+    expect(await call('GET', `/oauth/requests/${requestId}`)).toMatchObject({ status: 401 });
+    const approved = await call('POST', `/orgs/${orgId}/oauth/requests/${requestId}/approve`, {
+      cookie,
+      body: { agentId: agent.body.id },
+    });
+    expect(approved.status).toBe(200);
+    const back = new URL(approved.body.redirectTo as string);
+    expect(`${back.origin}${back.pathname}`).toBe(redirectUri);
+    expect(back.searchParams.get('state')).toBe('e2e-state');
+    const code = back.searchParams.get('code')!;
+
+    // 5. Canje con PKCE: un verificador incorrecto no sirve y no consume el código.
+    const wrong = await form('/oauth/token', {
+      grant_type: 'authorization_code',
+      client_id: clientId,
+      code,
+      code_verifier: randomBytes(32).toString('base64url'),
+      redirect_uri: redirectUri,
+    });
+    expect(wrong).toMatchObject({ status: 400, body: { error: 'invalid_grant' } });
+    const tokens = await form('/oauth/token', {
+      grant_type: 'authorization_code',
+      client_id: clientId,
+      code,
+      code_verifier: verifier,
+      redirect_uri: redirectUri,
+      resource: resource.resource,
+    });
+    expect(tokens.status).toBe(200);
+    expect(tokens.body).toMatchObject({ token_type: 'Bearer', expires_in: 3600 });
+
+    // 6. El token actúa como el agente elegido en /mcp y en la API de agentes.
+    const session = await mcp(tokens.body.access_token as string);
+    expect(session.status).toBe(200);
+    expect(JSON.stringify(await session.json())).toContain('deal-terminal');
+    const me = await call('GET', '/agent/me', { bearer: tokens.body.access_token as string });
+    expect(me.body).toMatchObject({ agentId: agent.body.id });
+
+    // 7. Renovación con rotación.
+    const refreshed = await form('/oauth/token', {
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      refresh_token: tokens.body.refresh_token as string,
+    });
+    expect(refreshed.status).toBe(200);
+    expect(refreshed.body.access_token).not.toBe(tokens.body.access_token);
+
+    // 8. Un token inválido en /mcp vuelve a señalar el descubrimiento OAuth.
+    const invalid = await mcp('dto_not-a-real-token');
+    expect(invalid.status).toBe(401);
+    expect(invalid.headers.get('www-authenticate')).toContain('error="invalid_token"');
+  });
+
+  it('the account pages keep their routes next to the OAuth endpoints', async () => {
+    for (const path of ['/register', '/login', '/oauth/consent']) {
+      expect((await fetch(`${origin}${path}`)).status, path).toBe(200);
+    }
   });
 });

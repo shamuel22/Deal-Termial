@@ -5,6 +5,7 @@ export * from './identity/actor.js';
 export * from './identity/secrets.js';
 export * from './identity/accounts.js';
 export * from './identity/agents.js';
+export * from './identity/oauth.js';
 export * from './catalog/categories.js';
 export * from './authorization/schemas.js';
 export * from './authorization/policy.js';

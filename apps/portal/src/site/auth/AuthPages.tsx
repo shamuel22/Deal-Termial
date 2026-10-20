@@ -2,7 +2,7 @@ import { AlertCircle, ArrowRight } from 'lucide-react';
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { post } from '../../api';
-import { useAction } from '../../hooks';
+import { useAction, useResource } from '../../hooks';
 import { useSession } from '../../session';
 import { BrandLockup } from '../components/Brand';
 import { SiteShell } from '../components/SiteShell';
@@ -83,7 +83,11 @@ function ErrorNotice({ message, hint }: { message?: string; hint?: string }) {
 function safeNext(value: string | null): string | null {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\'))
     return null;
-  return value.startsWith('/console') || value.startsWith('/api/paypal/') ? value : null;
+  return value.startsWith('/console') ||
+    value.startsWith('/api/paypal/') ||
+    value.startsWith('/oauth/consent')
+    ? value
+    : null;
 }
 
 export function SignInPage() {
@@ -216,6 +220,153 @@ export function RegisterPage() {
         {t.auth.haveAccount} <Link to="/login">{t.auth.signIn}</Link>
       </p>
       <p className="dt-auth__env">{t.auth.environment}</p>
+    </AuthFrame>
+  );
+}
+
+interface ConnectionRequest {
+  id: string;
+  status: 'pending' | 'approved' | 'denied' | 'exchanged' | 'expired';
+  client: { name: string; redirectHost: string };
+  organizations: Array<{
+    orgId: string;
+    orgName: string;
+    agents: Array<{
+      id: string;
+      name: string;
+      buyerLevel: 'search_only' | 'negotiate' | 'full_autonomy' | null;
+      sellerScopes: string[];
+    }>;
+  }>;
+}
+
+/**
+ * Consentimiento OAuth (claude.ai, ChatGPT…): el dueño elige qué agente representa a la aplicación.
+ * La aplicación hereda el nivel y las autorizaciones de ese agente; el servidor decide el resto.
+ */
+export function ConsentPage() {
+  const t = useCopy();
+  const c = t.consent;
+  const { status } = useSession();
+  const location = useLocation();
+  const requestId = new URLSearchParams(location.search).get('request') ?? '';
+  const request = useResource<ConnectionRequest>(
+    status === 'authenticated' && requestId ? `/oauth/requests/${requestId}` : null,
+  );
+  const [orgId, setOrgId] = useState('');
+  const [agentId, setAgentId] = useState('');
+  const decide = useAction((path: string, body?: unknown) =>
+    post<{ redirectTo: string }>(path, body),
+  );
+
+  if (status === 'anonymous') {
+    const next = `${location.pathname}${location.search}`;
+    return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />;
+  }
+
+  const data = request.data;
+  const org = data?.organizations.find((o) => o.orgId === orgId) ?? data?.organizations[0];
+  const app = data?.client.name ?? 'The app';
+
+  async function finish(path: string, body?: unknown) {
+    const result = await decide.run(path, body);
+    if (result) window.location.assign(result.redirectTo);
+  }
+
+  function levelLabel(agent: ConnectionRequest['organizations'][number]['agents'][number]) {
+    if (agent.buyerLevel) return c.levels[agent.buyerLevel];
+    return agent.sellerScopes.length ? c.levels.sellingOnly : c.levels.none;
+  }
+
+  return (
+    <AuthFrame title={c.title} lede={data ? c.lede(app) : c.loading}>
+      {request.error && (
+        <ErrorNotice message={request.error.body.message} hint={request.error.body.hint} />
+      )}
+      {!requestId && <ErrorNotice message={c.expired('the app')} />}
+      {data && data.status !== 'pending' && (
+        <div className="dt-notice dt-notice--error" role="alert">
+          <AlertCircle size={18} strokeWidth={1.75} aria-hidden />
+          <p>{c.expired(app)}</p>
+        </div>
+      )}
+      {data && data.status === 'pending' && !org && (
+        <p className="dt-consent__note">{c.notOwner}</p>
+      )}
+      {data && data.status === 'pending' && org && (
+        <form
+          className="dt-form"
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            void finish(`/orgs/${org.orgId}/oauth/requests/${data.id}/approve`, { agentId });
+          }}
+        >
+          {data.organizations.length > 1 && (
+            <div className="dt-field">
+              <label htmlFor="consent-org">{c.organization}</label>
+              <select
+                id="consent-org"
+                value={org.orgId}
+                onChange={(e) => {
+                  setOrgId(e.target.value);
+                  setAgentId('');
+                }}
+              >
+                {data.organizations.map((o) => (
+                  <option key={o.orgId} value={o.orgId}>
+                    {o.orgName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {org.agents.length === 0 ? (
+            <p className="dt-consent__note">
+              {c.noAgents} <Link to="/console/agents">{c.createAgent}</Link>
+            </p>
+          ) : (
+            <fieldset className="dt-choices">
+              <legend>{c.actAs}</legend>
+              {org.agents.map((agent) => (
+                <label key={agent.id} className="dt-choice">
+                  <input
+                    type="radio"
+                    name="agent"
+                    value={agent.id}
+                    required
+                    checked={agentId === agent.id}
+                    onChange={() => setAgentId(agent.id)}
+                  />
+                  <span>
+                    <strong>{agent.name}</strong>
+                    <span>{levelLabel(agent)}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+          )}
+          <p className="dt-consent__note">{c.scope}</p>
+          <ErrorNotice message={decide.error?.body.message} hint={decide.error?.body.hint} />
+          <div className="dt-consent__actions">
+            <button
+              type="button"
+              className="dt-btn dt-btn--secondary"
+              disabled={decide.pending}
+              onClick={() => void finish(`/orgs/${org.orgId}/oauth/requests/${data.id}/deny`)}
+            >
+              {c.cancel}
+            </button>
+            <button
+              className="dt-btn dt-btn--primary"
+              disabled={decide.pending || !agentId}
+              aria-busy={decide.pending}
+            >
+              {decide.pending ? c.connecting : c.connect}
+            </button>
+          </div>
+          <p className="dt-auth__env">{c.returnTo(data.client.redirectHost)}</p>
+        </form>
+      )}
     </AuthFrame>
   );
 }

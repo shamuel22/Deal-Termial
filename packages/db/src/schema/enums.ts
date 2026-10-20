@@ -115,3 +115,13 @@ export const webhookStatus = pgEnum('webhook_status', [
   'ignored',
   'failed',
 ]);
+
+// Solicitud de autorización OAuth de un cliente MCP (claude.ai, ChatGPT…) hasta que se canjea su código.
+export const oauthAuthorizationStatus = pgEnum('oauth_authorization_status', [
+  'pending',
+  'approved',
+  'denied',
+  'exchanged',
+]);
+
+export const oauthTokenKind = pgEnum('oauth_token_kind', ['access', 'refresh']);

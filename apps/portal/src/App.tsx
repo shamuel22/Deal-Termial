@@ -14,6 +14,9 @@ const SignInPage = lazy(() =>
 const RegisterPage = lazy(() =>
   import('./site/auth/AuthPages').then((m) => ({ default: m.RegisterPage })),
 );
+const ConsentPage = lazy(() =>
+  import('./site/auth/AuthPages').then((m) => ({ default: m.ConsentPage })),
+);
 
 function ConsoleRoot() {
   return (
@@ -36,6 +39,7 @@ export function App() {
             </Route>
             <Route path="login" element={<SignInPage />} />
             <Route path="register" element={<RegisterPage />} />
+            <Route path="oauth/consent" element={<ConsentPage />} />
             <Route element={<ConsoleRoot />}>
               <Route path="*" element={<ConsoleRoutes />} />
             </Route>

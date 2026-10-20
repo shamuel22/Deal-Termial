@@ -49,6 +49,8 @@ export interface AgentView {
   credentials: Array<{
     id: string;
     keyPrefix: string;
+    /** Conexiones OAuth: nombre de la aplicación (p. ej. "Claude"). Null en claves `dtk_`. */
+    label: string | null;
     createdAt: Date;
     lastUsedAt: Date | null;
     revokedAt: Date | null;
@@ -65,7 +67,7 @@ export interface IssuedCredential {
 const KEY_PREFIX = 'dtk_';
 
 /** Carga un agente de la organización del actor; si es de otra organización, NOT_FOUND. */
-async function findOwnAgent(db: Executor, orgId: string, agentId: string) {
+export async function findOwnAgent(db: Executor, orgId: string, agentId: string) {
   if (!z.uuid().safeParse(agentId).success) {
     throw new DomainError('NOT_FOUND', 'Agent not found');
   }
@@ -149,6 +151,7 @@ export async function getAgent(db: Executor, actor: Actor, agentId: string): Pro
     .select({
       id: schema.agentCredentials.id,
       keyPrefix: schema.agentCredentials.keyPrefix,
+      label: schema.agentCredentials.label,
       createdAt: schema.agentCredentials.createdAt,
       lastUsedAt: schema.agentCredentials.lastUsedAt,
       revokedAt: schema.agentCredentials.revokedAt,
@@ -337,16 +340,28 @@ export async function resolveAgentKey(db: Executor, apiKey: string): Promise<Age
     throw new DomainError('UNAUTHENTICATED', 'Invalid agent credential');
   }
   const [row] = await db
-    .select({
-      credentialId: schema.agentCredentials.id,
-      agentId: schema.agents.id,
-      orgId: schema.agents.orgId,
-    })
+    .select({ id: schema.agentCredentials.id })
+    .from(schema.agentCredentials)
+    .where(eq(schema.agentCredentials.keyHash, sha256(apiKey)));
+  if (!row) throw new DomainError('UNAUTHENTICATED', 'Invalid or revoked agent credential');
+  return agentActorForCredential(db, row.id);
+}
+
+/**
+ * Actor de un agente a partir de su credencial (clave `dtk_` o conexión OAuth). Falla si la
+ * credencial está revocada o el agente deshabilitado; el nivel es siempre el vigente.
+ */
+export async function agentActorForCredential(
+  db: Executor,
+  credentialId: string,
+): Promise<AgentActor> {
+  const [row] = await db
+    .select({ agentId: schema.agents.id, orgId: schema.agents.orgId })
     .from(schema.agentCredentials)
     .innerJoin(schema.agents, eq(schema.agents.id, schema.agentCredentials.agentId))
     .where(
       and(
-        eq(schema.agentCredentials.keyHash, sha256(apiKey)),
+        eq(schema.agentCredentials.id, credentialId),
         isNull(schema.agentCredentials.revokedAt),
         isNull(schema.agents.disabledAt),
       ),
@@ -357,12 +372,12 @@ export async function resolveAgentKey(db: Executor, apiKey: string): Promise<Age
   await db
     .update(schema.agentCredentials)
     .set({ lastUsedAt: new Date() })
-    .where(eq(schema.agentCredentials.id, row.credentialId));
+    .where(eq(schema.agentCredentials.id, credentialId));
   return {
     kind: 'agent',
     agentId: row.agentId,
     orgId: row.orgId,
-    credentialId: row.credentialId,
+    credentialId,
     grant: {
       id: grant.id,
       version: grant.version,

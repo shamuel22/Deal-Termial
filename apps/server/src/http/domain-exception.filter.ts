@@ -3,11 +3,13 @@ import {
   Catch,
   type ExceptionFilter,
   HttpException,
+  Inject,
   Logger,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { DomainError, ERROR_CATALOG } from '@deal/shared';
+import { DomainError, ERROR_CATALOG, type AppConfig } from '@deal/shared';
+import { APP_CONFIG } from '../config.module.js';
 
 /**
  * Traduce errores a respuestas JSON estables `{ error: { code, message, hint, details } }`.
@@ -17,10 +19,22 @@ import { DomainError, ERROR_CATALOG } from '@deal/shared';
 export class DomainExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger('HTTP');
 
+  constructor(@Inject(APP_CONFIG) private readonly config: AppConfig) {}
+
   catch(exception: unknown, host: ArgumentsHost): void {
     const res = host.switchToHttp().getResponse<Response>();
 
     if (exception instanceof DomainError) {
+      const req = host.switchToHttp().getRequest<Request>();
+      if (exception.http === 401 && req.path.startsWith('/mcp')) {
+        // Descubrimiento OAuth (RFC 9728): el cliente MCP sabe dónde pedir autorización.
+        const metadata = new URL(
+          '/.well-known/oauth-protected-resource/mcp',
+          this.config.PUBLIC_BASE_URL,
+        );
+        const invalid = req.headers.authorization ? ', error="invalid_token"' : '';
+        res.set('WWW-Authenticate', `Bearer resource_metadata="${metadata.href}"${invalid}`);
+      }
       res.status(exception.http).json({ error: exception.toJSON() });
       return;
     }

@@ -125,6 +125,18 @@ html:has(.dt-site) {
   flex: none;
 }
 
+.dt-btn:disabled,
+.dt-btn:disabled:hover {
+  background: var(--action-disabled);
+  border-color: var(--action-disabled);
+  color: var(--action-disabled-text);
+  cursor: not-allowed;
+}
+
+.dt-btn[aria-busy='true']:disabled {
+  cursor: progress;
+}
+
 .dt-btn--compact {
   min-height: 36px;
   padding: 0 var(--space-4);
@@ -2058,4 +2070,83 @@ html:has(.dt-site) {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* Consentimiento OAuth: elegir el agente que representa a la aplicación */
+.dt-field select {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-control);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: 400 16px var(--font-sans);
+}
+
+.dt-choices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.dt-choices legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.dt-choice {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.dt-choice:has(input:checked) {
+  border-color: var(--border-active);
+  background: var(--bg-selected);
+}
+
+.dt-choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.dt-choice input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--action-accent);
+}
+
+.dt-choice > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dt-choice > span > span {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.dt-consent__note {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.dt-consent__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
 }

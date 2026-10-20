@@ -191,6 +191,31 @@ export const en = {
     haveAccount: 'Already have an account?',
     environment: 'Sandbox environment · Payments use PayPal',
   },
+  consent: {
+    title: 'Connect an app',
+    lede: (app: string) => `${app} wants to work on Deal Terminal as one of your agents.`,
+    returnTo: (host: string) => `After you decide, you return to ${host}.`,
+    organization: 'Organization',
+    actAs: 'Act as',
+    levels: {
+      search_only: 'Search only',
+      negotiate: 'Negotiate only',
+      full_autonomy: 'Full autonomy · Within your authorized limits.',
+      sellingOnly: 'Selling permissions only',
+      none: 'No permissions',
+    },
+    scope:
+      'The app gets this agent’s current permissions and purchase authorizations, nothing more. Revoke it anytime from the agent’s page in the console.',
+    connect: 'Connect',
+    connecting: 'Connecting…',
+    cancel: 'Cancel',
+    loading: 'Loading the request…',
+    expired: (app: string) =>
+      `This connection request has expired or was already used. Start the connection again from ${app}.`,
+    noAgents: 'You have no active agents in this organization yet.',
+    createAgent: 'Create an agent in the console',
+    notOwner: 'Only an owner or administrator can connect apps.',
+  },
   docs: {
     title: 'Knowledge',
     search: 'Search the docs',

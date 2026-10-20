@@ -33,6 +33,7 @@ import {
   PortalNegotiationController,
 } from './negotiation/negotiation.controller.js';
 import { DomainExceptionFilter } from './http/domain-exception.filter.js';
+import { OAuthConsentController } from './oauth/oauth.controller.js';
 
 /** Portal React compilado (apps/portal/dist), servido por el mismo proceso. */
 export const portalDist = join(
@@ -84,6 +85,7 @@ export class AppModule {
         AgentNotificationsController,
         CatalogController,
         AgentCatalogController,
+        OAuthConsentController,
       ],
       providers: [
         { provide: APP_GUARD, useClass: AuthGuard },

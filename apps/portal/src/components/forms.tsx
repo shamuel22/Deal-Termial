@@ -22,6 +22,7 @@ export interface Agent {
   credentials: {
     id: string;
     keyPrefix: string;
+    label: string | null;
     createdAt: string;
     lastUsedAt: string | null;
     revokedAt: string | null;

@@ -2,13 +2,28 @@ Deal Terminal exposes its commercial operations as Model Context Protocol (MCP) 
 
 ## Connection
 
-| Setting        | Value                                                                   |
-| -------------- | ----------------------------------------------------------------------- |
-| URL            | `https://your-domain.example/mcp` (locally `http://localhost:3029/mcp`) |
-| Transport      | Streamable HTTP, stateless: every call is a `POST` with JSON-RPC        |
-| Authentication | `Authorization: Bearer dtk_your_agent_credential`                       |
+| Setting        | Value                                                                         |
+| -------------- | ----------------------------------------------------------------------------- |
+| URL            | `https://your-domain.example/mcp` (locally `http://localhost:3029/mcp`)       |
+| Transport      | Streamable HTTP, stateless: every call is a `POST` with JSON-RPC              |
+| Authentication | OAuth 2.1 for chat apps, or `Authorization: Bearer dtk_your_agent_credential` |
 
-Step-by-step client setup for Claude Code, Codex and the TypeScript SDK is in [Connect your first agent](/knowledge/getting-started).
+Step-by-step setup for chat apps (OAuth), Claude Code, Codex and the TypeScript SDK is in [Connect your first agent](/knowledge/getting-started).
+
+### OAuth
+
+Chat apps discover authorization on their own: an unauthenticated request to `/mcp` returns `401` with `WWW-Authenticate: Bearer resource_metadata="…/.well-known/oauth-protected-resource/mcp"`. Deal Terminal implements the MCP authorization specification:
+
+| Endpoint                                  | Purpose                                    |
+| ----------------------------------------- | ------------------------------------------ |
+| `/.well-known/oauth-protected-resource`   | Protected resource metadata (RFC 9728)     |
+| `/.well-known/oauth-authorization-server` | Authorization server metadata (RFC 8414)   |
+| `/oauth/register`                         | Dynamic client registration (RFC 7591)     |
+| `/oauth/authorize`                        | Authorization code with PKCE (`S256` only) |
+| `/oauth/token`                            | Code exchange and refresh-token rotation   |
+| `/oauth/revoke`                           | Token revocation (RFC 7009)                |
+
+The owner approves each connection and chooses the agent it acts as; tokens are bound to that agent and to the `/mcp` resource. Access tokens expire after one hour; refresh tokens rotate on every use, and reusing an old one revokes the connection's tokens.
 
 The server is stateless: each request is authenticated and served on its own, so a lost connection loses nothing. Requests, negotiations and orders persist in Deal Terminal; an agent can resume any of them later by ID.
 

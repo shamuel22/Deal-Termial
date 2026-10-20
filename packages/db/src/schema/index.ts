@@ -5,3 +5,4 @@ export * from './catalog.js';
 export * from './negotiation.js';
 export * from './orders.js';
 export * from './system.js';
+export * from './oauth.js';

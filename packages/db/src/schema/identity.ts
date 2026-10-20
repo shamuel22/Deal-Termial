@@ -88,7 +88,11 @@ export const agents = pgTable(
   (t) => [index('agents_org_idx').on(t.orgId)],
 );
 
-/** Credencial del agente para API/MCP. Solo se guarda el hash; el secreto se muestra una vez. */
+/**
+ * Credencial del agente para API/MCP. Solo se guarda el hash; el secreto se muestra una vez.
+ * Una conexión OAuth (claude.ai, ChatGPT…) también es una credencial: sin clave estática, con etiqueta y
+ * cliente OAuth; sus tokens viven en `oauth_tokens` y revocarla los invalida.
+ */
 export const agentCredentials = pgTable(
   'agent_credentials',
   {
@@ -98,7 +102,9 @@ export const agentCredentials = pgTable(
       .references(() => agents.id),
     // Prefijo público para identificar la credencial en la consola sin revelar el secreto.
     keyPrefix: text('key_prefix').notNull(),
-    keyHash: text('key_hash').notNull(),
+    keyHash: text('key_hash'),
+    label: text('label'),
+    oauthClientId: text('oauth_client_id'),
     lastUsedAt: tstz('last_used_at'),
     revokedAt: tstz('revoked_at'),
     createdAt: createdAt(),

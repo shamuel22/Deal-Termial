@@ -10,7 +10,7 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { DbHandle } from '@deal/db';
 import {
-  resolveAgentKey,
+  resolveAgentBearer,
   resolveSession,
   resolveUserActor,
   type Actor,
@@ -78,7 +78,7 @@ export class AuthGuard implements CanActivate {
 
     if (mode === 'agent' || (mode === 'org-actor' && apiKey)) {
       if (!apiKey) throw new DomainError('UNAUTHENTICATED', 'Agent credential is missing');
-      const actor = await resolveAgentKey(db, apiKey);
+      const actor = await resolveAgentBearer(db, apiKey);
       const orgId = req.params.orgId;
       if (typeof orgId === 'string' && orgId !== actor.orgId) {
         throw new DomainError('NOT_FOUND', 'Organization not found');

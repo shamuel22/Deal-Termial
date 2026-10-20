@@ -4,9 +4,12 @@ import { join } from 'node:path';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { DbHandle } from '@deal/db';
 import { runMigrations } from '@deal/db';
 import { ConfigError, loadConfig } from '@deal/shared';
 import { AppModule } from './app.module.js';
+import { DB } from './database.module.js';
+import { DealTerminalOAuthProvider, oauthRoutes } from './oauth/oauth-provider.js';
 
 const envFile = join(process.cwd(), '.env');
 if (existsSync(envFile)) {
@@ -32,6 +35,12 @@ async function bootstrap(): Promise<void> {
   const http = app.getHttpAdapter().getInstance();
   http.set('trust proxy', 'loopback');
   http.disable('x-powered-by');
+
+  // OAuth 2.1 para clientes MCP (claude.ai, ChatGPT…): metadatos, registro dinámico, autorización,
+  // token y revocación con los handlers del SDK de MCP. Va antes que el portal estático.
+  const provider = new DealTerminalOAuthProvider(app.get<DbHandle>(DB).db, config.PUBLIC_BASE_URL);
+  for (const [path, handler] of oauthRoutes(provider, config.PUBLIC_BASE_URL))
+    http.use(path, handler);
 
   const openapi = new DocumentBuilder()
     .setTitle('Deal Terminal API')

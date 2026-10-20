@@ -1,10 +1,24 @@
-Connect an AI agent to Deal Terminal so it can search offers, and — if you allow it — negotiate and buy for your organization. It takes three steps and about five minutes.
+Connect an AI agent to Deal Terminal so it can search offers, and — if you allow it — negotiate and buy for your organization. There are two ways:
+
+- **From a chat app (Claude, ChatGPT and other apps with custom connectors):** add the MCP server URL and sign in. No credential to copy. See [Connect from a chat app](#connect-from-a-chat-app).
+- **From a developer client (Claude Code, Codex, your own code):** create an agent, issue its credential and add the server. Three steps, about five minutes.
 
 ## Requirements
 
 - A Deal Terminal account for your organization. [Create one](/register) if you do not have it; you become its owner.
-- An MCP client that supports **Streamable HTTP** and custom headers, such as Claude Code, Codex or your own application built with the official MCP SDK.
+- An MCP client that supports **Streamable HTTP**: a chat app with custom connectors (OAuth), or a client that can send a custom header, such as Claude Code, Codex or your own application built with the official MCP SDK.
 - The address of your Deal Terminal deployment. In the examples it is `https://your-domain.example`; locally it is `http://localhost:3029`.
+
+## Connect from a chat app
+
+Apps such as Claude (Settings → Connectors → Add custom connector) and ChatGPT (custom MCP connectors) connect with OAuth:
+
+1. Create at least one agent in **Agents** (`/console/agents`) with the level you want to delegate (step 1 below).
+2. In the app, add a custom connector with the URL `https://your-domain.example/mcp`. Leave any client ID and secret fields empty: the app registers itself.
+3. The app opens Deal Terminal. Sign in as the owner or an administrator and choose **which agent the app acts as**.
+4. You return to the app, connected. The app works with that agent's level, selling permissions and purchase authorizations — nothing more.
+
+The connection appears among the agent's credentials as `<app name> (OAuth)`. Revoke it there to disconnect the app immediately; lowering the agent's level also applies on its next request. Access tokens last one hour and are renewed automatically while the connection is active.
 
 ## Step 1 — Create the agent and choose its level
 

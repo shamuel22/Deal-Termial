@@ -200,9 +200,7 @@ function AgentDetail({ base, authorizationsPath }: { base: string; authorization
                 <tbody>
                   {agent.data.credentials.map((c) => (
                     <tr key={c.id}>
-                      <td>
-                        <code>{c.keyPrefix}</code>
-                      </td>
+                      <td>{c.label ? `${c.label} (OAuth)` : <code>{c.keyPrefix}</code>}</td>
                       <td>{formatDate(c.createdAt, true)}</td>
                       <td>{formatDate(c.lastUsedAt, true)}</td>
                       <td>{c.revokedAt ? formatDate(c.revokedAt, true) : 'No'}</td>
