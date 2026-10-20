@@ -6,7 +6,7 @@ import { z } from 'zod';
  */
 export const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().positive().default(3000),
+  PORT: z.coerce.number().int().positive().default(3029),
   HOST: z.string().default('0.0.0.0'),
   PUBLIC_BASE_URL: z.url(),
   DATABASE_URL: z.string().min(1),

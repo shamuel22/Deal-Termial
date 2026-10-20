@@ -4,7 +4,7 @@ Deal Terminal exposes its commercial operations as Model Context Protocol (MCP) 
 
 | Setting        | Value                                                                   |
 | -------------- | ----------------------------------------------------------------------- |
-| URL            | `https://your-domain.example/mcp` (locally `http://localhost:3000/mcp`) |
+| URL            | `https://your-domain.example/mcp` (locally `http://localhost:3029/mcp`) |
 | Transport      | Streamable HTTP, stateless: every call is a `POST` with JSON-RPC        |
 | Authentication | `Authorization: Bearer dtk_your_agent_credential`                       |
 

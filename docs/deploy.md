@@ -40,7 +40,7 @@ Completa `.env`:
 | Variable                                    | Valor                                                                                         |
 | ------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `NODE_ENV`                                  | `production`                                                                                  |
-| `PORT` / `HOST`                             | `3000` / `127.0.0.1` (solo accesible a través de nginx)                                       |
+| `PORT` / `HOST`                             | `3029` / `127.0.0.1` (solo accesible a través de nginx)                                       |
 | `PUBLIC_BASE_URL`                           | `https://dealterminal.lucuo.dev`                                                              |
 | `DATABASE_URL`                              | `postgres://deal_terminal:<contraseña codificada>@localhost:5432/deal_terminal` (`@` → `%40`) |
 | `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` | App REST sandbox (Developer Dashboard)                                                        |
@@ -83,7 +83,7 @@ WantedBy=multi-user.target
 sudo useradd --system --home /opt/deal-terminal deal
 sudo chown -R deal: /opt/deal-terminal
 sudo systemctl enable --now deal-terminal
-curl -s http://127.0.0.1:3000/api/health   # {"status":"ok","database":"ok"}
+curl -s http://127.0.0.1:3029/api/health   # {"status":"ok","database":"ok"}
 ```
 
 ## 5. nginx y TLS
@@ -95,7 +95,7 @@ server {
   server_name dealterminal.lucuo.dev;
 
   location / {
-    proxy_pass http://127.0.0.1:3000;
+    proxy_pass http://127.0.0.1:3029;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

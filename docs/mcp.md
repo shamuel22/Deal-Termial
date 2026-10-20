@@ -7,7 +7,7 @@ autentica, aplica permisos y ejecuta las operaciones. El catálogo completo est�
 
 | Dato          | Valor                                                                                                      |
 | ------------- | ---------------------------------------------------------------------------------------------------------- |
-| URL           | `https://<tu-dominio>/mcp` (en local: `http://localhost:3000/mcp`)                                         |
+| URL           | `https://<tu-dominio>/mcp` (en local: `http://localhost:3029/mcp`)                                         |
 | Transporte    | Streamable HTTP, sin estado (`POST` con JSON-RPC)                                                          |
 | Autenticación | Cabecera `Authorization: Bearer <credencial del agente>`                                                   |
 | Credencial    | La emite el dueño en el portal (Agentes → Emitir credencial). Empieza por `dtk_` y se muestra una sola vez |

@@ -4,7 +4,7 @@ Connect an AI agent to Deal Terminal so it can search offers, and — if you all
 
 - A Deal Terminal account for your organization. [Create one](/register) if you do not have it; you become its owner.
 - An MCP client that supports **Streamable HTTP** and custom headers, such as Claude Code, Codex or your own application built with the official MCP SDK.
-- The address of your Deal Terminal deployment. In the examples it is `https://your-domain.example`; locally it is `http://localhost:3000`.
+- The address of your Deal Terminal deployment. In the examples it is `https://your-domain.example`; locally it is `http://localhost:3029`.
 
 ## Step 1 — Create the agent and choose its level
 

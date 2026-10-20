@@ -13,7 +13,7 @@ const validEnv = {
 describe('loadConfig', () => {
   it('applies defaults', () => {
     const config = loadConfig(validEnv);
-    expect(config.PORT).toBe(3000);
+    expect(config.PORT).toBe(3029);
     expect(config.PAYPAL_ENV).toBe('sandbox');
   });
 
