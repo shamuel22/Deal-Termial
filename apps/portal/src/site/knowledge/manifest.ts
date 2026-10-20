@@ -80,7 +80,7 @@ const SECTIONS: Array<{ title: string; articles: Array<Omit<Article, 'section' |
       {
         slug: 'payments',
         title: 'Payments and refunds',
-        summary: 'Checkout, delegated payment, reconciliation and refunds with PayPal sandbox.',
+        summary: 'Checkout, delegated payment, reconciliation and refunds with PayPal.',
       },
     ],
   },

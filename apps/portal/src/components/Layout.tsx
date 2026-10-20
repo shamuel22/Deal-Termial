@@ -193,7 +193,10 @@ export function Layout() {
               {current && current.to !== '/console' && <li aria-current="page">{current.label}</li>}
             </ol>
           </nav>
-          <span className="env" title="Payments use the PayPal sandbox. No real money moves.">
+          <span
+            className="env"
+            title="Sandbox environment. Payments use PayPal; no real money moves."
+          >
             Sandbox
           </span>
         </header>

@@ -319,14 +319,11 @@ html:has(.dt-site) {
 }
 
 .dt-hero h1 {
-  font-size: clamp(44px, 5.4vw, 80px);
-  line-height: 0.99;
+  font-size: clamp(44px, 5vw, 76px);
+  line-height: 1;
+  text-wrap: balance;
   font-weight: 700;
   letter-spacing: var(--tracking-display);
-}
-
-.dt-hero h1 span {
-  display: block;
 }
 
 .dt-hero__body {
@@ -334,6 +331,12 @@ html:has(.dt-site) {
   line-height: 1.5;
   color: var(--text-secondary);
   max-width: 34ch;
+}
+
+.dt-hero__protocols {
+  font: 500 12px/1.5 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
 }
 
 .dt-hero__actions {
@@ -345,7 +348,7 @@ html:has(.dt-site) {
 
 @media (max-width: 1023px) {
   .dt-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -360,243 +363,522 @@ html:has(.dt-site) {
   }
 }
 
-/* ---------- Flujo del acuerdo (visual del hero) ---------- */
-.dt-flow {
-  background: var(--bg-flow);
-  border-radius: var(--radius-panel);
-  padding: clamp(20px, 3vw, 36px);
+/* ---------- Acuerdo animado (visual del hero) ----------
+   Propósito: explicación. Una sola secuencia (~5 s) que se reproduce una vez y se queda en el resultado.
+   Solo transform y opacity; el espacio está reservado desde el inicio, sin saltos de layout. */
+.dt-deal {
+  position: relative;
   display: flex;
   flex-direction: column;
-}
-
-.dt-flow__meta {
-  display: flex;
-  justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
-  color: var(--text-secondary);
-}
-
-.dt-flow__step {
-  background: var(--bg-flow-card);
+  margin: 0;
+  padding: var(--space-6);
+  background: var(--bg-flow);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-card);
-  padding: var(--space-5) var(--space-6);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-panel);
 }
 
-.dt-flow__step:nth-of-type(2) {
-  margin-inline: clamp(0px, 2vw, 20px) 0;
-}
-
-.dt-flow__step:nth-of-type(3) {
-  margin-inline: clamp(0px, 1vw, 10px) clamp(0px, 1vw, 10px);
-}
-
-.dt-flow__head {
+.dt-deal__meta {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.dt-flow__row {
-  display: flex;
-  align-items: center;
   gap: var(--space-4);
-  margin-top: var(--space-4);
 }
 
-.dt-flow__glyph {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
+.dt-deal__meta .dt-eyebrow {
+  font-size: 11px;
+}
+
+.dt-deal__meta .dt-eyebrow:last-child {
+  color: var(--text-muted);
+}
+
+/* Riel de etapas */
+.dt-deal__rail {
+  position: relative;
   display: grid;
-  place-items: center;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: var(--space-2) 0 var(--space-1);
+  padding: 0 0 var(--space-3);
+  list-style: none;
+  font: 500 11px/1.2 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dt-deal__rail::before,
+.dt-deal__rail::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--border-subtle);
+}
+
+.dt-deal__rail::after {
+  background: var(--action-accent);
+  transform-origin: left center;
+  transform: scaleX(0.2);
+  transition: transform 700ms var(--ease-in-out-strong);
+}
+
+.dt-deal[data-stage='1'] .dt-deal__rail::after {
+  transform: scaleX(0.4);
+}
+
+.dt-deal[data-stage='2'] .dt-deal__rail::after {
+  transform: scaleX(0.6);
+}
+
+.dt-deal[data-stage='3'] .dt-deal__rail::after {
+  transform: scaleX(0.8);
+}
+
+.dt-deal[data-stage='4'] .dt-deal__rail::after {
+  transform: scaleX(1);
+}
+
+.dt-deal__rail li {
+  color: var(--text-muted);
+  transition: color 300ms ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dt-deal__rail li[data-on] {
+  color: var(--text-secondary);
+}
+
+.dt-deal__rail li[aria-current='step'] {
   color: var(--text-primary);
 }
 
-.dt-flow__title {
-  font-size: 18px;
+/* Tarjetas */
+.dt-deal__card {
+  background: var(--bg-flow-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+}
+
+.dt-deal__offers,
+.dt-deal__checks,
+.dt-deal__order {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--border-subtle);
+  transition:
+    background-color 400ms ease,
+    border-color 400ms ease;
+}
+
+:is(.dt-deal__offers, .dt-deal__checks, .dt-deal__order)[data-on] {
+  background: var(--bg-flow-card);
+  border-style: solid;
+}
+
+:is(.dt-deal__offers, .dt-deal__checks, .dt-deal__order) > :not(.dt-deal__counter),
+.dt-deal__counter {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 500ms var(--ease-out-strong),
+    transform 500ms var(--ease-out-strong);
+}
+
+:is(.dt-deal__offers, .dt-deal__checks, .dt-deal__order)[data-on] > :not(.dt-deal__counter),
+.dt-deal__counter[data-on] {
+  opacity: 1;
+  transform: none;
+}
+
+.dt-deal__request,
+.dt-deal__order {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.dt-deal__glyph {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+}
+
+.dt-deal__kicker {
+  font: 500 11px/1.4 var(--font-mono);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dt-deal__title {
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.3;
 }
 
-.dt-flow__detail {
-  font-size: 14px;
+.dt-deal__detail {
+  font-size: 13.5px;
   color: var(--text-secondary);
 }
 
-.dt-flow__amount {
-  margin-left: auto;
-  text-align: right;
-}
-
-.dt-flow__status {
-  margin-left: auto;
-  flex: none;
-}
-
-.dt-flow__amount strong {
-  display: block;
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.dt-flow__amount span {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.dt-flow__budget {
+.dt-deal__budget {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  border-top: 1px solid var(--border-subtle);
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-}
-
-.dt-flow__budget dt {
-  font-size: 14px;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
   color: var(--text-secondary);
 }
 
-.dt-flow__budget dd {
-  margin: 0;
-  font-size: 28px;
+.dt-deal__budget strong {
+  font-size: 18px;
   font-weight: 600;
-  line-height: 1.1;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
-.dt-flow__budget small {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
-  margin-left: var(--space-2);
+/* Ofertas */
+.dt-deal__offers ul,
+.dt-deal__checks ul {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
 }
 
-.dt-flow__note {
-  flex-basis: 100%;
-  font-size: 13px;
+.dt-deal__offer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  margin-inline: calc(var(--space-3) * -1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-size: 14px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 400ms var(--ease-out-strong),
+    transform 400ms var(--ease-out-strong),
+    background-color 400ms ease,
+    border-color 400ms ease,
+    color 400ms ease;
+}
+
+.dt-deal__offers[data-on] .dt-deal__offer {
+  opacity: 1;
+  transform: none;
+}
+
+.dt-deal__offers[data-on] .dt-deal__offer:nth-child(2) {
+  transition-delay: 70ms;
+}
+
+.dt-deal__offers[data-on] .dt-deal__offer:nth-child(3) {
+  transition-delay: 140ms;
+}
+
+.dt-deal__offer svg {
   color: var(--text-muted);
 }
 
-.dt-flow__breakdown {
-  margin-top: var(--space-3);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.dt-flow__connector {
+.dt-deal__supplier {
   display: flex;
-  justify-content: center;
-  height: 28px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  min-width: 0;
+}
+
+.dt-deal__offer:first-child .dt-deal__price {
+  color: var(--text-muted);
+}
+
+.dt-deal__offer--chosen[data-on] {
+  background: var(--bg-selected);
+  border-color: var(--border-active);
+  color: var(--text-primary);
+  transition-delay: 0ms;
+}
+
+.dt-deal__price {
   position: relative;
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  justify-content: flex-end;
+  min-width: 64px;
+  font-variant-numeric: tabular-nums;
 }
 
-.dt-flow__connector::before {
-  content: '';
-  width: 2px;
-  background: var(--dt-emerald);
+.dt-deal__was {
+  position: relative;
+  transition: transform 450ms var(--ease-in-out-strong);
 }
 
-.dt-flow__connector::after {
+.dt-deal__offer--chosen .dt-deal__was::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: var(--bg-flow);
-  border: 2px solid var(--dt-emerald);
+  left: -2px;
+  right: -2px;
+  top: 52%;
+  height: 1.5px;
+  background: currentcolor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 350ms var(--ease-out-strong);
 }
 
-.dt-flow__head span:last-child,
-.dt-flow__meta span:last-child {
+.dt-deal__offer--chosen[data-on] .dt-deal__was {
+  color: var(--text-muted);
+  transform: translateX(calc(-7ch - var(--space-2)));
+}
+
+.dt-deal__offer--chosen[data-on] .dt-deal__was::after {
+  transform: scaleX(1);
+}
+
+.dt-deal__now {
+  position: absolute;
+  right: 0;
+  width: 7ch;
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 400ms var(--ease-out-strong) 250ms,
+    transform 400ms var(--ease-out-strong) 250ms;
+}
+
+.dt-deal__offer--chosen[data-on] .dt-deal__now {
+  opacity: 1;
+  transform: none;
+}
+
+.dt-deal__counter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: 13px;
+  color: var(--text-link);
+  transition-delay: 300ms;
+}
+
+/* Comprobaciones */
+.dt-deal__checks ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+.dt-deal__checks li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 350ms var(--ease-out-strong);
+}
+
+.dt-deal__checks li svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--success-fg);
+  transform: scale(0.6);
+  transition: transform 350ms var(--ease-out-strong);
+}
+
+.dt-deal__checks[data-on] li {
+  opacity: 1;
+}
+
+.dt-deal__checks[data-on] li svg {
+  transform: none;
+}
+
+.dt-deal__checks[data-on] li:nth-child(2),
+.dt-deal__checks[data-on] li:nth-child(2) svg {
+  transition-delay: 120ms;
+}
+
+.dt-deal__checks[data-on] li:nth-child(3),
+.dt-deal__checks[data-on] li:nth-child(3) svg {
+  transition-delay: 240ms;
+}
+
+.dt-deal__checks[data-on] li:nth-child(4),
+.dt-deal__checks[data-on] li:nth-child(4) svg {
+  transition-delay: 360ms;
+}
+
+/* Pedido */
+.dt-deal__order[data-on] {
+  border-color: rgb(95 212 160 / 35%);
+}
+
+.dt-deal__meter {
+  grid-column: 1 / -1;
+  height: 6px;
+  margin-top: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--bg-subtle);
+  overflow: hidden;
+}
+
+.dt-deal__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--action-accent);
+  transform-origin: left center;
+  /* $74.00 gastados de $80.00 */
+  transform: scaleX(0);
+  transition: transform 800ms var(--ease-out-strong) 300ms;
+}
+
+.dt-deal__order[data-on] .dt-deal__meter span {
+  transform: scaleX(0.925);
+}
+
+.dt-deal__spent {
+  grid-column: 1 / -1;
+  font: 500 12px/1.4 var(--font-mono);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dt-deal__meta {
+  align-items: center;
+  min-height: 28px;
   white-space: nowrap;
 }
 
+.dt-deal__meta-end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.dt-deal__replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-secondary);
+  font: 500 12px var(--font-sans);
+  cursor: pointer;
+}
+
+.dt-deal__replay:not([data-visible]) {
+  visibility: hidden;
+}
+
+.dt-deal__replay[data-visible] {
+  animation: dt-fade-in 300ms var(--ease-out-strong);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dt-deal__replay:hover {
+    color: var(--text-primary);
+  }
+}
+
+@keyframes dt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-deal *,
+  .dt-deal *::before,
+  .dt-deal *::after {
+    transition-duration: 0ms !important;
+    transition-delay: 0ms !important;
+    animation: none !important;
+  }
+}
+
 @media (max-width: 767px) {
-  .dt-flow__step:nth-of-type(n) {
-    margin-inline: 0;
-  }
-}
-
-/* Columna del flujo estrecha (tablet y escritorio pequeño): el estado pasa a su propia línea. */
-@media (min-width: 480px) and (max-width: 1279px) {
-  .dt-flow__row:has(.dt-flow__status) {
-    flex-wrap: wrap;
-    row-gap: var(--space-3);
-  }
-
-  .dt-flow__row:has(.dt-flow__status) > div {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .dt-flow__row .dt-flow__status {
-    order: 3;
-    margin-left: 60px;
-  }
-
-  .dt-flow__row:has(.dt-flow__status)::after {
-    content: '';
-    order: 2;
-    flex-basis: 100%;
-  }
-}
-
-@media (max-width: 479px) {
-  .dt-flow__step {
+  .dt-deal {
     padding: var(--space-4);
   }
 
-  /* Los pictogramas son decorativos: en pantallas estrechas ceden el espacio al contenido. */
-  .dt-flow__glyph {
-    display: none;
-  }
-
-  .dt-flow__row {
-    align-items: flex-start;
+  .dt-deal__meta {
     flex-wrap: wrap;
-    row-gap: var(--space-3);
+    white-space: normal;
   }
 
-  .dt-flow__row > div:not(.dt-flow__amount) {
-    flex: 1 1 0;
-    min-width: 0;
+  .dt-deal__rail {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: 10px;
+    letter-spacing: 0;
   }
 
-  .dt-flow__row:has(.dt-flow__status) > div {
-    flex-basis: 100%;
+  .dt-deal__request {
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .dt-flow__status {
-    order: 3;
-    margin-left: 0;
+  .dt-deal__budget {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-2);
   }
 
-  .dt-flow__amount strong,
-  .dt-flow__budget dd {
-    font-size: 24px;
+  .dt-deal__checks ul {
+    grid-template-columns: 1fr;
+  }
+
+  .dt-deal__offer {
+    padding-block: var(--space-2);
+  }
+
+  .dt-deal__supplier {
+    justify-content: flex-start;
+  }
+
+  /* En móvil el precio negociado va debajo del original, sin deslizarlo sobre el proveedor. */
+  .dt-deal__offer--chosen .dt-deal__price {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+  }
+
+  .dt-deal__offer--chosen[data-on] .dt-deal__was {
+    transform: none;
+  }
+
+  .dt-deal__now {
+    position: static;
+    width: auto;
+  }
+
+  .dt-deal__order .dt-badge {
+    grid-column: 2 / -1;
+    justify-self: start;
   }
 }
 
@@ -616,6 +898,11 @@ html:has(.dt-site) {
 .dt-badge--success {
   background: var(--success-bg);
   color: var(--success-fg);
+}
+
+.dt-badge--warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
 }
 
 .dt-badge--info {
@@ -687,9 +974,6 @@ html:has(.dt-site) {
 }
 
 .dt-steps li {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-5);
   padding: var(--space-2) var(--space-8);
   border-left: 1px solid var(--border-subtle);
 }
@@ -697,18 +981,6 @@ html:has(.dt-site) {
 .dt-steps li:first-child {
   border-left: 0;
   padding-left: 0;
-}
-
-.dt-step__number {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-control);
-  background: var(--bg-selected);
-  display: grid;
-  place-items: center;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 500;
 }
 
 .dt-step__icon {

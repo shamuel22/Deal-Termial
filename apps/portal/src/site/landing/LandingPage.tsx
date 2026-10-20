@@ -1,20 +1,21 @@
 import {
   ArrowRight,
+  Bot,
   Building2,
   Check,
   CircleCheck,
-  FileSearch,
   FileText,
   Handshake,
   Minus,
-  Package,
   Receipt,
+  RotateCcw,
   Search,
   MessagesSquare,
+  TriangleAlert,
   Zap,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { MarketingHeader } from '../components/MarketingHeader';
 import { SiteFooter } from '../components/SiteFooter';
@@ -54,11 +55,7 @@ function Hero() {
     <section className="dt-container dt-hero" aria-labelledby="hero-title">
       <div className="dt-hero__copy">
         <p className="dt-eyebrow">{t.hero.eyebrow}</p>
-        <h1 id="hero-title">
-          {t.hero.titleLines.map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-        </h1>
+        <h1 id="hero-title">{t.hero.title}</h1>
         <p className="dt-hero__body">{t.hero.body}</p>
         <div className="dt-hero__actions">
           <Link to="/register" className="dt-btn dt-btn--primary">
@@ -70,99 +67,152 @@ function Hero() {
             {t.hero.secondary}
           </Link>
         </div>
+        <p className="dt-hero__protocols">{t.hero.protocols}</p>
       </div>
-      <DealFlow />
+      <DealRun />
     </section>
   );
 }
 
-/** Visual del hero (DESIGN §11.3, §16): solicitud → oferta → pedido. Ilustrativo y etiquetado como demo. */
-function DealFlow() {
+// Momento de cada etapa (ms): encargo → ofertas → negociación → comprobaciones → pago.
+const STAGE_AT = [0, 700, 1900, 3000, 4200] as const;
+const LAST_STAGE = STAGE_AT.length - 1;
+
+/** Reproduce la secuencia una vez; con movimiento reducido muestra directamente el resultado. */
+function useDealStages(): [number, () => void] {
+  const [stage, setStage] = useState(0);
+  const [run, setRun] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setStage(LAST_STAGE);
+      return;
+    }
+    setStage(0);
+    const timers = STAGE_AT.slice(1).map((at, i) => window.setTimeout(() => setStage(i + 1), at));
+    return () => timers.forEach((id) => window.clearTimeout(id));
+  }, [run]);
+  return [stage, () => setRun((n) => n + 1)];
+}
+
+/**
+ * Visual del hero (DESIGN §8, §11, §16): un acuerdo completo que se explica solo.
+ * El primer fotograma ya muestra el encargo y su presupuesto; el resto se revela en orden.
+ */
+function DealRun() {
   const t = useCopy();
-  const f = t.flow;
+  const d = t.deal;
+  const [stage, replay] = useDealStages();
+  const at = (n: number) => ({ 'data-on': stage >= n ? '' : undefined });
+
   return (
-    <figure className="dt-flow" aria-labelledby="flow-caption">
-      <figcaption id="flow-caption" className="dt-flow__meta">
-        <span className="dt-eyebrow">{f.label}</span>
-        <span className="dt-eyebrow">{f.demo}</span>
+    <figure className="dt-deal" data-stage={stage} aria-labelledby="deal-caption">
+      <figcaption id="deal-caption" className="dt-deal__meta">
+        <span className="dt-eyebrow">{d.label}</span>
+        <span className="dt-deal__meta-end">
+          <span className="dt-eyebrow">{d.demo}</span>
+          <button
+            type="button"
+            className="dt-deal__replay"
+            onClick={replay}
+            data-visible={stage === LAST_STAGE ? '' : undefined}
+            aria-hidden={stage < LAST_STAGE}
+            tabIndex={stage < LAST_STAGE ? -1 : undefined}
+          >
+            <RotateCcw size={14} {...LINE} />
+            {d.replay}
+          </button>
+        </span>
       </figcaption>
 
-      <article className="dt-flow__step" aria-label={f.request.kind}>
-        <div className="dt-flow__head">
-          <span>{f.request.kind}</span>
-          <span>{f.request.id}</span>
-        </div>
-        <div className="dt-flow__row">
-          <span className="dt-flow__glyph">
-            <Package size={22} {...LINE} />
-          </span>
-          <div>
-            <p className="dt-flow__title">{f.request.title}</p>
-            <p className="dt-flow__detail">{f.request.detail}</p>
-          </div>
-          <span className="dt-badge dt-badge--info dt-flow__status">
-            <FileSearch size={14} {...LINE} />
-            {f.request.status}
-          </span>
-        </div>
-        <dl className="dt-flow__budget">
-          <dt>{f.request.budgetLabel}</dt>
-          <dd>
-            ${f.request.budget}
-            <small>USD</small>
-          </dd>
-          <p className="dt-flow__note">{f.request.budgetNote}</p>
-        </dl>
-      </article>
+      <ol className="dt-deal__rail">
+        {d.steps.map((step, i) => (
+          <li key={step} {...at(i)} aria-current={stage === i ? 'step' : undefined}>
+            {step}
+          </li>
+        ))}
+      </ol>
 
-      <div className="dt-flow__connector" aria-hidden />
+      <div className="dt-deal__card dt-deal__request">
+        <span className="dt-deal__glyph">
+          <Bot size={20} {...LINE} />
+        </span>
+        <div>
+          <p className="dt-deal__kicker">{d.request.agent}</p>
+          <p className="dt-deal__title">{d.request.title}</p>
+          <p className="dt-deal__detail">{d.request.detail}</p>
+        </div>
+        <div className="dt-deal__budget">
+          <span>{d.request.budgetLabel}</span>
+          <strong>{d.request.budget}</strong>
+        </div>
+      </div>
 
-      <article className="dt-flow__step" aria-label={f.quote.kind}>
-        <div className="dt-flow__head">
-          <span>{f.quote.kind}</span>
-          <span>{f.quote.id}</span>
-        </div>
-        <div className="dt-flow__row">
-          <span className="dt-flow__glyph">
-            <Building2 size={22} {...LINE} />
-          </span>
-          <div>
-            <p className="dt-flow__title">{f.quote.supplier}</p>
-            <p className="dt-flow__detail">{f.quote.supplierNote}</p>
-          </div>
-          <div className="dt-flow__amount">
-            <strong>${f.quote.total}</strong>
-            <span>USD</span>
-          </div>
-        </div>
-        <p className="dt-flow__breakdown">{f.quote.breakdown}</p>
-        <p className="dt-badge dt-badge--success dt-badge--block">
-          <CircleCheck size={16} {...LINE} />
-          {f.quote.check}
+      <div className="dt-deal__card dt-deal__offers" {...at(1)}>
+        <p className="dt-deal__kicker">{d.offers.found}</p>
+        <ul>
+          {d.offers.items.map((offer, i) => {
+            const chosen = i === d.offers.items.length - 1;
+            return (
+              <li
+                key={offer.supplier}
+                className={chosen ? 'dt-deal__offer dt-deal__offer--chosen' : 'dt-deal__offer'}
+                {...(chosen ? at(2) : {})}
+              >
+                <Building2 size={16} {...LINE} />
+                <span className="dt-deal__supplier">
+                  <span>{offer.supplier}</span>
+                  {i === 0 && (
+                    <span className="dt-badge dt-badge--warning">
+                      <TriangleAlert size={13} {...LINE} />
+                      {d.offers.overBudget}
+                    </span>
+                  )}
+                </span>
+                <span className="dt-deal__price">
+                  <span className="dt-deal__was">{offer.total}</span>
+                  {chosen && <span className="dt-deal__now">{d.offers.negotiated}</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="dt-deal__counter" {...at(2)}>
+          <Handshake size={15} {...LINE} />
+          {d.offers.counter}
         </p>
-      </article>
+      </div>
 
-      <div className="dt-flow__connector" aria-hidden />
+      <div className="dt-deal__card dt-deal__checks" {...at(3)}>
+        <p className="dt-deal__kicker">{d.checks.title}</p>
+        <ul>
+          {d.checks.items.map((item) => (
+            <li key={item}>
+              <Check size={15} {...LINE} />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <article className="dt-flow__step" aria-label={f.order.kind}>
-        <div className="dt-flow__head">
-          <span>{f.order.kind}</span>
-          <span>{f.order.id}</span>
+      <div className="dt-deal__card dt-deal__order" {...at(4)}>
+        <span className="dt-deal__glyph">
+          <Receipt size={20} {...LINE} />
+        </span>
+        <div>
+          <p className="dt-deal__title">
+            {d.order.title} · {d.offers.negotiated}
+          </p>
+          <p className="dt-deal__detail">{d.order.detail}</p>
         </div>
-        <div className="dt-flow__row">
-          <span className="dt-flow__glyph">
-            <Receipt size={22} {...LINE} />
-          </span>
-          <div>
-            <p className="dt-flow__title">{f.order.payment}</p>
-            <p className="dt-flow__detail">{f.order.paymentNote}</p>
-          </div>
-          <span className="dt-badge dt-badge--success dt-flow__status">
-            <CircleCheck size={14} {...LINE} />
-            {f.order.status}
-          </span>
+        <span className="dt-badge dt-badge--success">
+          <CircleCheck size={14} {...LINE} />
+          {d.order.status}
+        </span>
+        <div className="dt-deal__meter" aria-label={d.order.spent}>
+          <span />
         </div>
-      </article>
+        <p className="dt-deal__spent">{d.order.spent}</p>
+      </div>
     </figure>
   );
 }
@@ -182,9 +232,6 @@ function HowItWorks() {
             const Icon = STEP_ICONS[i]!;
             return (
               <li key={step.title} className="dt-step">
-                <span className="dt-step__number" aria-hidden>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
                 <div>
                   <Icon className="dt-step__icon" size={44} strokeWidth={1.5} aria-hidden />
                   <h3>{step.title}</h3>
