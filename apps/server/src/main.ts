@@ -29,7 +29,9 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
   // Detrás de nginx en la misma máquina: la IP real del cliente llega en X-Forwarded-For.
   // Solo se confía en un proxy local, así nadie puede falsearla desde fuera.
-  app.getHttpAdapter().getInstance().set('trust proxy', 'loopback');
+  const http = app.getHttpAdapter().getInstance();
+  http.set('trust proxy', 'loopback');
+  http.disable('x-powered-by');
 
   const openapi = new DocumentBuilder()
     .setTitle('Deal Terminal API')

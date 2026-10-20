@@ -113,6 +113,27 @@ sudo systemctl reload nginx
 
 El servidor confía solo en un proxy local (`trust proxy = loopback`) para conocer la IP real del cliente.
 
+### Detrás de Cloudflare
+
+Con el proxy de Cloudflare activo, nginx recibe las peticiones desde IPs de Cloudflare. Sin este paso, el
+servidor ve la IP del nodo de Cloudflare en lugar de la del cliente, y el limitador de intentos de login
+(10 fallos por email e IP cada 15 minutos) agrupa a muchos usuarios bajo la misma IP. nginx debe tomar la IP real
+de `CF-Connecting-IP`, **solo** cuando la petición llega desde un rango de Cloudflare:
+
+```bash
+{
+  for ip in $(curl -s https://www.cloudflare.com/ips-v4) $(curl -s https://www.cloudflare.com/ips-v6); do
+    echo "set_real_ip_from $ip;"
+  done
+  echo "real_ip_header CF-Connecting-IP;"
+} | sudo tee /etc/nginx/conf.d/cloudflare-real-ip.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+La configuración del sitio no cambia: `$proxy_add_x_forwarded_for` ya añade la IP real del cliente. Una
+petición que no venga de Cloudflare conserva su propia IP, así que la cabecera no se puede falsear.
+En Cloudflare, el modo SSL/TLS debe ser **Full (strict)**, porque el origen ya tiene certificado.
+
 ## 6. PayPal
 
 En el Developer Dashboard → app sandbox:
