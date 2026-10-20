@@ -55,6 +55,9 @@ pnpm build
 pnpm seed:demo   # opcional: datos de la demo (imprime cuentas y credenciales de agentes una sola vez)
 ```
 
+> `NODE_ENV=production` va en `.env` (lo lee el servidor), no exportado en la shell: si la shell lo tiene,
+> `pnpm install` omite TypeScript y Vite y `pnpm build` falla.
+
 ## 4. Servicio systemd
 
 `/etc/systemd/system/deal-terminal.service`:
