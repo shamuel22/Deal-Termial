@@ -330,7 +330,7 @@ function Side(props: {
 function FinalCta() {
   const t = useCopy();
   return (
-    <section className="dt-cta" data-surface="dark" aria-labelledby="cta-title">
+    <section className="dt-cta" aria-labelledby="cta-title">
       <div className="dt-container dt-cta__inner">
         <div>
           <p className="dt-eyebrow">{t.cta.eyebrow}</p>

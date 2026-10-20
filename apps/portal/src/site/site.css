@@ -1,7 +1,7 @@
 /* Sitio público (landing + Knowledge). DESIGN.md §5–§8, §11, §12, §17. Todo bajo .dt-site. */
 
 .dt-site {
-  color-scheme: light;
+  color-scheme: dark;
   min-height: 100vh;
   background: var(--bg-page);
   color: var(--text-primary);
@@ -190,7 +190,7 @@ html:has(.dt-site) {
   height: 28px;
 }
 
-.dt-brand__symbol {
+.dt-brand .dt-brand__symbol {
   display: none;
 }
 
@@ -199,7 +199,7 @@ html:has(.dt-site) {
     display: none;
   }
 
-  .dt-brand--adaptive .dt-brand__symbol {
+  .dt-brand--adaptive .dt-brand__logo + .dt-brand__symbol {
     display: block;
     height: 30px;
   }
@@ -968,7 +968,7 @@ html:has(.dt-site) {
 }
 
 .dt-cta :focus-visible {
-  outline-color: #41d9a4;
+  outline-color: var(--focus-ring);
 }
 
 @media (max-width: 1023px) {
@@ -1385,7 +1385,7 @@ html:has(.dt-site) {
   justify-content: space-between;
   align-items: center;
   padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
-  border-bottom: 1px solid #2b3530;
+  border-bottom: 1px solid var(--border-subtle);
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-inverse-muted);
@@ -1398,7 +1398,7 @@ html:has(.dt-site) {
   min-height: 36px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-control);
-  border: 1px solid #45534a;
+  border: 1px solid var(--border-control);
   background: transparent;
   color: var(--text-inverse);
   font: 500 13px var(--font-sans);
@@ -1406,11 +1406,11 @@ html:has(.dt-site) {
 }
 
 .dt-code__copy:hover {
-  background: #28342d;
+  background: var(--bg-subtle);
 }
 
 .dt-code__copy:focus-visible {
-  outline-color: #41d9a4;
+  outline-color: var(--focus-ring);
 }
 
 .dt-code pre {
@@ -1457,7 +1457,7 @@ html:has(.dt-site) {
 .dt-callout--important {
   background: var(--bg-selected);
   color: var(--text-primary);
-  border-color: #b9d3c3;
+  border-color: var(--border-active);
 }
 
 .dt-callout--warning {
