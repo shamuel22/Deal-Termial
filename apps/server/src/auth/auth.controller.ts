@@ -1,6 +1,6 @@
-import { Body, Controller, Get, HttpCode, Inject, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import type { DbHandle } from '@deal/db';
 import {
   listMemberships,
@@ -12,15 +12,18 @@ import {
   type LoginInput,
   type RegisterInput,
 } from '@deal/core';
-import type { AppConfig } from '@deal/shared';
+import { DomainError, type AppConfig } from '@deal/shared';
 import { APP_CONFIG } from '../config.module.js';
 import { DB } from '../database.module.js';
 import { ApiZodBody } from '../http/zod.js';
 import { Auth, CurrentSession, SESSION_COOKIE } from './auth.guard.js';
+import { LoginLimiter } from './login-limiter.js';
 
 @ApiTags('portal: cuenta')
 @Controller()
 export class AuthController {
+  private readonly limiter = new LoginLimiter();
+
   constructor(
     @Inject(DB) private readonly handle: DbHandle,
     @Inject(APP_CONFIG) private readonly config: AppConfig,
@@ -51,10 +54,24 @@ export class AuthController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Inicio de sesión del portal (cookie httpOnly)' })
   @ApiZodBody(loginInput)
-  async login(@Body() body: LoginInput, @Res({ passthrough: true }) res: Response) {
-    const session = await login(this.handle.db, body);
-    this.setSessionCookie(res, session.token, session.expiresAt);
-    return { userId: session.userId, expiresAt: session.expiresAt };
+  async login(
+    @Body() body: LoginInput,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const email = typeof body?.email === 'string' ? body.email : '';
+    const ip = req.ip ?? 'desconocida';
+    this.limiter.assertAllowed(email, ip);
+    try {
+      const session = await login(this.handle.db, body);
+      this.limiter.reset(email, ip);
+      this.setSessionCookie(res, session.token, session.expiresAt);
+      return { userId: session.userId, expiresAt: session.expiresAt };
+    } catch (error) {
+      if (error instanceof DomainError && error.code === 'UNAUTHENTICATED')
+        this.limiter.recordFailure(email, ip);
+      throw error;
+    }
   }
 
   @Post('auth/logout')
