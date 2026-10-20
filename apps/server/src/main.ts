@@ -27,6 +27,9 @@ async function bootstrap(): Promise<void> {
   });
   app.setGlobalPrefix('api', { exclude: ['webhooks/{*path}', 'mcp'] });
   app.enableShutdownHooks();
+  // Detrás de nginx en la misma máquina: la IP real del cliente llega en X-Forwarded-For.
+  // Solo se confía en un proxy local, así nadie puede falsearla desde fuera.
+  app.getHttpAdapter().getInstance().set('trust proxy', 'loopback');
 
   const openapi = new DocumentBuilder()
     .setTitle('Deal Terminal API')
